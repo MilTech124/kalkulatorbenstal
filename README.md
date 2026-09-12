@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kalkulator garaży BEN-STAL
 
-## Getting Started
+Publiczny kalkulator wyceny garaży blaszanych (cena liczona na żywo) + panel `/panel` do edycji cennika i przeglądania zapisanych wycen.
 
-First, run the development server:
+Stack: **Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · MongoDB (Mongoose) · Zod · Vitest**
+
+## Uruchomienie lokalne
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local      # uzupełnij MONGODB_URI, ADMIN_EMAIL, ADMIN_PASSWORD, AUTH_SECRET
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Baza danych – jedna z opcji:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **MongoDB Atlas / własny serwer** – wpisz URI w `MONGODB_URI`.
+- **Bez instalacji Mongo (tylko do developmentu)** – w osobnym terminalu uruchom bazę w pamięci:
+  ```bash
+  npm run dev:mongo
+  ```
+  Nasłuchuje na `mongodb://127.0.0.1:27017/benstal` (dane znikają po zatrzymaniu; przy pierwszym uruchomieniu pobiera binarkę MongoDB, ok. 100 MB).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Następnie:
 
-## Learn More
+```bash
+npm run seed    # zapisuje domyślny cennik (Excel + PDF) jako wersję 1, jeśli bazy nie ma jeszcze cennika
+npm run dev     # http://localhost:3000  (panel: http://localhost:3000/panel)
+```
 
-To learn more about Next.js, take a look at the following resources:
+Inne skrypty: `npm test` (testy silnika wyceny), `npm run lint`, `npm run build` + `npm start` (produkcja).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Zmienne środowiskowe
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Zmienna          | Opis                                                                 |
+| ---------------- | -------------------------------------------------------------------- |
+| `MONGODB_URI`    | connection string do MongoDB                                         |
+| `ADMIN_EMAIL`    | e-mail do logowania w `/panel`                                       |
+| `ADMIN_PASSWORD` | hasło do logowania w `/panel`                                        |
+| `AUTH_SECRET`    | losowy sekret (min. 32 znaki) do podpisywania sesji, np. `openssl rand -hex 32` |
 
-## Deploy on Vercel
+## Jak liczona jest cena
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Cały algorytm jest w jednym pliku: [`src/lib/pricing/engine.ts`](src/lib/pricing/engine.ts) (`calculateQuote(input, cennik)`), używanym zarówno w przeglądarce (cena na żywo), jak i na serwerze przy zapisie wyceny (serwer liczy sam – klient nie może przesłać własnej kwoty).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Garaż bazowy** – z tabeli szer. × dł. (Excel): kolumna „spad do tyłu” albo „dwuspadowy” (spad na bok i dwuspad używają tej drugiej).
+2. **Wysokość** – standard 2,13 m; za każde rozpoczęte 10 cm powyżej dopłata z tabeli (+ dopłata kolorowa/drewnopodobna za 10 cm). Brama segmentowa (i automat przy spadzie do tyłu) automatycznie wymusza minimalną wysokość garażu wg reguł z panelu (np. wys. bramy + 50 cm przy spadzie do tyłu).
+3. **Blacha** – dopłata RAL / drewnopodobna z tabeli; **poziomy panel** z tabeli (wymuszany przez okno pleksa).
+4. **Okucia** – pionowe `4 × wysokość` mb, dachu wg spadu (`2·D + S` dla spadu do tyłu, `2·S + D` dla pozostałych) × zł/mb.
+5. **Rynny** – `S` (spad do tyłu), `D` (na bok), `2·D` (dwuspad) × zł/mb. **Filc** – m² (garaż + wiata). **Blachodachówka** – m² garażu.
+6. **Brama** – uchylna/dwuskrzydłowa: cena bazowa (do 220 cm / powyżej) + dopłaty za 50 cm szerokości i 10 cm wysokości ponad 3 × 2 m, dwuskrzydłowa +500, automat, poziomy panel; segmentowa: tabela Oknomont (netto) × 1,23 × 1,40, rozmiar zaokrąglany w górę, winchester za m², drzwi w bramie.
+7. **Okna, drzwi, dodatki** (zamek, uchwyt, kratka, kotwiczenie wg szerokości), **wiata** (stawka za mb wg szerokości × długość + kolor za mb), **ściany działowe** (m²), **ażury** (ściana m² lub cały garaż `(2S+2D)·H × 40`).
+
+Wszystkie kwoty, mnożniki, wzory (współczynniki `s`/`d`) i reguły wysokości edytuje się w `/panel` → Cennik. Każdy zapis tworzy nową wersję; można wrócić do wcześniejszej lub przywrócić cennik domyślny.
+
+Domyślne dane: [`src/lib/pricing/data/base-table.ts`](src/lib/pricing/data/base-table.ts) (generowany skryptem `py scripts/import-xlsx.py plik.xlsx` z Excela) i [`src/lib/pricing/data/sectional.ts`](src/lib/pricing/data/sectional.ts) (przepisany cennik bram segmentowych).
+
+> Uwaga: dopłaty bramy uchylnej za +50 cm szerokości (150 zł) i +10 cm wysokości (50 zł) to wartości tymczasowe – do uzupełnienia w panelu.
+
+## Struktura
+
+```
+src/
+  app/                 strony i API (App Router)
+    page.tsx           kalkulator
+    panel/             login, lista wycen, szczegóły, edytor cennika
+    api/pricing        GET aktywny cennik (public)
+    api/quotes         POST zapis wyceny (public)
+    api/admin/*        login/logout, cennik (GET/PUT/POST), wyceny (GET/DELETE)
+  proxy.ts             ochrona /panel/* i /api/admin/* (cookie sesji JWT)
+  lib/pricing/         silnik wyceny, typy, schematy zod, domyślny cennik, repozytorium
+  lib/auth.ts          sesja (jose), porównanie haseł w stałym czasie
+  models/              Mongoose: PriceList (wersjonowany), Quote, Counter
+  components/          UI kalkulatora i panelu
+scripts/               seed.ts, dev-mongo.ts, import-xlsx.py
+```
+
+## Wdrożenie
+
+- **Vercel + MongoDB Atlas** – dodaj zmienne środowiskowe w projekcie Vercel, `npm run seed` uruchom raz lokalnie z URI Atlasa (albo zaloguj się do panelu i użyj „Przywróć cennik domyślny” – zapisze cennik do bazy).
+- **Własny serwer (Node 20+)** – `npm ci && npm run build && npm start` (port 3000), za reverse proxy z HTTPS (cookie sesji ma `secure` w produkcji).
