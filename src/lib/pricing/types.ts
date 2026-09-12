@@ -128,7 +128,8 @@ export interface QuoteInput {
   felt: boolean;
   tile: boolean;
   gutters: boolean;
-  gate: GateInput;
+  /** Lista bram (moze byc pusta = bez bramy). */
+  gates: GateInput[];
   windows: { type: WindowType; qty: number }[];
   doors: number;
   extras: {

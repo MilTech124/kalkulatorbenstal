@@ -2,6 +2,7 @@
 // Uzywany na kliencie (cena na zywo) i na serwerze (przeliczenie przy zapisie wyceny).
 import type {
   BaseTableRow,
+  GateInput,
   GateType,
   LineItem,
   PriceList,
@@ -47,7 +48,7 @@ export function heightSteps(pl: PriceList, height: number): number {
 /** Wymagany zapas wysokosci garazu ponad wysokosc bramy [cm] - max z pasujacych regul. */
 export function gateClearanceCm(
   pl: PriceList,
-  gate: QuoteInput['gate'],
+  gate: GateInput,
   roofType: RoofType,
 ): { cm: number; label?: string } {
   if (gate.type === 'none') return { cm: 0 };
@@ -93,7 +94,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   let needsManualQuote = false;
   const push = (item: LineItem) => items.push({ ...item, amount: money(item.amount) });
 
-  const { width: S, length: D, roofType, sheet, gate } = input;
+  const { width: S, length: D, roofType, sheet } = input;
   const roof = pl.roofTypes[roofType];
   const row = findBaseRow(pl, S, D);
 
@@ -109,19 +110,30 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     amount: roof.priceGroup === 'rear' ? row.rear : row.gable,
   });
 
-  // 2. Wymagana wysokosc (brama moze wymusic podwyzszenie)
+  // 2. Wymagana wysokosc (najwyzsza z bram moze wymusic podwyzszenie)
+  const gates = input.gates.filter((g) => g.type !== 'none');
   let effectiveHeight = input.height;
   let heightNote: string | undefined;
-  if (gate.type !== 'none') {
+  let requiredCm = 0;
+  let requiredLabel: string | undefined;
+  let requiredAdd = 0;
+  for (const gate of gates) {
     const clearance = gateClearanceCm(pl, gate, roofType);
-    const requiredCm = cm(gate.height) + clearance.cm;
-    if (requiredCm > cm(effectiveHeight)) {
-      const steps = heightSteps(pl, requiredCm / 100);
-      effectiveHeight = (cm(pl.standardHeight) + steps * cm(pl.heightStep)) / 100;
-      heightNote = `Podwyższono do ${fmt(effectiveHeight)} m: ${clearance.label ?? 'wysokość bramy'} (+${clearance.cm} cm nad bramą).`;
+    const needed = cm(gate.height) + clearance.cm;
+    if (needed > requiredCm) {
+      requiredCm = needed;
+      requiredLabel = clearance.label;
+      requiredAdd = clearance.cm;
     }
-    if (gate.width >= S) warnings.push('Brama jest szersza lub równa szerokości garażu.');
+    if (gate.width >= S) warnings.push(`Brama ${fmt(gate.width)} m jest szersza lub równa szerokości garażu.`);
   }
+  if (requiredCm > cm(effectiveHeight)) {
+    const steps = heightSteps(pl, requiredCm / 100);
+    effectiveHeight = (cm(pl.standardHeight) + steps * cm(pl.heightStep)) / 100;
+    heightNote = `Podwyższono do ${fmt(effectiveHeight)} m: ${requiredLabel ?? 'wysokość bramy'} (+${requiredAdd} cm nad bramą).`;
+  }
+  const gatesWidth = gates.reduce((sum, g) => sum + g.width, 0);
+  if (gates.length > 1 && gatesWidth >= S) warnings.push('Łączna szerokość bram jest większa lub równa szerokości garażu.');
 
   // 3. Podwyzszenie
   const steps = heightSteps(pl, effectiveHeight);
@@ -208,53 +220,57 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     });
   }
 
-  // 9. Brama
-  if (gate.type === 'tilt' || gate.type === 'double') {
-    const t = pl.gate.tilt;
-    const base = cm(gate.height) <= cm(t.lowMaxHeight) ? t.priceLow : t.priceHigh;
-    const label = gate.type === 'tilt' ? 'Brama uchylna' : 'Brama dwuskrzydłowa';
-    push({ key: 'gate', label: `${label} ${fmt(gate.width)} × ${fmt(gate.height)} m`, amount: base });
-    const w50 = Math.max(0, Math.ceil((cm(gate.width) - cm(t.baseWidth)) / 50));
-    if (w50 > 0) {
-      push({ key: 'gateWidth', label: 'Brama – dodatkowa szerokość', qty: w50, unit: '× 50 cm', unitPrice: t.per50cmWidth, amount: w50 * t.per50cmWidth });
-    }
-    const h10 = Math.max(0, Math.ceil((cm(gate.height) - cm(t.baseHeight)) / 10));
-    if (h10 > 0) {
-      push({ key: 'gateHeight', label: 'Brama – dodatkowa wysokość', qty: h10, unit: '× 10 cm', unitPrice: t.per10cmHeight, amount: h10 * t.per10cmHeight });
-    }
-    if (gate.type === 'double') push({ key: 'gateDouble', label: 'Dopłata: brama dwuskrzydłowa', amount: pl.gate.doubleLeafExtra });
-    if (gate.automat) push({ key: 'gateAutomat', label: 'Automat do bramy', amount: pl.gate.automat });
-    if (horizontalPanel && gate.horizontalPanel) {
-      push({ key: 'gatePanel', label: 'Poziomy panel na bramie', amount: pl.gate.horizontalPanelOnGateOrDoor });
-    }
-  } else if (gate.type === 'sectional') {
-    const cell = sectionalCell(pl, gate.width, gate.height);
-    if (!cell || cell.net === null) {
-      needsManualQuote = true;
-      warnings.push(`Brama segmentowa ${fmt(gate.width)} × ${fmt(gate.height)} m – rozmiar poza cennikiem, wycena indywidualna.`);
-      push({ key: 'gate', label: `Brama segmentowa ${fmt(gate.width)} × ${fmt(gate.height)} m`, amount: 0, note: 'Wycena indywidualna' });
-    } else {
-      const rounded = cell.width !== Math.round(gate.width * 1000) || cell.height !== Math.round(gate.height * 1000);
-      push({
-        key: 'gate',
-        label: `Brama segmentowa ${fmt(gate.width)} × ${fmt(gate.height)} m (z automatem)`,
-        amount: sectionalPrice(pl, cell.net),
-        note: rounded ? `Przyjęto rozmiar ${cell.width} × ${cell.height} mm z cennika.` : undefined,
-      });
-      if (gate.winchester) {
-        const m2 = gate.width * gate.height;
-        push({
-          key: 'gateWinchester',
-          label: 'Brama – kolor winchester',
-          qty: m2,
-          unit: 'm²',
-          unitPrice: sectionalPrice(pl, pl.gate.sectional.winchesterPerM2),
-          amount: sectionalPrice(pl, m2 * pl.gate.sectional.winchesterPerM2),
-        });
+  // 9. Bramy
+  gates.forEach((gate, gi) => {
+    const k = (key: string) => `gate:${gi}:${key}`;
+    const prefix = gates.length > 1 ? `Brama ${gi + 1}: ` : '';
+    if (gate.type === 'tilt' || gate.type === 'double') {
+      const t = pl.gate.tilt;
+      const base = cm(gate.height) <= cm(t.lowMaxHeight) ? t.priceLow : t.priceHigh;
+      const label = gate.type === 'tilt' ? 'uchylna' : 'dwuskrzydłowa';
+      push({ key: k('base'), label: `${prefix}Brama ${label} ${fmt(gate.width)} × ${fmt(gate.height)} m`, amount: base });
+      const w50 = Math.max(0, Math.ceil((cm(gate.width) - cm(t.baseWidth)) / 50));
+      if (w50 > 0) {
+        push({ key: k('width'), label: `${prefix}dodatkowa szerokość`, qty: w50, unit: '× 50 cm', unitPrice: t.per50cmWidth, amount: w50 * t.per50cmWidth });
       }
-      if (gate.doorInGate) push({ key: 'gateDoor', label: 'Drzwi w bramie segmentowej', amount: pl.gate.sectional.doorInGate });
+      const h10 = Math.max(0, Math.ceil((cm(gate.height) - cm(t.baseHeight)) / 10));
+      if (h10 > 0) {
+        push({ key: k('height'), label: `${prefix}dodatkowa wysokość`, qty: h10, unit: '× 10 cm', unitPrice: t.per10cmHeight, amount: h10 * t.per10cmHeight });
+      }
+      if (gate.type === 'double') push({ key: k('double'), label: `${prefix}dopłata: dwuskrzydłowa`, amount: pl.gate.doubleLeafExtra });
+      if (gate.automat) push({ key: k('automat'), label: `${prefix}automat do bramy`, amount: pl.gate.automat });
+      if (horizontalPanel && gate.horizontalPanel) {
+        push({ key: k('panel'), label: `${prefix}poziomy panel na bramie`, amount: pl.gate.horizontalPanelOnGateOrDoor });
+      }
+    } else if (gate.type === 'sectional') {
+      const cell = sectionalCell(pl, gate.width, gate.height);
+      if (!cell || cell.net === null) {
+        needsManualQuote = true;
+        warnings.push(`Brama segmentowa ${fmt(gate.width)} × ${fmt(gate.height)} m – rozmiar poza cennikiem, wycena indywidualna.`);
+        push({ key: k('base'), label: `${prefix}Brama segmentowa ${fmt(gate.width)} × ${fmt(gate.height)} m`, amount: 0, note: 'Wycena indywidualna' });
+      } else {
+        const rounded = cell.width !== Math.round(gate.width * 1000) || cell.height !== Math.round(gate.height * 1000);
+        push({
+          key: k('base'),
+          label: `${prefix}Brama segmentowa ${fmt(gate.width)} × ${fmt(gate.height)} m (z automatem)`,
+          amount: sectionalPrice(pl, cell.net),
+          note: rounded ? `Przyjęto rozmiar ${cell.width} × ${cell.height} mm z cennika.` : undefined,
+        });
+        if (gate.winchester) {
+          const m2 = gate.width * gate.height;
+          push({
+            key: k('winchester'),
+            label: `${prefix}kolor winchester`,
+            qty: m2,
+            unit: 'm²',
+            unitPrice: sectionalPrice(pl, pl.gate.sectional.winchesterPerM2),
+            amount: sectionalPrice(pl, m2 * pl.gate.sectional.winchesterPerM2),
+          });
+        }
+        if (gate.doorInGate) push({ key: k('door'), label: `${prefix}drzwi w bramie segmentowej`, amount: pl.gate.sectional.doorInGate });
+      }
     }
-  }
+  });
 
   // 10. Okna i drzwi
   for (const w of input.windows) {
@@ -382,7 +398,7 @@ export function emptyInput(pl: PriceList): QuoteInput {
     felt: false,
     tile: false,
     gutters: false,
-    gate: { type: 'tilt', width: 2.5, height: 2, automat: false, horizontalPanel: false, winchester: false, doorInGate: false },
+    gates: [defaultGate()],
     windows: [],
     doors: 0,
     extras: { lockKowal: false, anchoring: false, padlockHolder: false, ventGrilleQty: 0 },
@@ -390,6 +406,10 @@ export function emptyInput(pl: PriceList): QuoteInput {
     partitionWalls: [],
     openwork: { mode: 'none', width: 3, height: 2 },
   };
+}
+
+export function defaultGate(): GateInput {
+  return { type: 'tilt', width: 2.5, height: 2, automat: false, horizontalPanel: false, winchester: false, doorInGate: false };
 }
 
 export const GATE_LABELS: Record<GateType, string> = {

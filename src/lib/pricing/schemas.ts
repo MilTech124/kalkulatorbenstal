@@ -19,15 +19,19 @@ export const quoteInputSchema = z.object({
   felt: z.boolean(),
   tile: z.boolean(),
   gutters: z.boolean(),
-  gate: z.object({
-    type: gateTypeSchema,
-    width: nonNeg.max(20),
-    height: nonNeg.max(6),
-    automat: z.boolean(),
-    horizontalPanel: z.boolean(),
-    winchester: z.boolean(),
-    doorInGate: z.boolean(),
-  }),
+  gates: z
+    .array(
+      z.object({
+        type: gateTypeSchema,
+        width: nonNeg.max(20),
+        height: nonNeg.max(6),
+        automat: z.boolean(),
+        horizontalPanel: z.boolean(),
+        winchester: z.boolean(),
+        doorInGate: z.boolean(),
+      }),
+    )
+    .max(6),
   windows: z.array(z.object({ type: windowTypeSchema, qty: z.number().int().min(0).max(50) })).max(20),
   doors: z.number().int().min(0).max(20),
   extras: z.object({

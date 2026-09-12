@@ -17,11 +17,16 @@ function describeInput(input: QuoteInput): { label: string; value: string }[] {
     { label: 'Wymiary', value: `${input.width} × ${input.length} m, wys. ${input.height} m` },
     { label: 'Dach / blacha', value: `${roof}, ${sheet}${input.horizontalPanel ? ', poziomy panel' : ''}` },
     {
-      label: 'Brama',
+      label: input.gates.length > 1 ? 'Bramy' : 'Brama',
       value:
-        input.gate.type === 'none'
+        input.gates.length === 0
           ? 'brak'
-          : `${GATE_LABELS[input.gate.type]} ${input.gate.width} × ${input.gate.height} m${input.gate.automat && input.gate.type !== 'sectional' ? ', automat' : ''}${input.gate.winchester ? ', winchester' : ''}${input.gate.doorInGate ? ', drzwi w bramie' : ''}`,
+          : input.gates
+              .map(
+                (g) =>
+                  `${GATE_LABELS[g.type]} ${g.width} × ${g.height} m${g.automat && g.type !== 'sectional' ? ', automat' : ''}${g.winchester ? ', winchester' : ''}${g.doorInGate ? ', drzwi w bramie' : ''}`,
+              )
+              .join('; '),
     },
     { label: 'Opcje dachu', value: [input.gutters && 'rynny', input.felt && 'filc', input.tile && 'blachodachówka'].filter(Boolean).join(', ') || '—' },
   ];

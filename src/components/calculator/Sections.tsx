@@ -1,7 +1,7 @@
 'use client';
 
-import { availableLengths, availableWidths, GATE_LABELS, heightOptions, SHEET_ORDER } from '@/lib/pricing/engine';
-import type { GateType, PriceList, QuoteInput, RoofType, SheetType, WindowType } from '@/lib/pricing/types';
+import { availableLengths, availableWidths, defaultGate, GATE_LABELS, heightOptions, SHEET_ORDER } from '@/lib/pricing/engine';
+import type { GateInput, GateType, PriceList, QuoteInput, RoofType, SheetType, WindowType } from '@/lib/pricing/types';
 import { Card, Checkbox, Field, NumberInput, Segmented, Select } from '@/components/ui';
 import { formatNum, formatPln } from '@/lib/format';
 
@@ -109,87 +109,131 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
   );
 }
 
-const GATE_ORDER: GateType[] = ['tilt', 'double', 'sectional', 'none'];
+const GATE_ORDER: GateType[] = ['tilt', 'double', 'sectional'];
 
 export function GateSection({ input, pl, update }: SectionProps) {
-  const g = input.gate;
-  const setGate = (patch: Partial<QuoteInput['gate']>) => update({ gate: { ...g, ...patch } });
-  const isSectional = g.type === 'sectional';
-  const isManual = g.type === 'tilt' || g.type === 'double';
-  const sec = pl.gate.sectional;
+  const gates = input.gates;
+  const setGates = (next: GateInput[]) => update({ gates: next });
+  const patchGate = (i: number, patch: Partial<GateInput>) => setGates(gates.map((g, j) => (j === i ? { ...g, ...patch } : g)));
 
   return (
-    <Card title="Brama" subtitle="Brama segmentowa wyceniana z cennika producenta (automat w standardzie).">
+    <Card title="Bramy" subtitle="Można dodać kilka bram (np. garaż dwustanowiskowy). Brama segmentowa wyceniana z cennika producenta, automat w standardzie.">
       <div className="space-y-4">
-        <Segmented<GateType>
-          value={g.type}
-          onChange={(type) => {
-            if (type === 'sectional') {
-              setGate({ type, width: Math.max(g.width, 2.2), height: Math.max(g.height, 2.02), automat: true });
-            } else {
-              setGate({ type, automat: false, winchester: false, doorInGate: false });
-            }
-          }}
-          options={GATE_ORDER.map((t) => ({ value: t, label: GATE_LABELS[t] }))}
-        />
-
-        {g.type !== 'none' && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {isSectional ? (
-              <>
-                <Field label="Szerokość bramy [mm]" hint="Rozmiar spoza listy zaokrąglany w górę">
-                  <Select value={Math.round(g.width * 1000)} onChange={(e) => setGate({ width: Number(e.target.value) / 1000 })}>
-                    {sec.widths.map((w) => (
-                      <option key={w} value={w}>
-                        {w} mm
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-                <Field label="Wysokość bramy [mm]">
-                  <Select value={Math.round(g.height * 1000)} onChange={(e) => setGate({ height: Number(e.target.value) / 1000 })}>
-                    {sec.heights.map((h) => (
-                      <option key={h} value={h}>
-                        {h} mm
-                      </option>
-                    ))}
-                  </Select>
-                </Field>
-              </>
-            ) : (
-              <>
-                <Field label="Szerokość bramy [m]" hint={`Baza ${formatNum(pl.gate.tilt.baseWidth)} m, dopłata za każde 50 cm`}>
-                  <NumberInput value={g.width} min={1} max={10} step={0.1} onChange={(width) => setGate({ width })} />
-                </Field>
-                <Field label="Wysokość bramy [m]" hint={`Baza ${formatNum(pl.gate.tilt.baseHeight)} m, dopłata za każde 10 cm`}>
-                  <NumberInput value={g.height} min={1} max={4} step={0.1} onChange={(height) => setGate({ height })} />
-                </Field>
-              </>
-            )}
-          </div>
-        )}
-
-        {isManual && (
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Checkbox checked={g.automat} onChange={(automat) => setGate({ automat })} label="Automat do bramy" hint={formatPln(pl.gate.automat)} />
-            <Checkbox
-              checked={g.horizontalPanel}
-              onChange={(horizontalPanel) => setGate({ horizontalPanel })}
-              label="Poziomy panel na bramie"
-              hint={`${formatPln(pl.gate.horizontalPanelOnGateOrDoor)} (gdy wybrano poziomy panel)`}
-              disabled={!input.horizontalPanel}
-            />
-          </div>
-        )}
-
-        {isSectional && (
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Checkbox checked={g.winchester} onChange={(winchester) => setGate({ winchester })} label="Kolor winchester" hint="Dopłata za m² bramy" />
-            <Checkbox checked={g.doorInGate} onChange={(doorInGate) => setGate({ doorInGate })} label="Drzwi w bramie" hint={formatPln(sec.doorInGate)} />
-          </div>
+        {gates.length === 0 && <p className="text-sm text-slate-500">Bez bramy.</p>}
+        {gates.map((g, i) => (
+          <GateCard
+            key={i}
+            index={i}
+            total={gates.length}
+            gate={g}
+            pl={pl}
+            horizontalPanel={input.horizontalPanel}
+            onChange={(patch) => patchGate(i, patch)}
+            onRemove={() => setGates(gates.filter((_, j) => j !== i))}
+          />
+        ))}
+        {gates.length < 6 && (
+          <button type="button" className="text-sm font-medium text-brand-600 hover:underline" onClick={() => setGates([...gates, defaultGate()])}>
+            + dodaj bramę
+          </button>
         )}
       </div>
     </Card>
+  );
+}
+
+function GateCard({
+  index,
+  total,
+  gate: g,
+  pl,
+  horizontalPanel,
+  onChange,
+  onRemove,
+}: {
+  index: number;
+  total: number;
+  gate: GateInput;
+  pl: PriceList;
+  horizontalPanel: boolean;
+  onChange: (patch: Partial<GateInput>) => void;
+  onRemove: () => void;
+}) {
+  const isSectional = g.type === 'sectional';
+  const sec = pl.gate.sectional;
+
+  return (
+    <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-slate-800">{total > 1 ? `Brama ${index + 1}` : 'Brama'}</p>
+        <button type="button" className="text-xs text-red-600 hover:underline" onClick={onRemove}>
+          usuń bramę
+        </button>
+      </div>
+      <Segmented<GateType>
+        value={g.type}
+        onChange={(type) => {
+          if (type === 'sectional') {
+            onChange({ type, width: Math.max(g.width, 2.2), height: Math.max(g.height, 2.02), automat: true });
+          } else {
+            onChange({ type, automat: false, winchester: false, doorInGate: false });
+          }
+        }}
+        options={GATE_ORDER.map((t) => ({ value: t, label: GATE_LABELS[t] }))}
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {isSectional ? (
+          <>
+            <Field label="Szerokość bramy [mm]" hint="Rozmiar spoza listy zaokrąglany w górę">
+              <Select value={Math.round(g.width * 1000)} onChange={(e) => onChange({ width: Number(e.target.value) / 1000 })}>
+                {sec.widths.map((w) => (
+                  <option key={w} value={w}>
+                    {w} mm
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Wysokość bramy [mm]">
+              <Select value={Math.round(g.height * 1000)} onChange={(e) => onChange({ height: Number(e.target.value) / 1000 })}>
+                {sec.heights.map((h) => (
+                  <option key={h} value={h}>
+                    {h} mm
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </>
+        ) : (
+          <>
+            <Field label="Szerokość bramy [m]" hint={`Baza ${formatNum(pl.gate.tilt.baseWidth)} m, dopłata za każde 50 cm`}>
+              <NumberInput value={g.width} min={1} max={10} step={0.1} onChange={(width) => onChange({ width })} />
+            </Field>
+            <Field label="Wysokość bramy [m]" hint={`Baza ${formatNum(pl.gate.tilt.baseHeight)} m, dopłata za każde 10 cm`}>
+              <NumberInput value={g.height} min={1} max={4} step={0.1} onChange={(height) => onChange({ height })} />
+            </Field>
+          </>
+        )}
+      </div>
+
+      {isSectional ? (
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Checkbox checked={g.winchester} onChange={(winchester) => onChange({ winchester })} label="Kolor winchester" hint="Dopłata za m² bramy" />
+          <Checkbox checked={g.doorInGate} onChange={(doorInGate) => onChange({ doorInGate })} label="Drzwi w bramie" hint={formatPln(sec.doorInGate)} />
+        </div>
+      ) : (
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Checkbox checked={g.automat} onChange={(automat) => onChange({ automat })} label="Automat do bramy" hint={formatPln(pl.gate.automat)} />
+          <Checkbox
+            checked={g.horizontalPanel}
+            onChange={(horizontalPanel) => onChange({ horizontalPanel })}
+            label="Poziomy panel na bramie"
+            hint={`${formatPln(pl.gate.horizontalPanelOnGateOrDoor)} (gdy wybrano poziomy panel)`}
+            disabled={!horizontalPanel}
+          />
+        </div>
+      )}
+    </div>
   );
 }
 

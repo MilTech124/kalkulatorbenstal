@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PRICE_LIST as PL } from './defaults';
-import { availableLengths, calculateQuote, emptyInput, heightOptions, sectionalCell, sectionalPrice } from './engine';
+import { availableLengths, calculateQuote, defaultGate, emptyInput, heightOptions, sectionalCell, sectionalPrice } from './engine';
 import type { QuoteInput } from './types';
 
 function base(overrides: Partial<QuoteInput> = {}): QuoteInput {
   const input = emptyInput(PL);
-  return { ...input, gate: { ...input.gate, type: 'none' }, ...overrides };
+  return { ...input, gates: [], ...overrides };
 }
 
 const amount = (r: ReturnType<typeof calculateQuote>, key: string) => r.items.find((i) => i.key === key)?.amount;
@@ -62,23 +62,23 @@ describe('rynny / filc / blachodachówka', () => {
 
 describe('brama uchylna / dwuskrzydłowa', () => {
   it('3×2 = 900; 3×2,3 = 1000 + 3 × 50', () => {
-    const r1 = calculateQuote(base({ gate: { ...emptyInput(PL).gate, type: 'tilt', width: 3, height: 2 } }), PL);
-    expect(amount(r1, 'gate')).toBe(900);
-    const r2 = calculateQuote(base({ width: 4, length: 5, gate: { ...emptyInput(PL).gate, type: 'tilt', width: 3, height: 2.3 } }), PL);
-    expect(amount(r2, 'gate')).toBe(1000);
-    expect(amount(r2, 'gateHeight')).toBe(3 * 50);
+    const r1 = calculateQuote(base({ gates: [{ ...defaultGate(), type: 'tilt', width: 3, height: 2 }] }), PL);
+    expect(amount(r1, 'gate:0:base')).toBe(900);
+    const r2 = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), type: 'tilt', width: 3, height: 2.3 }] }), PL);
+    expect(amount(r2, 'gate:0:base')).toBe(1000);
+    expect(amount(r2, 'gate:0:height')).toBe(3 * 50);
   });
 
   it('dwuskrzydłowa 3,5×2 z automatem = 900 + 150 + 500 + 1300', () => {
-    const r = calculateQuote(base({ width: 4, length: 5, gate: { ...emptyInput(PL).gate, type: 'double', width: 3.5, height: 2, automat: true } }), PL);
-    expect(amount(r, 'gate')).toBe(900);
-    expect(amount(r, 'gateWidth')).toBe(150);
-    expect(amount(r, 'gateDouble')).toBe(500);
-    expect(amount(r, 'gateAutomat')).toBe(1300);
+    const r = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), type: 'double', width: 3.5, height: 2, automat: true }] }), PL);
+    expect(amount(r, 'gate:0:base')).toBe(900);
+    expect(amount(r, 'gate:0:width')).toBe(150);
+    expect(amount(r, 'gate:0:double')).toBe(500);
+    expect(amount(r, 'gate:0:automat')).toBe(1300);
   });
 
   it('automat przy spadzie do tyłu podnosi garaż o 20 cm nad bramę', () => {
-    const r = calculateQuote(base({ width: 4, length: 5, gate: { ...emptyInput(PL).gate, type: 'tilt', width: 3, height: 2.2, automat: true } }), PL);
+    const r = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), type: 'tilt', width: 3, height: 2.2, automat: true }] }), PL);
     // wymagane 2,40 -> 3 kroki od 2,13 -> 2,43
     expect(r.effectiveHeight).toBe(2.43);
     expect(amount(r, 'height')).toBe(3 * 170);
@@ -93,22 +93,47 @@ describe('brama segmentowa', () => {
   });
 
   it('rozmiar poza tabelą = wycena indywidualna', () => {
-    const r = calculateQuote(base({ width: 7, length: 7, gate: { ...emptyInput(PL).gate, type: 'sectional', width: 5.5, height: 3 } }), PL);
+    const r = calculateQuote(base({ width: 7, length: 7, gates: [{ ...defaultGate(), type: 'sectional', width: 5.5, height: 3 }] }), PL);
     expect(r.needsManualQuote).toBe(true);
-    expect(amount(r, 'gate')).toBe(0);
+    expect(amount(r, 'gate:0:base')).toBe(0);
   });
 
   it('segmentówka 2,5 m przy spadzie do tyłu wymusza wysokość 3,03 (2,5 + 0,5 -> 9 kroków)', () => {
-    const r = calculateQuote(base({ width: 4, length: 5, gate: { ...emptyInput(PL).gate, type: 'sectional', width: 3, height: 2.5 } }), PL);
+    const r = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), type: 'sectional', width: 3, height: 2.5 }] }), PL);
     expect(r.effectiveHeight).toBe(3.03);
     expect(amount(r, 'height')).toBe(9 * 170);
-    expect(amount(r, 'gate')).toBe(Math.round(3500 * 1.23 * 1.4));
+    expect(amount(r, 'gate:0:base')).toBe(Math.round(3500 * 1.23 * 1.4));
   });
 
   it('segmentówka > 4 m przy spadzie do tyłu: +80 cm; przy dwuspadzie +40 cm', () => {
-    const g = { ...emptyInput(PL).gate, type: 'sectional' as const, width: 4.5, height: 2.02 };
-    expect(calculateQuote(base({ width: 6, length: 6, gate: g }), PL).effectiveHeight).toBe(2.83);
-    expect(calculateQuote(base({ width: 6, length: 6, gate: g, roofType: 'gable' }), PL).effectiveHeight).toBe(2.43);
+    const g = { ...defaultGate(), type: 'sectional' as const, width: 4.5, height: 2.02 };
+    expect(calculateQuote(base({ width: 6, length: 6, gates: [g] }), PL).effectiveHeight).toBe(2.83);
+    expect(calculateQuote(base({ width: 6, length: 6, gates: [g], roofType: 'gable' }), PL).effectiveHeight).toBe(2.43);
+  });
+});
+
+describe('kilka bram', () => {
+  it('dwie bramy: każda wyceniona osobno, wysokość wg najwyższej wymaganej', () => {
+    const r = calculateQuote(
+      base({
+        width: 7,
+        length: 6,
+        gates: [
+          { ...defaultGate(), type: 'tilt', width: 2.5, height: 2 },
+          { ...defaultGate(), type: 'sectional', width: 3, height: 2.5 },
+        ],
+      }),
+      PL,
+    );
+    expect(amount(r, 'gate:0:base')).toBe(900);
+    expect(amount(r, 'gate:1:base')).toBe(Math.round(3500 * 1.23 * 1.4));
+    expect(r.effectiveHeight).toBe(3.03);
+    expect(r.items.find((i) => i.key === 'gate:1:base')?.label).toMatch(/^Brama 2: /);
+  });
+
+  it('łączna szerokość bram >= szerokość garażu daje ostrzeżenie', () => {
+    const r = calculateQuote(base({ width: 5, length: 5, gates: [{ ...defaultGate(), width: 2.5 }, { ...defaultGate(), width: 2.5 }] }), PL);
+    expect(r.warnings.some((w) => w.includes('Łączna szerokość'))).toBe(true);
   });
 });
 
