@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { QuoteBreakdown } from '@/components/calculator/Summary';
 import { formatPln } from '@/lib/format';
 import { connectDb } from '@/lib/db';
-import { GATE_LABELS } from '@/lib/pricing/engine';
+import { GATE_LABELS, normalizeInput } from '@/lib/pricing/engine';
 import type { QuoteInput, QuoteResult } from '@/lib/pricing/types';
 import { QuoteModel } from '@/models/Quote';
 
@@ -41,7 +41,7 @@ export default async function QuoteDetailsPage({ params }: { params: Promise<{ i
   const doc = await QuoteModel.findById(id).lean();
   if (!doc) notFound();
 
-  const input = doc.input as QuoteInput;
+  const input = normalizeInput(doc.input as QuoteInput);
   const result = doc.result as QuoteResult;
   const c = doc.customer;
 

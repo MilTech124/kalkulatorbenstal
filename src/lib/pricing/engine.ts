@@ -408,6 +408,13 @@ export function emptyInput(pl: PriceList): QuoteInput {
   };
 }
 
+/** Ujednolica wejscie zapisane w starszym formacie (pojedyncze pole `gate`). */
+export function normalizeInput(raw: QuoteInput & { gate?: GateInput }): QuoteInput {
+  if (Array.isArray(raw.gates)) return raw;
+  const gates = raw.gate && raw.gate.type !== 'none' ? [raw.gate] : [];
+  return { ...raw, gates };
+}
+
 export function defaultGate(): GateInput {
   return { type: 'tilt', width: 2.5, height: 2, automat: false, horizontalPanel: false, winchester: false, doorInGate: false };
 }

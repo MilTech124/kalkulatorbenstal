@@ -60,9 +60,9 @@ export function QuotesTable({ rows }: { rows: QuoteRow[] }) {
               </tr>
             )}
             {filtered.map((r) => (
-              <tr key={r.id} className="hover:bg-slate-50">
+              <tr key={r.id} className="cursor-pointer hover:bg-brand-50/60" onClick={() => router.push(`/panel/wyceny/${r.id}`)}>
                 <td className="px-4 py-2 font-medium">
-                  <Link href={`/panel/wyceny/${r.id}`} className="text-brand-600 hover:underline">
+                  <Link href={`/panel/wyceny/${r.id}`} className="text-brand-600 hover:underline" onClick={(e) => e.stopPropagation()}>
                     #{r.number}
                   </Link>
                 </td>
@@ -75,7 +75,17 @@ export function QuotesTable({ rows }: { rows: QuoteRow[] }) {
                 <td className="whitespace-nowrap px-4 py-2 text-slate-600">{r.dims}</td>
                 <td className="whitespace-nowrap px-4 py-2 text-right font-semibold tabular-nums">{formatPln(r.total)}</td>
                 <td className="px-4 py-2 text-right">
-                  <button type="button" onClick={() => remove(r)} className="text-xs text-red-600 hover:underline">
+                  <Link href={`/panel/wyceny/${r.id}`} className="mr-3 text-xs text-brand-600 hover:underline" onClick={(e) => e.stopPropagation()}>
+                    szczegóły
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      remove(r);
+                    }}
+                    className="text-xs text-red-600 hover:underline"
+                  >
                     usuń
                   </button>
                 </td>
