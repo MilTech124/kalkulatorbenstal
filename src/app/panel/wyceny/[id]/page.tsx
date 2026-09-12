@@ -5,6 +5,7 @@ import { QuoteBreakdown } from '@/components/calculator/Summary';
 import { formatAddress } from '@/lib/customer';
 import { formatPln } from '@/lib/format';
 import { SendToTrackerButton, StatusSelect } from '@/components/panel/QuoteStatusControls';
+import { SendOfferButton } from '@/components/panel/SendOfferButton';
 import { connectDb } from '@/lib/db';
 import { GATE_LABELS, normalizeInput } from '@/lib/pricing/engine';
 import type { QuoteInput, QuoteResult } from '@/lib/pricing/types';
@@ -57,6 +58,7 @@ export default async function QuoteDetailsPage({ params }: { params: Promise<{ i
           <h1 className="text-xl font-bold text-slate-900">Wycena #{doc.number}</h1>
           <p className="text-sm text-slate-500">
             {doc.createdAt.toLocaleString('pl-PL', { dateStyle: 'long', timeStyle: 'short' })} · cennik v{doc.priceListVersion}
+            {doc.emailSentAt && <> · oferta e-mail {doc.emailSentAt.toLocaleString('pl-PL')} ({doc.emailTo})</>}
             {doc.tracker?.orderId && (
               <>
                 {' '}· w trackerze od {doc.tracker.sentAt?.toLocaleString('pl-PL')}
@@ -69,10 +71,22 @@ export default async function QuoteDetailsPage({ params }: { params: Promise<{ i
           <div className="flex items-center gap-2 text-sm text-slate-600">
             Status: <StatusSelect quoteId={id} status={doc.status ?? 'nowe'} />
           </div>
+          <SendOfferButton
+            quoteId={id}
+            quoteNumber={doc.number}
+            email={c.email}
+            total={doc.total}
+            offeredTotal={doc.offeredTotal}
+            note={doc.offerNote}
+            emailSentAt={doc.emailSentAt ? doc.emailSentAt.toISOString() : null}
+          />
           <SendToTrackerButton quoteId={id} quoteNumber={doc.number} sentAt={doc.tracker?.sentAt ? doc.tracker.sentAt.toISOString() : null} variant="button" />
           <div className="text-right">
             <p className="text-xs uppercase tracking-wide text-slate-500">Razem brutto</p>
             <p className="text-2xl font-bold tabular-nums text-brand-700">{formatPln(doc.total)}</p>
+            {doc.offeredTotal != null && doc.offeredTotal !== doc.total && (
+              <p className="text-xs text-amber-700">w ofercie: {formatPln(doc.offeredTotal)}</p>
+            )}
           </div>
         </div>
       </div>

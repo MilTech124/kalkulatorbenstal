@@ -37,6 +37,10 @@ Inne skrypty: `npm test` (testy silnika wyceny), `npm run lint`, `npm run build`
 | `ADMIN_EMAIL`    | e-mail do logowania w `/panel`                                       |
 | `ADMIN_PASSWORD` | hasło do logowania w `/panel`                                        |
 | `AUTH_SECRET`    | losowy sekret (min. 32 znaki) do podpisywania sesji, np. `openssl rand -hex 32` |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | konto SMTP do wysyłki ofert (zenbox: `s51.zenbox.pl`, port 465) |
+| `MAIL_FROM` | nadawca widoczny dla klienta, np. `"BEN-STAL Garaże <dev@benspa.pl>"` |
+| `MAIL_BCC` | (opcjonalnie) kopia każdej oferty na skrzynkę firmową |
+| `APP_URL` | (opcjonalnie) publiczny adres aplikacji do logo w mailu; domyślnie z nagłówków requestu |
 | `ORDER_TRACKER_URL` | adres Order-trackera (domyślnie `https://order-tracker-rouge.vercel.app`) |
 | `ORDER_TRACKER_API_KEY` | klucz API z Order-trackera (Ustawienia → Klucz API); bez niego przycisk „Wyślij do Tracker” pokazuje komunikat o braku konfiguracji |
 
@@ -57,6 +61,10 @@ Wszystkie kwoty, mnożniki, wzory (współczynniki `s`/`d`) i reguły wysokości
 Domyślne dane: [`src/lib/pricing/data/base-table.ts`](src/lib/pricing/data/base-table.ts) (generowany skryptem `py scripts/import-xlsx.py plik.xlsx` z Excela) i [`src/lib/pricing/data/sectional.ts`](src/lib/pricing/data/sectional.ts) (przepisany cennik bram segmentowych).
 
 > Uwaga: dopłaty bramy uchylnej za +50 cm szerokości (150 zł) i +10 cm wysokości (50 zł) to wartości tymczasowe – do uzupełnienia w panelu.
+
+## Oferta e-mailem
+
+W oknie „Zapisz wycenę” jest opcja **„Wyślij wycenę na mój e-mail”** – klient dostaje ładny mail ofertowy BEN-STAL (logo, podsumowanie konfiguracji bez rozbicia cen, cena, kontakt, zastrzeżenie). Zalogowany admin widzi w tym samym oknie **tryb firmowy**: może zmienić cenę w ofercie i dopisać uwagi. W szczegółach wyceny w panelu jest przycisk **„Wyślij ofertę e-mailem”** (ponowna wysyłka, edycja ceny i adresu). Cena z oferty i data wysyłki są zapisywane przy wycenie. Podgląd szablonu: `npx tsx scripts/preview-offer-email.ts > oferta.html`. Szablon: [`src/lib/offerEmail.ts`](src/lib/offerEmail.ts) (dane firmy w stałej `COMPANY`).
 
 ## Statusy wycen i Order-tracker
 

@@ -55,9 +55,16 @@ export const customerSchema = z.object({
   city: z.string().trim().min(2, 'Podaj miejscowość').max(100),
 });
 
+export const offerEmailOptionsSchema = z.object({
+  offeredTotal: z.number().finite().min(0).max(10_000_000).optional(),
+  note: z.string().trim().max(2000).optional(),
+});
+
 export const saveQuoteSchema = z.object({
   input: quoteInputSchema,
   customer: customerSchema,
+  sendEmail: z.boolean().optional(),
+  offer: offerEmailOptionsSchema.optional(),
 });
 
 const linearSchema = z.object({ s: num, d: num });

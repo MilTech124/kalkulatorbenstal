@@ -16,6 +16,11 @@ const quoteSchema = new Schema(
       address: { type: String, default: '' },
     },
     status: { type: String, enum: QUOTE_STATUSES, default: 'nowe', index: true },
+    /** Cena podana w ofercie e-mail (moze byc inna niz wyliczona - edycja przez firme). */
+    offeredTotal: { type: Number },
+    offerNote: { type: String },
+    emailSentAt: { type: Date },
+    emailTo: { type: String },
     tracker: {
       orderId: { type: String },
       sentAt: { type: Date },

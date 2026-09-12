@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Calculator } from '@/components/calculator/Calculator';
+import { getSession } from '@/lib/auth';
 import { DEFAULT_PRICE_LIST } from '@/lib/pricing/defaults';
 import { getActivePriceList } from '@/lib/pricing/repository';
 
@@ -14,6 +15,8 @@ export default async function HomePage() {
       return DEFAULT_PRICE_LIST;
     });
 
+  const isAdmin = Boolean(await getSession());
+
   return (
     <>
       <header className="border-b border-slate-200 bg-white">
@@ -23,12 +26,12 @@ export default async function HomePage() {
             <h1 className="text-xl font-bold text-slate-900">Kalkulator garaży blaszanych</h1>
           </div>
           <Link href="/panel" className="text-sm text-slate-500 hover:text-slate-800">
-            Panel
+            {isAdmin ? 'Panel (zalogowano)' : 'Panel'}
           </Link>
         </div>
       </header>
       <main className="flex-1">
-        <Calculator priceList={priceList} />
+        <Calculator priceList={priceList} isAdmin={isAdmin} />
       </main>
       <footer className="px-4 py-6 text-center text-xs text-slate-400">Wycena ma charakter orientacyjny i nie stanowi oferty handlowej.</footer>
     </>

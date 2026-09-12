@@ -11,16 +11,22 @@ interface Props {
   onClose: () => void;
   input: QuoteInput;
   total: number;
+  /** Zalogowany admin: moze edytowac cene w ofercie e-mail. */
+  isAdmin?: boolean;
 }
 
 const EMPTY: CustomerInfo = { firstName: '', lastName: '', phone: '', email: '', street: '', postalCode: '', city: '' };
 
-export function SaveQuoteDialog({ open, onClose, input, total }: Props) {
+export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }: Props) {
   const [customer, setCustomer] = useState<CustomerInfo>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof CustomerInfo, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saving' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
-  const [saved, setSaved] = useState<{ number: number; total: number } | null>(null);
+  const [saved, setSaved] = useState<{ number: number; total: number; emailSent: boolean; emailError?: string } | null>(null);
+  const [sendEmail, setSendEmail] = useState(false);
+  const [offeredTotal, setOfferedTotal] = useState<number | null>(null);
+  const [note, setNote] = useState('');
+  const offerPrice = offeredTotal ?? total;
 
   useEffect(() => {
     if (!open) return;
@@ -42,17 +48,26 @@ export function SaveQuoteDialog({ open, onClose, input, total }: Props) {
       setErrors(errs);
       return;
     }
+    if (sendEmail && !parsed.data.email) {
+      setErrors({ email: 'Podaj e-mail, aby wysłać wycenę' });
+      return;
+    }
     setErrors({});
     setStatus('saving');
     try {
       const res = await fetch('/api/quotes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ input, customer: parsed.data }),
+        body: JSON.stringify({
+          input,
+          customer: parsed.data,
+          sendEmail,
+          offer: isAdmin && sendEmail ? { offeredTotal: offerPrice, note: note || undefined } : undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Błąd zapisu');
-      setSaved({ number: data.number, total: data.total });
+      setSaved({ number: data.number, total: data.offeredTotal ?? data.total, emailSent: Boolean(data.emailSent), emailError: data.emailError });
       setStatus('done');
     } catch (err) {
       setStatus('error');
@@ -70,6 +85,8 @@ export function SaveQuoteDialog({ open, onClose, input, total }: Props) {
             <p className="mt-1 text-sm text-slate-600">
               Kwota: <strong>{formatPln(saved.total)}</strong>. Skontaktujemy się z Tobą w celu potwierdzenia szczegółów.
             </p>
+            {saved.emailSent && <p className="mt-2 text-sm text-green-700">Wycena została wysłana na adres {customer.email}.</p>}
+            {saved.emailError && <p className="mt-2 text-sm text-amber-700">{saved.emailError}</p>}
             <Button className="mt-5" onClick={onClose}>
               Zamknij
             </Button>
@@ -95,7 +112,7 @@ export function SaveQuoteDialog({ open, onClose, input, total }: Props) {
                 <TextInput value={customer.phone} onChange={(e) => set('phone', e.target.value)} type="tel" autoComplete="tel" />
                 {errors.phone && <span className="text-xs text-red-600">{errors.phone}</span>}
               </Field>
-              <Field label="E-mail (opcjonalnie)">
+              <Field label={sendEmail ? "E-mail" : "E-mail (opcjonalnie)"}>
                 <TextInput value={customer.email ?? ''} onChange={(e) => set('email', e.target.value)} type="email" autoComplete="email" />
                 {errors.email && <span className="text-xs text-red-600">{errors.email}</span>}
               </Field>
@@ -114,13 +131,39 @@ export function SaveQuoteDialog({ open, onClose, input, total }: Props) {
                 {errors.city && <span className="text-xs text-red-600">{errors.city}</span>}
               </Field>
             </div>
+            <label className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 ${sendEmail ? 'border-brand-500 bg-brand-50' : 'border-slate-200'}`}>
+              <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} className="mt-0.5 h-4 w-4 accent-brand-600" />
+              <span>
+                <span className="block text-sm font-medium text-slate-800">Wyślij wycenę na mój e-mail</span>
+                <span className="block text-xs text-slate-500">Otrzymasz ofertę z podsumowaniem konfiguracji i ceną.</span>
+              </span>
+            </label>
+            {isAdmin && sendEmail && (
+              <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">Tryb firmowy – oferta e-mail</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="Cena w ofercie [zł]" hint={`Wyliczona: ${formatPln(total)}`}>
+                    <TextInput type="number" min={0} step={1} value={offerPrice} onChange={(e) => setOfferedTotal(e.target.valueAsNumber || 0)} />
+                  </Field>
+                  <Field label="Dopisek w ofercie (opcjonalnie)">
+                    <textarea
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      rows={2}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                      placeholder="np. termin realizacji, warunki płatności"
+                    />
+                  </Field>
+                </div>
+              </div>
+            )}
             {status === 'error' && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{message}</p>}
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="secondary" onClick={onClose}>
                 Anuluj
               </Button>
               <Button type="submit" disabled={status === 'saving'}>
-                {status === 'saving' ? 'Zapisywanie…' : 'Zapisz wycenę'}
+                {status === 'saving' ? (sendEmail ? 'Zapisywanie i wysyłka…' : 'Zapisywanie…') : sendEmail ? 'Zapisz i wyślij wycenę' : 'Zapisz wycenę'}
               </Button>
             </div>
           </form>
