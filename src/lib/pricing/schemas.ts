@@ -50,7 +50,9 @@ export const customerSchema = z.object({
   lastName: z.string().trim().min(1, 'Podaj nazwisko').max(100),
   phone: z.string().trim().min(5, 'Podaj numer telefonu').max(30),
   email: z.union([z.literal(''), z.string().trim().email('Nieprawidłowy e-mail').max(200)]).optional(),
-  address: z.string().trim().min(3, 'Podaj adres').max(300),
+  street: z.string().trim().min(2, 'Podaj ulicę i numer').max(200),
+  postalCode: z.string().trim().min(2, 'Podaj kod pocztowy').max(20),
+  city: z.string().trim().min(2, 'Podaj miejscowość').max(100),
 });
 
 export const saveQuoteSchema = z.object({

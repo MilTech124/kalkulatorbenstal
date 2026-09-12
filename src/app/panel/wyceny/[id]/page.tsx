@@ -2,7 +2,9 @@ import mongoose from 'mongoose';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { QuoteBreakdown } from '@/components/calculator/Summary';
+import { formatAddress } from '@/lib/customer';
 import { formatPln } from '@/lib/format';
+import { SendToTrackerButton, StatusSelect } from '@/components/panel/QuoteStatusControls';
 import { connectDb } from '@/lib/db';
 import { GATE_LABELS, normalizeInput } from '@/lib/pricing/engine';
 import type { QuoteInput, QuoteResult } from '@/lib/pricing/types';
@@ -55,11 +57,23 @@ export default async function QuoteDetailsPage({ params }: { params: Promise<{ i
           <h1 className="text-xl font-bold text-slate-900">Wycena #{doc.number}</h1>
           <p className="text-sm text-slate-500">
             {doc.createdAt.toLocaleString('pl-PL', { dateStyle: 'long', timeStyle: 'short' })} · cennik v{doc.priceListVersion}
+            {doc.tracker?.orderId && (
+              <>
+                {' '}· w trackerze od {doc.tracker.sentAt?.toLocaleString('pl-PL')}
+                {doc.tracker.addressGeocoded === false && <span className="text-amber-700"> (adres bez pina na mapie)</span>}
+              </>
+            )}
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Razem brutto</p>
-          <p className="text-2xl font-bold tabular-nums text-brand-700">{formatPln(doc.total)}</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-slate-600">
+            Status: <StatusSelect quoteId={id} status={doc.status ?? 'nowe'} />
+          </div>
+          <SendToTrackerButton quoteId={id} quoteNumber={doc.number} sentAt={doc.tracker?.sentAt ? doc.tracker.sentAt.toISOString() : null} variant="button" />
+          <div className="text-right">
+            <p className="text-xs uppercase tracking-wide text-slate-500">Razem brutto</p>
+            <p className="text-2xl font-bold tabular-nums text-brand-700">{formatPln(doc.total)}</p>
+          </div>
         </div>
       </div>
 
@@ -71,7 +85,7 @@ export default async function QuoteDetailsPage({ params }: { params: Promise<{ i
               <Row label="Imię i nazwisko" value={`${c.firstName} ${c.lastName}`} />
               <Row label="Telefon" value={c.phone} />
               <Row label="E-mail" value={c.email ?? '—'} />
-              <Row label="Adres" value={c.address} />
+              <Row label="Adres" value={formatAddress(c)} />
             </dl>
           </section>
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

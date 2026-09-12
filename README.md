@@ -37,6 +37,8 @@ Inne skrypty: `npm test` (testy silnika wyceny), `npm run lint`, `npm run build`
 | `ADMIN_EMAIL`    | e-mail do logowania w `/panel`                                       |
 | `ADMIN_PASSWORD` | hasło do logowania w `/panel`                                        |
 | `AUTH_SECRET`    | losowy sekret (min. 32 znaki) do podpisywania sesji, np. `openssl rand -hex 32` |
+| `ORDER_TRACKER_URL` | adres Order-trackera (domyślnie `https://order-tracker-rouge.vercel.app`) |
+| `ORDER_TRACKER_API_KEY` | klucz API z Order-trackera (Ustawienia → Klucz API); bez niego przycisk „Wyślij do Tracker” pokazuje komunikat o braku konfiguracji |
 
 ## Jak liczona jest cena
 
@@ -55,6 +57,12 @@ Wszystkie kwoty, mnożniki, wzory (współczynniki `s`/`d`) i reguły wysokości
 Domyślne dane: [`src/lib/pricing/data/base-table.ts`](src/lib/pricing/data/base-table.ts) (generowany skryptem `py scripts/import-xlsx.py plik.xlsx` z Excela) i [`src/lib/pricing/data/sectional.ts`](src/lib/pricing/data/sectional.ts) (przepisany cennik bram segmentowych).
 
 > Uwaga: dopłaty bramy uchylnej za +50 cm szerokości (150 zł) i +10 cm wysokości (50 zł) to wartości tymczasowe – do uzupełnienia w panelu.
+
+## Statusy wycen i Order-tracker
+
+Każda wycena ma status: **Nowe → Wyceniono → Zamówiono → W realizacji → W trasie → Dostarczone / Anulowane** (zmiana w liście lub w szczegółach, filtr w liście). Nowe wyceny z kalkulatora dostają status „Nowe”.
+
+W panelu (lista i szczegóły) jest ikona/przycisk **„Wyślij do Tracker”** – otwiera okno z podglądem: status w trackerze (mapowany z statusu wyceny), opcjonalna data dostawy i uwagi (domyślnie skrócona konfiguracja garażu). Wysyłka idzie serwer→serwer (`POST {ORDER_TRACKER_URL}/api/integration/orders`, nagłówek `X-Api-Key`), z adresem rozbitym na ulicę / kod / miasto (geokodowanie pina na mapie). Po wysłaniu wycena dostaje znacznik trackera (id zamówienia, data), a status „Nowe/Wyceniono” zmienia się na „Zamówiono”. Ponowna wysyłka jest możliwa (z ostrzeżeniem – tworzy drugie zamówienie).
 
 ## Struktura
 

@@ -13,7 +13,7 @@ interface Props {
   total: number;
 }
 
-const EMPTY: CustomerInfo = { firstName: '', lastName: '', phone: '', email: '', address: '' };
+const EMPTY: CustomerInfo = { firstName: '', lastName: '', phone: '', email: '', street: '', postalCode: '', city: '' };
 
 export function SaveQuoteDialog({ open, onClose, input, total }: Props) {
   const [customer, setCustomer] = useState<CustomerInfo>(EMPTY);
@@ -100,10 +100,20 @@ export function SaveQuoteDialog({ open, onClose, input, total }: Props) {
                 {errors.email && <span className="text-xs text-red-600">{errors.email}</span>}
               </Field>
             </div>
-            <Field label="Adres montażu">
-              <TextInput value={customer.address} onChange={(e) => set('address', e.target.value)} autoComplete="street-address" placeholder="ulica, kod pocztowy, miejscowość" />
-              {errors.address && <span className="text-xs text-red-600">{errors.address}</span>}
-            </Field>
+            <div className="grid gap-3 sm:grid-cols-[1fr_120px_1fr]">
+              <Field label="Ulica i numer (adres montażu)">
+                <TextInput value={customer.street} onChange={(e) => set('street', e.target.value)} autoComplete="street-address" />
+                {errors.street && <span className="text-xs text-red-600">{errors.street}</span>}
+              </Field>
+              <Field label="Kod pocztowy">
+                <TextInput value={customer.postalCode} onChange={(e) => set('postalCode', e.target.value)} autoComplete="postal-code" placeholder="00-000" />
+                {errors.postalCode && <span className="text-xs text-red-600">{errors.postalCode}</span>}
+              </Field>
+              <Field label="Miejscowość">
+                <TextInput value={customer.city} onChange={(e) => set('city', e.target.value)} autoComplete="address-level2" />
+                {errors.city && <span className="text-xs text-red-600">{errors.city}</span>}
+              </Field>
+            </div>
             {status === 'error' && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{message}</p>}
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="secondary" onClick={onClose}>

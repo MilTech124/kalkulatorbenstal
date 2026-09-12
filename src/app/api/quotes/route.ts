@@ -25,7 +25,12 @@ export async function POST(request: Request) {
   const number = await nextSequence('quote');
   const doc = await QuoteModel.create({
     number,
-    customer: { ...customer, email: customer.email || undefined },
+    customer: {
+      ...customer,
+      email: customer.email || undefined,
+      address: `${customer.street}, ${customer.postalCode} ${customer.city}`,
+    },
+    status: 'nowe',
     input,
     result,
     total: result.total,

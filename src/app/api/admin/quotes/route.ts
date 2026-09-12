@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   await connectDb();
-  const quotes = await QuoteModel.find({}, { number: 1, customer: 1, total: 1, createdAt: 1, 'input.width': 1, 'input.length': 1 })
+  const quotes = await QuoteModel.find({}, { number: 1, customer: 1, total: 1, createdAt: 1, status: 1, tracker: 1, 'input.width': 1, 'input.length': 1 })
     .sort({ createdAt: -1 })
     .limit(500)
     .lean();

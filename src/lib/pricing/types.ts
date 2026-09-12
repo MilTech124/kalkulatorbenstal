@@ -166,5 +166,9 @@ export interface CustomerInfo {
   lastName: string;
   phone: string;
   email?: string;
-  address: string;
+  street: string;
+  postalCode: string;
+  city: string;
+  /** Adres jednym ciagiem (stare wyceny); nowe zapisy skladaja go z ulicy/kodu/miasta. */
+  address?: string;
 }
