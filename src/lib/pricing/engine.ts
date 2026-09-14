@@ -235,9 +235,10 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
 
   // 6-8. Elementy dachu i blachy - tylko garaze blaszane
   if (productType === 'steel') {
-    // 6. Okucia
+    // 6. Okucia (opcjonalne; brak pola = tak)
+    const flashings = input.flashings ?? true;
     const vertMb = pl.verticalFlashingPerHeight * effectiveHeight;
-    push({
+    if (flashings) push({
       key: 'flashingVertical',
       label: 'Okucia pionowe',
       qty: vertMb,
@@ -246,7 +247,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
       amount: vertMb * pl.unit.flashingPerMb,
     });
     const roofMb = linear(roof.roofFlashing, S, D);
-    push({
+    if (flashings) push({
       key: 'flashingRoof',
       label: 'Okucia dachu',
       qty: roofMb,
@@ -493,6 +494,7 @@ export function emptyInput(pl: PriceList): QuoteInput {
     sheet: 'ocynk',
     horizontalPanel: false,
     felt: false,
+    flashings: true,
     tile: false,
     gutters: false,
     gates: [defaultGate()],

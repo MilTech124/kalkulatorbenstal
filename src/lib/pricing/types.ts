@@ -154,6 +154,8 @@ export interface QuoteInput {
   sheet: SheetType;
   horizontalPanel: boolean;
   felt: boolean;
+  /** Okucia (pionowe + dachu); brak pola = tak (stare wyceny). */
+  flashings?: boolean;
   tile: boolean;
   gutters: boolean;
   /** Lista bram (moze byc pusta = bez bramy). */

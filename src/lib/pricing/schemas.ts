@@ -22,6 +22,7 @@ export const quoteInputSchema = z.object({
   sheet: sheetSchema,
   horizontalPanel: z.boolean(),
   felt: z.boolean(),
+  flashings: z.boolean().optional(),
   tile: z.boolean(),
   gutters: z.boolean(),
   gates: z

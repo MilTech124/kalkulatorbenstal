@@ -32,6 +32,15 @@ describe('tabela bazowa', () => {
   });
 });
 
+describe('okucia opcjonalne', () => {
+  it('bez okuć brak pozycji okuć', () => {
+    const r = calculateQuote(base({ width: 3, length: 5, flashings: false }), PL);
+    expect(amount(r, 'flashingVertical')).toBeUndefined();
+    expect(amount(r, 'flashingRoof')).toBeUndefined();
+    expect(r.total).toBe(2980);
+  });
+});
+
 describe('kolor i wysokość', () => {
   it('RAL 3×5 wys. 2,33 = kolor 650 + 2 kroki × (130 + 33)', () => {
     const r = calculateQuote(base({ width: 3, length: 5, sheet: 'ral', height: 2.33 }), PL);

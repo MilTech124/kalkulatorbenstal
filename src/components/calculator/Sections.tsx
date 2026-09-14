@@ -158,6 +158,14 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
               hint="Dopłata wg wymiarów garażu"
             />
           )}
+          {!sandwich && (
+            <Checkbox
+              checked={input.flashings ?? true}
+              onChange={(flashings) => update({ flashings })}
+              label="Okucia (pionowe + dachu)"
+              hint={`${formatPln(pl.unit.flashingPerMb)}/mb, długość zależna od wysokości i spadu`}
+            />
+          )}
           <Checkbox
             checked={input.gutters}
             onChange={(gutters) => update({ gutters })}
