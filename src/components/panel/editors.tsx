@@ -127,15 +127,21 @@ export function AddonsEditor({ pl, setPl }: EditorProps) {
         <NumField label="Współczynnik pow. dachu" value={u.roofAreaFactor} step={0.01} onChange={(v) => setUnit('roofAreaFactor', v)} hint="1,0 = szer. × dł.; np. 1,05 uwzględnia spadek/okap" />
       </Group>
 
-      <Group title="Okna i drzwi">
+      <Group title="Okna i drzwi" description="Nazwa okna jest widoczna w kalkulatorze i w ofercie PDF.">
         {(Object.keys(pl.windows) as (keyof PriceList['windows'])[]).map((k) => (
-          <NumField key={k} label={`${pl.windows[k].label} [zł]`} value={pl.windows[k].price} onChange={(v) => setWindow(k, v)} />
+          <div key={k} className="grid grid-cols-[1fr_100px] gap-2 rounded-lg border border-slate-200 p-2">
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-slate-600">Nazwa</span>
+              <TextInput value={pl.windows[k].label} onChange={(e) => setPl((p) => ({ ...p, windows: { ...p.windows, [k]: { ...p.windows[k], label: e.target.value } } }))} />
+            </label>
+            <NumField label="zł/szt." value={pl.windows[k].price} onChange={(v) => setWindow(k, v)} />
+          </div>
         ))}
         <NumField label="Drzwi [zł/szt.]" value={pl.door} onChange={(v) => setPl((p) => ({ ...p, door: v }))} />
       </Group>
 
       <Group title="Dodatki">
-        <NumField label="Zamek kowalski [zł]" value={pl.extras.lockKowal} onChange={(v) => setExtra('lockKowal', v)} />
+        <NumField label="Zamek kowal [zł]" value={pl.extras.lockKowal} onChange={(v) => setExtra('lockKowal', v)} />
         <NumField label="Uchwyt na kłódkę [zł]" value={pl.extras.padlockHolder} onChange={(v) => setExtra('padlockHolder', v)} />
         <NumField label="Kratka wentylacyjna [zł/szt.]" value={pl.extras.ventGrille} onChange={(v) => setExtra('ventGrille', v)} />
         <div className="sm:col-span-2 lg:col-span-3">

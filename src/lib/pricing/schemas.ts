@@ -63,7 +63,6 @@ export const offerEmailOptionsSchema = z.object({
 export const saveQuoteSchema = z.object({
   input: quoteInputSchema,
   customer: customerSchema,
-  sendEmail: z.boolean().optional(),
   offer: offerEmailOptionsSchema.optional(),
 });
 

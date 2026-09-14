@@ -22,11 +22,16 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
   const [errors, setErrors] = useState<Partial<Record<keyof CustomerInfo, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saving' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
-  const [saved, setSaved] = useState<{ number: number; total: number; emailSent: boolean; emailError?: string } | null>(null);
-  const [sendEmail, setSendEmail] = useState(false);
+  const [saved, setSaved] = useState<{ number: number; total: number; pdfUrl: string } | null>(null);
+  const [markupPct, setMarkupPct] = useState(0);
   const [offeredTotal, setOfferedTotal] = useState<number | null>(null);
   const [note, setNote] = useState('');
-  const offerPrice = offeredTotal ?? total;
+  // Cena w ofercie: recznie wpisana (offeredTotal) albo wyliczona + narzut %.
+  const offerPrice = offeredTotal ?? Math.round(total * (1 + markupPct / 100));
+  const applyMarkup = (pct: number) => {
+    setMarkupPct(pct);
+    setOfferedTotal(null);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -48,10 +53,6 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
       setErrors(errs);
       return;
     }
-    if (sendEmail && !parsed.data.email) {
-      setErrors({ email: 'Podaj e-mail, aby wysłać wycenę' });
-      return;
-    }
     setErrors({});
     setStatus('saving');
     try {
@@ -61,13 +62,12 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
         body: JSON.stringify({
           input,
           customer: parsed.data,
-          sendEmail,
-          offer: isAdmin && sendEmail ? { offeredTotal: offerPrice, note: note || undefined } : undefined,
+          offer: offerPrice !== total || note ? { offeredTotal: offerPrice, note: note || undefined } : undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Błąd zapisu');
-      setSaved({ number: data.number, total: data.offeredTotal ?? data.total, emailSent: Boolean(data.emailSent), emailError: data.emailError });
+      setSaved({ number: data.number, total: data.offeredTotal ?? data.total, pdfUrl: data.pdfUrl });
       setStatus('done');
     } catch (err) {
       setStatus('error');
@@ -85,11 +85,19 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
             <p className="mt-1 text-sm text-slate-600">
               Kwota: <strong>{formatPln(saved.total)}</strong>. Skontaktujemy się z Tobą w celu potwierdzenia szczegółów.
             </p>
-            {saved.emailSent && <p className="mt-2 text-sm text-green-700">Wycena została wysłana na adres {customer.email}.</p>}
-            {saved.emailError && <p className="mt-2 text-sm text-amber-700">{saved.emailError}</p>}
-            <Button className="mt-5" onClick={onClose}>
-              Zamknij
-            </Button>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <a
+                href={saved.pdfUrl}
+                target="_blank"
+                rel="noopener"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-600"
+              >
+                Pobierz ofertę PDF
+              </a>
+              <Button variant="secondary" onClick={onClose}>
+                Zamknij
+              </Button>
+            </div>
           </div>
         ) : (
           <form onSubmit={submit} className="space-y-4" noValidate>
@@ -112,7 +120,7 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
                 <TextInput value={customer.phone} onChange={(e) => set('phone', e.target.value)} type="tel" autoComplete="tel" />
                 {errors.phone && <span className="text-xs text-red-600">{errors.phone}</span>}
               </Field>
-              <Field label={sendEmail ? "E-mail" : "E-mail (opcjonalnie)"}>
+              <Field label="E-mail (opcjonalnie)">
                 <TextInput value={customer.email ?? ''} onChange={(e) => set('email', e.target.value)} type="email" autoComplete="email" />
                 {errors.email && <span className="text-xs text-red-600">{errors.email}</span>}
               </Field>
@@ -131,39 +139,48 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
                 {errors.city && <span className="text-xs text-red-600">{errors.city}</span>}
               </Field>
             </div>
-            <label className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 ${sendEmail ? 'border-brand-500 bg-brand-50' : 'border-slate-200'}`}>
-              <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} className="mt-0.5 h-4 w-4 accent-brand-600" />
-              <span>
-                <span className="block text-sm font-medium text-slate-800">Wyślij wycenę na mój e-mail</span>
-                <span className="block text-xs text-slate-500">Otrzymasz ofertę z podsumowaniem konfiguracji i ceną.</span>
-              </span>
-            </label>
-            {isAdmin && sendEmail && (
-              <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">Tryb firmowy – oferta e-mail</p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Field label="Cena w ofercie [zł]" hint={`Wyliczona: ${formatPln(total)}`}>
-                    <TextInput type="number" min={0} step={1} value={offerPrice} onChange={(e) => setOfferedTotal(e.target.valueAsNumber || 0)} />
-                  </Field>
-                  <Field label="Dopisek w ofercie (opcjonalnie)">
-                    <textarea
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      rows={2}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
-                      placeholder="np. termin realizacji, warunki płatności"
-                    />
-                  </Field>
+            <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">Cena w ofercie</p>
+                <div className="flex flex-wrap gap-1">
+                  {[0, 5, 10, 15, 20].map((pct) => (
+                    <button
+                      key={pct}
+                      type="button"
+                      onClick={() => applyMarkup(pct)}
+                      className={`rounded-md border px-2 py-1 text-xs font-medium ${offeredTotal === null && markupPct === pct ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}
+                    >
+                      {pct === 0 ? 'bez narzutu' : `+${pct}%`}
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
+              <div className="grid gap-3 sm:grid-cols-[110px_1fr_1fr]">
+                <Field label="Narzut [%]">
+                  <TextInput type="number" min={isAdmin ? -100 : 0} max={500} step={1} value={markupPct} onChange={(e) => applyMarkup(e.target.valueAsNumber || 0)} />
+                </Field>
+                <Field label="Cena w ofercie [zł]" hint={`Wyliczona z cennika: ${formatPln(total)}`}>
+                  <TextInput type="number" min={isAdmin ? 0 : total} step={1} value={offerPrice} onChange={(e) => setOfferedTotal(e.target.valueAsNumber || 0)} />
+                </Field>
+                <Field label="Dopisek w ofercie (opcjonalnie)">
+                  <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    rows={2}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+                    placeholder="np. termin realizacji, warunki płatności"
+                  />
+                </Field>
+              </div>
+              {!isAdmin && offerPrice < total && <p className="text-xs text-red-600">Cena w ofercie nie może być niższa niż wyliczona ({formatPln(total)}).</p>}
+            </div>
             {status === 'error' && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{message}</p>}
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="secondary" onClick={onClose}>
                 Anuluj
               </Button>
               <Button type="submit" disabled={status === 'saving'}>
-                {status === 'saving' ? (sendEmail ? 'Zapisywanie i wysyłka…' : 'Zapisywanie…') : sendEmail ? 'Zapisz i wyślij wycenę' : 'Zapisz wycenę'}
+                {status === 'saving' ? 'Zapisywanie…' : 'Zapisz wycenę'}
               </Button>
             </div>
           </form>

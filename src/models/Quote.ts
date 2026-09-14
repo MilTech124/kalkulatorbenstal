@@ -19,8 +19,8 @@ const quoteSchema = new Schema(
     /** Cena podana w ofercie e-mail (moze byc inna niz wyliczona - edycja przez firme). */
     offeredTotal: { type: Number },
     offerNote: { type: String },
-    emailSentAt: { type: Date },
-    emailTo: { type: String },
+    /** Losowy token do publicznego pobrania oferty PDF. */
+    accessToken: { type: String, index: true },
     tracker: {
       orderId: { type: String },
       sentAt: { type: Date },

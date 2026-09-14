@@ -293,7 +293,7 @@ export function ExtrasSection({ input, pl, update }: SectionProps) {
   return (
     <Card title="Dodatki">
       <div className="grid gap-2 sm:grid-cols-2">
-        <Checkbox checked={e.lockKowal} onChange={(lockKowal) => setExtras({ lockKowal })} label="Zamek kowalski" hint={formatPln(pl.extras.lockKowal)} />
+        <Checkbox checked={e.lockKowal} onChange={(lockKowal) => setExtras({ lockKowal })} label="Zamek kowal" hint={formatPln(pl.extras.lockKowal)} />
         <Checkbox checked={e.padlockHolder} onChange={(padlockHolder) => setExtras({ padlockHolder })} label="Uchwyt na kłódkę" hint={formatPln(pl.extras.padlockHolder)} />
         <Checkbox
           checked={e.anchoring}

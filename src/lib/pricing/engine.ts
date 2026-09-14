@@ -157,7 +157,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   if (sheet === 'ral') push({ key: 'color', label: 'Blacha w kolorze RAL', amount: row.color });
   if (sheet === 'wood') push({ key: 'color', label: 'Blacha drewnopodobna', amount: row.wood });
 
-  // 5. Poziomy panel (wymuszany przez okno pleksa)
+  // 5. Poziomy panel (wymuszany przez okno fix)
   const plexiSelected = input.windows.some((w) => w.qty > 0 && pl.windows[w.type]?.requiresHorizontalPanel);
   const horizontalPanel = input.horizontalPanel || plexiSelected;
   if (horizontalPanel) {
@@ -165,7 +165,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
       key: 'horizontalPanel',
       label: 'Poziomy panel blachy',
       amount: row.horizontalPanel,
-      note: !input.horizontalPanel && plexiSelected ? 'Wymagany przez okno stałe (pleksa).' : undefined,
+      note: !input.horizontalPanel && plexiSelected ? 'Wymagany przez okno fix (stałe przeszklenie).' : undefined,
     });
   }
 
@@ -293,7 +293,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   }
 
   // 11. Dodatki
-  if (input.extras.lockKowal) push({ key: 'lockKowal', label: 'Zamek kowalski', amount: pl.extras.lockKowal });
+  if (input.extras.lockKowal) push({ key: 'lockKowal', label: 'Zamek kowal', amount: pl.extras.lockKowal });
   if (input.extras.padlockHolder) push({ key: 'padlockHolder', label: 'Uchwyt na kłódkę', amount: pl.extras.padlockHolder });
   if (input.extras.ventGrilleQty > 0) {
     push({

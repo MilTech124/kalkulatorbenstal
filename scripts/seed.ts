@@ -5,6 +5,8 @@ import mongoose from 'mongoose';
 import { DEFAULT_PRICE_LIST } from '../src/lib/pricing/defaults';
 import { PriceListModel } from '../src/models/PriceList';
 
+// Zmienne juz ustawione w srodowisku maja pierwszenstwo (dotenv nie nadpisuje).
+config({ path: '.env.development.local' });
 config({ path: '.env.local' });
 config();
 

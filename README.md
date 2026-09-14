@@ -37,10 +37,6 @@ Inne skrypty: `npm test` (testy silnika wyceny), `npm run lint`, `npm run build`
 | `ADMIN_EMAIL`    | e-mail do logowania w `/panel`                                       |
 | `ADMIN_PASSWORD` | hasło do logowania w `/panel`                                        |
 | `AUTH_SECRET`    | losowy sekret (min. 32 znaki) do podpisywania sesji, np. `openssl rand -hex 32` |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | konto SMTP do wysyłki ofert (zenbox: `s51.zenbox.pl`, port 465) |
-| `MAIL_FROM` | nadawca widoczny dla klienta, np. `"BEN-STAL Garaże <dev@benspa.pl>"` |
-| `MAIL_BCC` | (opcjonalnie) kopia każdej oferty na skrzynkę firmową |
-| `APP_URL` | (opcjonalnie) publiczny adres aplikacji do logo w mailu; domyślnie z nagłówków requestu |
 | `ORDER_TRACKER_URL` | adres Order-trackera (domyślnie `https://order-tracker-rouge.vercel.app`) |
 | `ORDER_TRACKER_API_KEY` | klucz API z Order-trackera (Ustawienia → Klucz API); bez niego przycisk „Wyślij do Tracker” pokazuje komunikat o braku konfiguracji |
 
@@ -62,9 +58,11 @@ Domyślne dane: [`src/lib/pricing/data/base-table.ts`](src/lib/pricing/data/base
 
 > Uwaga: dopłaty bramy uchylnej za +50 cm szerokości (150 zł) i +10 cm wysokości (50 zł) to wartości tymczasowe – do uzupełnienia w panelu.
 
-## Oferta e-mailem
+## Oferta PDF
 
-W oknie „Zapisz wycenę” jest opcja **„Wyślij wycenę na mój e-mail”** – klient dostaje ładny mail ofertowy BEN-STAL (logo, podsumowanie konfiguracji bez rozbicia cen, cena, kontakt, zastrzeżenie). Zalogowany admin widzi w tym samym oknie **tryb firmowy**: może zmienić cenę w ofercie i dopisać uwagi. W szczegółach wyceny w panelu jest przycisk **„Wyślij ofertę e-mailem”** (ponowna wysyłka, edycja ceny i adresu). Cena z oferty i data wysyłki są zapisywane przy wycenie. Podgląd szablonu: `npx tsx scripts/preview-offer-email.ts > oferta.html`. Szablon: [`src/lib/offerEmail.ts`](src/lib/offerEmail.ts) (dane firmy w stałej `COMPANY`).
+Po zapisaniu wyceny klient dostaje przycisk **„Pobierz ofertę PDF”** (link z jednorazowym tokenem, `/api/quotes/[id]/pdf?t=…`). PDF zawiera logo, numer i datę oferty, dane zamawiającego, podsumowanie konfiguracji (bez rozbicia cen), cenę, dopisek i stopkę firmową; generowany serwerowo (`@react-pdf/renderer`, czcionka Roboto z polskimi znakami, szablon w [`src/lib/offerPdf.tsx`](src/lib/offerPdf.tsx), dane firmy w `COMPANY` w [`src/lib/offer.ts`](src/lib/offer.ts)).
+
+**Edycja ceny:** w oknie „Zapisz wycenę” jest sekcja „Cena w ofercie” – szybkie przyciski narzutu (+5/+10/+15/+20%), pole narzutu w % i pole ceny oraz dopisek. Niezalogowany użytkownik może cenę tylko podnieść (serwer odrzuca cenę niższą niż wyliczona); zalogowany admin może wpisać dowolną. W panelu, w szczegółach wyceny, przycisk **„Oferta PDF”** pozwala zmienić cenę/dopisek i otworzyć PDF (zmiany zapisują się przy wycenie).
 
 ## Statusy wycen i Order-tracker
 
