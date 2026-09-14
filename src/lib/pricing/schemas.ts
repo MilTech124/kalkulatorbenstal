@@ -42,7 +42,7 @@ export const quoteInputSchema = z.object({
   windows: z.array(z.object({ type: windowTypeSchema, qty: z.number().int().min(0).max(50) })).max(20),
   doors: z.number().int().min(0).max(20),
   doorLocks: z.number().int().min(0).max(20).optional(),
-  currency: z.string().trim().max(3).optional(),
+  currency: z.string().trim().max(20).optional(),
   extras: z.object({
     lockKowal: z.boolean(),
     anchoring: z.boolean(),
@@ -176,5 +176,5 @@ export const priceListSchema = z.object({
   sandwich: z.object({ pricePerM3: nonNeg }).default({ pricePerM3: 0 }),
   custom: z.object({ pricePerM3: nonNeg, colorPerM3: z.object({ ral: nonNeg, wood: nonNeg }) }).default({ pricePerM3: 0, colorPerM3: { ral: 0, wood: 0 } }),
   structures: z.array(z.object({ key: z.string().min(1).max(50), label: z.string().min(1).max(100), pct: num })).default([]),
-  currencies: z.array(z.object({ code: z.string().trim().min(3).max(3).toUpperCase(), label: z.string().min(1).max(50), rate: pos })).default([]),
+  currencies: z.array(z.object({ key: z.string().trim().min(1).max(20).optional(), code: z.string().trim().min(3).max(3).toUpperCase(), label: z.string().min(1).max(50), rate: pos })).default([]),
 });

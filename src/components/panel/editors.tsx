@@ -180,12 +180,16 @@ export function AddonsEditor({ pl, setPl }: EditorProps) {
 
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <h3 className="text-base font-semibold text-slate-900">Waluty i kursy</h3>
-        <p className="mb-3 text-sm text-slate-500">Kurs = ile złotych za 1 jednostkę waluty. Klient może wybrać walutę przy wycenie; cena w PDF jest przeliczana po kursie z chwili zapisu.</p>
+        <p className="mb-3 text-sm text-slate-500">Kurs = ile złotych za 1 jednostkę waluty. Osobne pozycje mogą mieć ten sam kod ISO (np. euro dla Niemiec i Słowacji z różnym kursem) – klucz musi być unikalny. Klient wybiera pozycję przy wycenie; PDF przelicza po kursie z chwili zapisu.</p>
         <div className="space-y-2">
           {(pl.currencies ?? []).map((c, i) => (
-            <div key={i} className="grid grid-cols-[80px_1fr_120px_auto] items-end gap-2">
+            <div key={i} className="grid grid-cols-[90px_70px_1fr_120px_auto] items-end gap-2">
               <label className="block">
-                <span className="mb-1 block text-xs font-medium text-slate-600">Kod</span>
+                <span className="mb-1 block text-xs font-medium text-slate-600">Klucz</span>
+                <TextInput value={c.key ?? c.code} onChange={(e) => setPl((p) => ({ ...p, currencies: p.currencies.map((x, j) => (j === i ? { ...x, key: e.target.value.toUpperCase().replace(/\s+/g, '_') } : x)) }))} />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-slate-600">Kod ISO</span>
                 <TextInput value={c.code} maxLength={3} onChange={(e) => setPl((p) => ({ ...p, currencies: p.currencies.map((x, j) => (j === i ? { ...x, code: e.target.value.toUpperCase() } : x)) }))} />
               </label>
               <label className="block">
@@ -198,7 +202,7 @@ export function AddonsEditor({ pl, setPl }: EditorProps) {
               </button>
             </div>
           ))}
-          <button type="button" className="text-sm font-medium text-brand-600 hover:underline" onClick={() => setPl((p) => ({ ...p, currencies: [...(p.currencies ?? []), { code: 'USD', label: 'Dolar (USD)', rate: 4 }] }))}>
+          <button type="button" className="text-sm font-medium text-brand-600 hover:underline" onClick={() => setPl((p) => ({ ...p, currencies: [...(p.currencies ?? []), { key: `EUR_${(p.currencies?.length ?? 0) + 1}`, code: 'EUR', label: 'Nowy kraj – euro (EUR)', rate: 4.3 }] }))}>
             + dodaj walutę
           </button>
         </div>

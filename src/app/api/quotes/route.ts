@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
-import { findCurrency } from '@/lib/currency';
+import { currencyKey, findCurrency } from '@/lib/currency';
 import { connectDb } from '@/lib/db';
 import { calculateQuote } from '@/lib/pricing/engine';
 import { getActivePriceList } from '@/lib/pricing/repository';
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     offerNote: note,
     currency: (() => {
       const c = findCurrency(pl.data.currencies, input.currency);
-      return { code: c.code, rate: c.rate };
+      return { key: currencyKey(c), code: c.code, label: c.label, rate: c.rate };
     })(),
     priceListVersion: pl.version,
     accessToken,

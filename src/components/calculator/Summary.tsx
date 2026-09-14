@@ -2,7 +2,7 @@
 
 import type { QuoteResult } from '@/lib/pricing/types';
 import { formatNum, formatPln } from '@/lib/format';
-import { convertFromPln, findCurrency, formatMoney, PLN, type CurrencyOption } from '@/lib/currency';
+import { convertFromPln, currencyKey, findCurrency, formatMoney, PLN, type CurrencyOption } from '@/lib/currency';
 
 export function QuoteBreakdown({ result, compact = false }: { result: QuoteResult; compact?: boolean }) {
   return (
@@ -59,9 +59,9 @@ export function Summary({
         {onCurrencyChange && currencies.length > 0 && (
           <div className="mb-3 flex items-center justify-between gap-2">
             <span className="text-xs text-slate-500">Waluta</span>
-            <select value={cur.code} onChange={(e) => onCurrencyChange(e.target.value)} className="rounded-md border border-slate-300 px-2 py-1 text-xs">
+            <select value={currencyKey(cur)} onChange={(e) => onCurrencyChange(e.target.value)} className="rounded-md border border-slate-300 px-2 py-1 text-xs">
               {[PLN, ...currencies].map((c) => (
-                <option key={c.code} value={c.code}>
+                <option key={currencyKey(c)} value={currencyKey(c)}>
                   {c.label}
                 </option>
               ))}
@@ -74,7 +74,7 @@ export function Summary({
         </div>
         {cur.code !== 'PLN' && (
           <p className="text-right text-xs text-slate-500">
-            {formatPln(result.total)} · kurs 1 {cur.code} = {formatNum(cur.rate)} zł
+            {formatPln(result.total)} · {cur.label}: 1 {cur.code} = {formatNum(cur.rate)} zł
           </p>
         )}
         {result.needsManualQuote && <p className="mt-1 text-xs text-amber-700">Część pozycji wymaga wyceny indywidualnej – suma jest orientacyjna.</p>}

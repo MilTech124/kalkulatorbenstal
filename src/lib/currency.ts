@@ -1,16 +1,21 @@
 // Waluty: kursy w cenniku (ile PLN za 1 jednostke). PLN zawsze dostepny.
 export interface CurrencyOption {
+  /** Unikalny identyfikator pozycji (np. EUR_DE); stare cenniki: brak = code. */
+  key?: string;
+  /** Kod ISO waluty - decyduje o symbolu/formatowaniu; moze sie powtarzac (np. EUR Niemcy i EUR Slowacja z innym kursem). */
   code: string;
   label: string;
   /** Ile PLN za 1 jednostke waluty. */
   rate: number;
 }
 
-export const PLN: CurrencyOption = { code: 'PLN', label: 'Złoty (PLN)', rate: 1 };
+export const PLN: CurrencyOption = { key: 'PLN', code: 'PLN', label: 'Złoty (PLN)', rate: 1 };
 
-export function findCurrency(list: CurrencyOption[] | undefined, code: string | undefined): CurrencyOption {
-  if (!code || code === 'PLN') return PLN;
-  return list?.find((c) => c.code === code && c.rate > 0) ?? PLN;
+export const currencyKey = (c: CurrencyOption) => c.key || c.code;
+
+export function findCurrency(list: CurrencyOption[] | undefined, key: string | undefined): CurrencyOption {
+  if (!key || key === 'PLN') return PLN;
+  return list?.find((c) => currencyKey(c) === key && c.rate > 0) ?? PLN;
 }
 
 export function convertFromPln(pln: number, cur: Pick<CurrencyOption, 'rate'>): number {

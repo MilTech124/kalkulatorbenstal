@@ -20,7 +20,7 @@ const quoteSchema = new Schema(
     offeredTotal: { type: Number },
     offerNote: { type: String },
     /** Waluta prezentacji + kurs z chwili zapisu (ile PLN za 1 jednostke). */
-    currency: { code: { type: String }, rate: { type: Number } },
+    currency: { key: { type: String }, code: { type: String }, label: { type: String }, rate: { type: Number } },
     /** Losowy token do publicznego pobrania oferty PDF. */
     accessToken: { type: String, index: true },
     tracker: {

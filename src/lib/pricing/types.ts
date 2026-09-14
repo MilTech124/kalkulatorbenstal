@@ -127,7 +127,7 @@ export interface PriceList {
   };
   structures: StructureOption[];
   /** Waluty do wyboru przy wycenie (kurs = ile PLN za 1 jednostke). */
-  currencies: { code: string; label: string; rate: number }[];
+  currencies: { key?: string; code: string; label: string; rate: number }[];
 }
 
 export interface GateInput {
@@ -166,7 +166,7 @@ export interface QuoteInput {
   doors: number;
   /** Liczba drzwi z zamkiem kowal. */
   doorLocks?: number;
-  /** Waluta prezentacji ceny (kod z PriceList.currencies); brak = PLN. */
+  /** Waluta prezentacji ceny (klucz pozycji z PriceList.currencies); brak = PLN. */
   currency?: string;
   extras: {
     lockKowal: boolean;

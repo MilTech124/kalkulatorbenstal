@@ -65,7 +65,7 @@ Domyślne dane: [`src/lib/pricing/data/base-table.ts`](src/lib/pricing/data/base
 
 ## Waluty
 
-Panel → Cennik → Dodatki → „Waluty i kursy”: lista walut z kursem (ile PLN za 1 jednostkę); domyślnie EUR (Niemcy, Słowacja) i HUF. W podsumowaniu wyceny jest wybór waluty – suma przeliczana po kursie, w PDF cena w wybranej walucie z adnotacją o kursie z chwili zapisu (kurs zapisywany przy wycenie). Rozbicie i edycja ceny zawsze w PLN.
+Panel → Cennik → Dodatki → „Waluty i kursy”: lista walut z kursem (ile PLN za 1 jednostkę); domyślnie osobne pozycje: Niemcy – EUR, Słowacja – EUR (mogą mieć różne kursy) i Węgry – HUF. W podsumowaniu wyceny jest wybór waluty – suma przeliczana po kursie, w PDF cena w wybranej walucie z adnotacją o kursie z chwili zapisu (kurs zapisywany przy wycenie). Rozbicie i edycja ceny zawsze w PLN.
 
 ## Oferta PDF
 

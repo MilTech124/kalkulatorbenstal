@@ -70,7 +70,7 @@ export interface OfferPdfData {
   note?: string;
   validDays?: number;
   /** Waluta prezentacji (kurs: ile PLN za 1 jednostke). */
-  currency?: { code: string; rate: number };
+  currency?: { code: string; rate: number; label?: string };
 }
 
 const fmt = (n: number) => n.toLocaleString('pl-PL', { maximumFractionDigits: 2 });
@@ -131,7 +131,7 @@ function OfferDocument({ d, logo }: { d: OfferPdfData; logo: Buffer }) {
             <View>
               <Text style={s.priceLabel}>Cena całkowita brutto</Text>
               <Text style={s.priceHint}>z montażem · oferta ważna {validDays} dni</Text>
-              {foreign ? <Text style={s.priceHint}>{pln(d.total)} wg kursu 1 {foreign.code} = {fmt(foreign.rate)} zł</Text> : null}
+              {foreign ? <Text style={s.priceHint}>{pln(d.total)} wg kursu 1 {foreign.code} = {fmt(foreign.rate)} zł{foreign.label ? ` (${foreign.label})` : ''}</Text> : null}
             </View>
             <Text style={s.price}>{foreign ? formatMoney(convertFromPln(d.total, foreign), foreign.code) : pln(d.total)}</Text>
           </View>
