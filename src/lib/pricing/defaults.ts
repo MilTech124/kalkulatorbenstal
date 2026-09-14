@@ -87,7 +87,7 @@ export const DEFAULT_PRICE_LIST: PriceList = {
   // Katownik w cenie; profile zamkniete = narzut % od ceny bazowej garazu
   // Kursy orientacyjne - do aktualizacji w panelu (ile PLN za 1 jednostke). Slowacja uzywa EUR.
   currencies: [
-    { code: 'EUR', label: 'Euro (EUR / Słowacja)', rate: 4.3 },
+    { code: 'EUR', label: 'Euro (EUR – Niemcy, Słowacja)', rate: 4.3 },
     { code: 'HUF', label: 'Forint węgierski (HUF)', rate: 0.0108 },
   ],
   structures: [
