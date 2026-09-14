@@ -18,8 +18,8 @@ export function convertFromPln(pln: number, cur: Pick<CurrencyOption, 'rate'>): 
 }
 
 export function formatMoney(amount: number, code: string): string {
-  const digits = code === 'PLN' || code === 'HUF' || code === 'CZK' ? 0 : 2;
+  const digits = code === 'PLN' || code === 'HUF' ? 0 : 2;
   const n = amount.toLocaleString('pl-PL', { minimumFractionDigits: digits, maximumFractionDigits: digits });
-  const sym: Record<string, string> = { PLN: 'zł', EUR: '€', CZK: 'Kč', HUF: 'Ft' };
+  const sym: Record<string, string> = { PLN: 'zł', EUR: '€', HUF: 'Ft' };
   return `${n} ${sym[code] ?? code}`;
 }
