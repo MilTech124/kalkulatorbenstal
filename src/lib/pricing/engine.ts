@@ -291,14 +291,22 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   }
 
   // 9. Bramy
+  // W cenie garazu jest 1x brama (uchylna/dwuskrzydlowa) LUB 1x drzwi; kazde kolejne = pl.door. Segmentowa zawsze z tabeli.
+  let includedOpeningUsed = false;
   gates.forEach((gate, gi) => {
     const k = (key: string) => `gate:${gi}:${key}`;
     const prefix = gates.length > 1 ? `Brama ${gi + 1}: ` : '';
     if (gate.type === 'tilt' || gate.type === 'double') {
       const t = pl.gate.tilt;
-      const base = cm(gate.height) <= cm(t.lowMaxHeight) ? t.priceLow : t.priceHigh;
+      const included = !includedOpeningUsed;
+      includedOpeningUsed = true;
       const label = gate.type === 'tilt' ? 'uchylna' : 'dwuskrzydłowa';
-      push({ key: k('base'), label: `${prefix}Brama ${label} ${fmt(gate.width)} × ${fmt(gate.height)} m`, amount: base });
+      push({
+        key: k('base'),
+        label: `${prefix}Brama ${label} ${fmt(gate.width)} × ${fmt(gate.height)} m`,
+        amount: included ? 0 : pl.door,
+        note: included ? 'W cenie garażu' : 'Dodatkowa brama',
+      });
       const w50 = Math.max(0, Math.ceil((cm(gate.width) - cm(t.baseWidth)) / 50));
       if (w50 > 0) {
         push({ key: k('width'), label: `${prefix}dodatkowa szerokość`, qty: w50, unit: '× 50 cm', unitPrice: t.per50cmWidth, amount: w50 * t.per50cmWidth });
@@ -350,7 +358,17 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     push({ key: `window:${w.type}`, label: def.label, qty: w.qty, unit: 'szt.', unitPrice: def.price, amount: w.qty * def.price });
   }
   if (input.doors > 0) {
-    push({ key: 'doors', label: 'Drzwi', qty: input.doors, unit: 'szt.', unitPrice: pl.door, amount: input.doors * pl.door });
+    const paidDoors = includedOpeningUsed ? input.doors : input.doors - 1;
+    push({
+      key: 'doors',
+      label: 'Drzwi',
+      qty: input.doors,
+      unit: 'szt.',
+      unitPrice: pl.door,
+      amount: paidDoors * pl.door,
+      note: includedOpeningUsed ? 'Dodatkowe drzwi' : '1 szt. w cenie garażu',
+    });
+    includedOpeningUsed = true;
     const locks = Math.min(input.doorLocks ?? 0, input.doors);
     if (locks > 0) push({ key: 'doorLocks', label: 'Zamek kowal (klamka) w drzwiach', qty: locks, unit: 'szt.', unitPrice: pl.extras.lockKowal, amount: locks * pl.extras.lockKowal });
     if (horizontalPanel) {

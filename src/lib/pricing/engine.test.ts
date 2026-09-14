@@ -62,17 +62,29 @@ describe('rynny / filc / blachodachówka', () => {
 });
 
 describe('brama uchylna / dwuskrzydłowa', () => {
-  it('3×2 = 900; 3×2,3 = 1000 + 3 × 50', () => {
+  it('pierwsza brama w cenie garażu; 3×2,3 = 0 + 3 × 50', () => {
     const r1 = calculateQuote(base({ gates: [{ ...defaultGate(), type: 'tilt', width: 3, height: 2 }] }), PL);
-    expect(amount(r1, 'gate:0:base')).toBe(900);
+    expect(amount(r1, 'gate:0:base')).toBe(0);
     const r2 = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), type: 'tilt', width: 3, height: 2.3 }] }), PL);
-    expect(amount(r2, 'gate:0:base')).toBe(1000);
+    expect(amount(r2, 'gate:0:base')).toBe(0);
     expect(amount(r2, 'gate:0:height')).toBe(3 * 50);
   });
 
-  it('dwuskrzydłowa 3,5×2 z automatem = 900 + 150 + 500 + 1300', () => {
+  it('1x brama lub drzwi w cenie, kolejne +300; segmentowa zawsze z tabeli', () => {
+    const two = calculateQuote(base({ width: 6, length: 6, gates: [defaultGate(), defaultGate()], doors: 2 }), PL);
+    expect(amount(two, 'gate:0:base')).toBe(0);
+    expect(amount(two, 'gate:1:base')).toBe(300);
+    expect(amount(two, 'doors')).toBe(600);
+    const onlyDoors = calculateQuote(base({ width: 3, length: 5, doors: 2 }), PL);
+    expect(amount(onlyDoors, 'doors')).toBe(300);
+    const sec = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), type: 'sectional', width: 3, height: 2.5 }], doors: 1 }), PL);
+    expect(amount(sec, 'gate:0:base')).toBe(Math.round(3500 * 1.23 * 1.4));
+    expect(amount(sec, 'doors')).toBe(0);
+  });
+
+  it('dwuskrzydłowa 3,5×2 z automatem = 0 + 150 + 500 + 1300', () => {
     const r = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), type: 'double', width: 3.5, height: 2, automat: true }] }), PL);
-    expect(amount(r, 'gate:0:base')).toBe(900);
+    expect(amount(r, 'gate:0:base')).toBe(0);
     expect(amount(r, 'gate:0:width')).toBe(150);
     expect(amount(r, 'gate:0:double')).toBe(500);
     expect(amount(r, 'gate:0:automat')).toBe(1300);
@@ -126,7 +138,7 @@ describe('kilka bram', () => {
       }),
       PL,
     );
-    expect(amount(r, 'gate:0:base')).toBe(900);
+    expect(amount(r, 'gate:0:base')).toBe(0);
     expect(amount(r, 'gate:1:base')).toBe(Math.round(3500 * 1.23 * 1.4));
     expect(r.effectiveHeight).toBe(3.03);
     expect(r.items.find((i) => i.key === 'gate:1:base')?.label).toMatch(/^Brama 2: /);
@@ -143,7 +155,7 @@ describe('okna, drzwi, dodatki', () => {
     const r = calculateQuote(base({ width: 3, length: 5, windows: [{ type: 'plexi64x34', qty: 1 }], doors: 1 }), PL);
     expect(amount(r, 'horizontalPanel')).toBe(600);
     expect(amount(r, 'window:plexi64x34')).toBe(500);
-    expect(amount(r, 'doors')).toBe(300);
+    expect(amount(r, 'doors')).toBe(0);
     expect(amount(r, 'doorsPanel')).toBe(100);
   });
 

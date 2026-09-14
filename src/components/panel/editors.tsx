@@ -138,7 +138,7 @@ export function AddonsEditor({ pl, setPl }: EditorProps) {
             <NumField label="zł/szt." value={pl.windows[k].price} onChange={(v) => setWindow(k, v)} />
           </div>
         ))}
-        <NumField label="Drzwi [zł/szt.]" value={pl.door} onChange={(v) => setPl((p) => ({ ...p, door: v }))} />
+        <NumField label="Dodatkowe drzwi / brama [zł/szt.]" value={pl.door} onChange={(v) => setPl((p) => ({ ...p, door: v }))} hint="1 szt. drzwi lub bramy (uchylnej/dwuskrzydłowej) w cenie garażu" />
       </Group>
 
       <Group title="Dodatki">
@@ -245,12 +245,9 @@ export function GatesEditor({ pl, setPl }: EditorProps) {
 
   return (
     <div className="space-y-5">
-      <Group title="Brama uchylna / dwuskrzydłowa" description="Cena bazowa dla wymiaru bazowego; dopłaty za każde rozpoczęte 50 cm szerokości i 10 cm wysokości ponad bazę.">
+      <Group title="Brama uchylna / dwuskrzydłowa" description="Pierwsza brama uchylna/dwuskrzydłowa lub pierwsze drzwi są w cenie garażu; każda kolejna = cena „Dodatkowe drzwi/brama”. Dopłaty za każde rozpoczęte 50 cm szerokości i 10 cm wysokości ponad wymiar bazowy.">
         <NumField label="Szerokość bazowa [m]" value={t.baseWidth} step={0.1} onChange={(v) => setTilt('baseWidth', v)} />
         <NumField label="Wysokość bazowa [m]" value={t.baseHeight} step={0.1} onChange={(v) => setTilt('baseHeight', v)} />
-        <NumField label="Cena do wys. granicznej [zł]" value={t.priceLow} onChange={(v) => setTilt('priceLow', v)} />
-        <NumField label="Wysokość graniczna [m]" value={t.lowMaxHeight} step={0.1} onChange={(v) => setTilt('lowMaxHeight', v)} hint="np. 2,20 → do 220 cm cena niższa" />
-        <NumField label="Cena powyżej granicy [zł]" value={t.priceHigh} onChange={(v) => setTilt('priceHigh', v)} />
         <NumField label="Dopłata za 50 cm szer. [zł]" value={t.per50cmWidth} onChange={(v) => setTilt('per50cmWidth', v)} />
         <NumField label="Dopłata za 10 cm wys. [zł]" value={t.per10cmHeight} onChange={(v) => setTilt('per10cmHeight', v)} />
         <NumField label="Dopłata: dwuskrzydłowa [zł]" value={pl.gate.doubleLeafExtra} onChange={(v) => setGate('doubleLeafExtra', v)} />

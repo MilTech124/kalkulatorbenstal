@@ -338,7 +338,7 @@ export function WindowsDoorsSection({ input, pl, update }: SectionProps) {
             />
           );
         })}
-        <QtyRow label="Drzwi" hint={`${formatPln(pl.door)}/szt.`} value={input.doors} onChange={(doors) => update({ doors, doorLocks: Math.min(input.doorLocks ?? 0, doors) })} />
+        <QtyRow label="Drzwi" hint={`1 szt. drzwi lub bramy w cenie garażu, kolejne ${formatPln(pl.door)}/szt.`} value={input.doors} onChange={(doors) => update({ doors, doorLocks: Math.min(input.doorLocks ?? 0, doors) })} />
         {input.doors > 0 && (
           <QtyRow label="Zamek kowal (klamka) w drzwiach" hint={`${formatPln(pl.extras.lockKowal)}/szt., max ${input.doors}`} value={input.doorLocks ?? 0} onChange={(doorLocks) => update({ doorLocks: Math.min(doorLocks, input.doors) })} />
         )}
