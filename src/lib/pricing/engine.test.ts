@@ -167,13 +167,15 @@ describe('garaże warstwowe', () => {
     expect(amount(r, 'color')).toBeUndefined();
     expect(amount(r, 'horizontalPanel')).toBeUndefined();
     expect(amount(r, 'height')).toBeUndefined();
-    expect(amount(r, 'gutters')).toBe(4.5 * 80);
+    expect(amount(r, 'gutters')).toBeUndefined();
+    expect(amount(r, 'flashingRoof')).toBeUndefined();
   });
 
   it('brama segmentowa podnosi wysokość garażu warstwowego (liczona w kubaturze)', () => {
     const r = calculateQuote(base({ productType: 'sandwich', width: 4, length: 6, height: 2.2, gates: [{ ...defaultGate(), type: 'sectional', width: 3, height: 2.5 }] }), PL);
-    expect(r.effectiveHeight).toBe(3.03);
-    expect(amount(r, 'base')).toBe(Math.round(4 * 6 * 3.03 * PL.sandwich.pricePerM3));
+    // bez zapasu z regul dachowych: 2,5 m -> 4 kroki od 2,13 -> 2,53
+    expect(r.effectiveHeight).toBe(2.53);
+    expect(amount(r, 'base')).toBe(Math.round(4 * 6 * 2.53 * PL.sandwich.pricePerM3));
   });
 
   it('wiaty śmietnikowe: jeszcze bez wyceny', () => {

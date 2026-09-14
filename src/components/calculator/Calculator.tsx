@@ -29,7 +29,7 @@ export function Calculator({ priceList, isAdmin = false }: { priceList: PriceLis
       const lengths = availableLengths(priceList, width);
       update({ productType: type, width, length: lengths.includes(input.length) ? input.length : lengths[0], height: base.height });
     } else {
-      update({ productType: type, horizontalPanel: false, felt: false });
+      update({ productType: type, horizontalPanel: false, felt: false, tile: false, gutters: false, sheet: 'ocynk', partitionWalls: [], openwork: { ...input.openwork, mode: 'none' } });
     }
   };
 
@@ -55,7 +55,7 @@ export function Calculator({ priceList, isAdmin = false }: { priceList: PriceLis
         ) : (
           <>
             <DimensionsSection {...sectionProps} />
-            <RoofAndSheetSection {...sectionProps} />
+            {productType === 'steel' && <RoofAndSheetSection {...sectionProps} />}
             <GateSection {...sectionProps} />
             <WindowsDoorsSection {...sectionProps} />
             <ExtrasSection {...sectionProps} />

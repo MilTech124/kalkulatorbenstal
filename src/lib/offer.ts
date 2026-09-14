@@ -21,9 +21,12 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
   const rows: { label: string; value: string }[] = [
     { label: 'Rodzaj', value: input.productType === 'sandwich' ? 'Garaż warstwowy (płyta warstwowa)' : 'Garaż blaszany' },
     { label: 'Wymiary', value: `${fmt(input.width)} × ${fmt(input.length)} m, wysokość ${fmt(effectiveHeight)} m` },
-    { label: 'Dach', value: pl.roofTypes[input.roofType]?.label ?? input.roofType },
-    { label: 'Blacha', value: `${pl.sheetLabels[input.sheet]}${input.horizontalPanel ? ', poziomy panel' : ''}` },
   ];
+  const sandwich = input.productType === 'sandwich';
+  if (!sandwich) {
+    rows.push({ label: 'Dach', value: pl.roofTypes[input.roofType]?.label ?? input.roofType });
+    rows.push({ label: 'Blacha', value: `${pl.sheetLabels[input.sheet]}${input.horizontalPanel ? ', poziomy panel' : ''}` });
+  }
   if (input.gates.length) {
     rows.push({
       label: input.gates.length > 1 ? 'Bramy' : 'Brama',
@@ -35,7 +38,7 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
     rows.push({ label: 'Brama', value: 'bez bramy' });
   }
   const roofOpts = [input.gutters && 'rynny', input.felt && 'filc antykondensacyjny', input.tile && 'blachodachówka'].filter(Boolean) as string[];
-  if (roofOpts.length) rows.push({ label: 'Wyposażenie dachu', value: roofOpts.join(', ') });
+  if (!sandwich && roofOpts.length) rows.push({ label: 'Wyposażenie dachu', value: roofOpts.join(', ') });
   const openings: string[] = input.windows.filter((w) => w.qty > 0).map((w) => `${pl.windows[w.type]?.label ?? w.type} × ${w.qty}`);
   if (input.doors > 0) openings.push(`drzwi × ${input.doors}`);
   if (openings.length) rows.push({ label: 'Okna i drzwi', value: openings.join(', ') });

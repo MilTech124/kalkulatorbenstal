@@ -338,9 +338,10 @@ export function CarportAndWallsSection({ input, pl, update }: SectionProps) {
     .sort((a, b) => a - b);
   const ow = input.openwork;
   const setOpenwork = (patch: Partial<QuoteInput['openwork']>) => update({ openwork: { ...ow, ...patch } });
+  const sandwich = input.productType === 'sandwich';
 
   return (
-    <Card title="Wiata, ściany i ażury" subtitle="Opcjonalne elementy dodatkowe.">
+    <Card title={sandwich ? 'Wiata' : 'Wiata, ściany i ażury'} subtitle="Opcjonalne elementy dodatkowe.">
       <div className="space-y-5">
         <div>
           <Checkbox checked={c.enabled} onChange={(enabled) => setCarport({ enabled })} label="Wiata (zadaszenie) przy garażu" hint="Cena za metr bieżący zależna od szerokości wiaty" />
@@ -362,6 +363,8 @@ export function CarportAndWallsSection({ input, pl, update }: SectionProps) {
           )}
         </div>
 
+        {!sandwich && (
+          <>
         <div>
           <div className="mb-2 flex items-center justify-between">
             <p className="text-sm font-medium text-slate-700">Ściany działowe / oblachowane</p>
@@ -429,6 +432,8 @@ export function CarportAndWallsSection({ input, pl, update }: SectionProps) {
             </div>
           )}
         </div>
+          </>
+        )}
       </div>
     </Card>
   );

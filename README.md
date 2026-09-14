@@ -42,7 +42,7 @@ Inne skrypty: `npm test` (testy silnika wyceny), `npm run lint`, `npm run build`
 
 ## Jak liczona jest cena
 
-U góry kalkulatora jest przełącznik **Garaże blaszane / Garaże warstwowe / Wiaty śmietnikowe** (`productType`). Blaszane – tabela cennika (poniżej). Warstwowe – cena bazowa = szer. × dł. × wys. × stawka zł/m³ (panel → Cennik → Dodatki → „Garaże warstwowe”; stawka domyślna 350 zł to placeholder), bez dopłat tabelowych (kolor, poziomy panel, +10 cm), dodatki jak w blaszanych. Wiaty śmietnikowe – jeszcze bez wyceny.
+U góry kalkulatora jest przełącznik **Garaże blaszane / Garaże warstwowe / Wiaty śmietnikowe** (`productType`). Blaszane – tabela cennika (poniżej). Warstwowe – cena bazowa = szer. × dł. × wys. × stawka zł/m³ (panel → Cennik → Dodatki → „Garaże warstwowe”; stawka domyślna 350 zł to placeholder), bez sekcji dach/blacha (okucia, rynny, filc, blachodachówka, ściany działowe i ażury nie dotyczą); dodatki: bramy, okna/drzwi, zamek, kłódka, kratka, kotwiczenie, wiata. Wiaty śmietnikowe – jeszcze bez wyceny.
 
 Cały algorytm jest w jednym pliku: [`src/lib/pricing/engine.ts`](src/lib/pricing/engine.ts) (`calculateQuote(input, cennik)`), używanym zarówno w przeglądarce (cena na żywo), jak i na serwerze przy zapisie wyceny (serwer liczy sam – klient nie może przesłać własnej kwoty).
 

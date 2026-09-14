@@ -128,7 +128,8 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   let requiredLabel: string | undefined;
   let requiredAdd = 0;
   for (const gate of gates) {
-    const clearance = gateClearanceCm(pl, gate, roofType);
+    // Garaz warstwowy nie ma wyboru dachu - wymagana wysokosc = wysokosc bramy (bez zapasu z regul).
+    const clearance = productType === 'steel' ? gateClearanceCm(pl, gate, roofType) : { cm: 0 };
     const needed = cm(gate.height) + clearance.cm;
     if (needed > requiredCm) {
       requiredCm = needed;
@@ -155,7 +156,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     }
     push({
       key: 'base',
-      label: `Garaż warstwowy ${fmt(S)} × ${fmt(D)} × ${fmt(effectiveHeight)} m, ${roof.label.toLowerCase()}`,
+      label: `Garaż warstwowy ${fmt(S)} × ${fmt(D)} × ${fmt(effectiveHeight)} m`,
       qty: m3,
       unit: 'm³',
       unitPrice: rate,
@@ -198,55 +199,59 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     });
   }
 
-  // 6. Okucia
-  const vertMb = pl.verticalFlashingPerHeight * effectiveHeight;
-  push({
-    key: 'flashingVertical',
-    label: 'Okucia pionowe',
-    qty: vertMb,
-    unit: 'mb',
-    unitPrice: pl.unit.flashingPerMb,
-    amount: vertMb * pl.unit.flashingPerMb,
-  });
-  const roofMb = linear(roof.roofFlashing, S, D);
-  push({
-    key: 'flashingRoof',
-    label: 'Okucia dachu',
-    qty: roofMb,
-    unit: 'mb',
-    unitPrice: pl.unit.flashingPerMb,
-    amount: roofMb * pl.unit.flashingPerMb,
-  });
-
-  // 7. Rynny
-  if (input.gutters) {
-    const mb = linear(roof.gutter, S, D);
-    push({ key: 'gutters', label: 'Rynny', qty: mb, unit: 'mb', unitPrice: pl.unit.gutterPerMb, amount: mb * pl.unit.gutterPerMb });
-  }
-
-  // 8. Filc / blachodachowka
-  const garageArea = S * D * pl.unit.roofAreaFactor;
-  const carportArea = input.carport.enabled ? input.carport.width * input.carport.length : 0;
-  if (input.felt) {
-    const m2 = garageArea + carportArea;
+  // 6-8. Elementy dachu i blachy - tylko garaze blaszane
+  if (productType === 'steel') {
+    // 6. Okucia
+    const vertMb = pl.verticalFlashingPerHeight * effectiveHeight;
     push({
-      key: 'felt',
-      label: carportArea ? 'Filc (garaż + wiata)' : 'Filc',
-      qty: m2,
-      unit: 'm²',
-      unitPrice: pl.unit.feltPerM2,
-      amount: m2 * pl.unit.feltPerM2,
+      key: 'flashingVertical',
+      label: 'Okucia pionowe',
+      qty: vertMb,
+      unit: 'mb',
+      unitPrice: pl.unit.flashingPerMb,
+      amount: vertMb * pl.unit.flashingPerMb,
     });
-  }
-  if (input.tile) {
+    const roofMb = linear(roof.roofFlashing, S, D);
     push({
-      key: 'tile',
-      label: 'Blachodachówka',
-      qty: garageArea,
-      unit: 'm²',
-      unitPrice: pl.unit.tilePerM2,
-      amount: garageArea * pl.unit.tilePerM2,
+      key: 'flashingRoof',
+      label: 'Okucia dachu',
+      qty: roofMb,
+      unit: 'mb',
+      unitPrice: pl.unit.flashingPerMb,
+      amount: roofMb * pl.unit.flashingPerMb,
     });
+
+    // 7. Rynny
+    if (input.gutters) {
+      const mb = linear(roof.gutter, S, D);
+      push({ key: 'gutters', label: 'Rynny', qty: mb, unit: 'mb', unitPrice: pl.unit.gutterPerMb, amount: mb * pl.unit.gutterPerMb });
+    }
+
+    // 8. Filc / blachodachowka
+    const garageArea = S * D * pl.unit.roofAreaFactor;
+    const carportArea = input.carport.enabled ? input.carport.width * input.carport.length : 0;
+    if (input.felt) {
+      const m2 = garageArea + carportArea;
+      push({
+        key: 'felt',
+        label: carportArea ? 'Filc (garaż + wiata)' : 'Filc',
+        qty: m2,
+        unit: 'm²',
+        unitPrice: pl.unit.feltPerM2,
+        amount: m2 * pl.unit.feltPerM2,
+      });
+    }
+    if (input.tile) {
+      push({
+        key: 'tile',
+        label: 'Blachodachówka',
+        qty: garageArea,
+        unit: 'm²',
+        unitPrice: pl.unit.tilePerM2,
+        amount: garageArea * pl.unit.tilePerM2,
+      });
+    }
+
   }
 
   // 9. Bramy
@@ -369,45 +374,49 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     }
   }
 
-  // 13. Sciany dzialowe
-  input.partitionWalls.forEach((wall, i) => {
-    if (wall.width <= 0 || wall.height <= 0) return;
-    const m2 = wall.width * wall.height;
-    const rate = pl.partitionWallPerM2[sheet];
-    push({
-      key: `partitionWall:${i}`,
-      label: `Ściana działowa ${fmt(wall.width)} × ${fmt(wall.height)} m`,
-      qty: m2,
-      unit: 'm²',
-      unitPrice: rate,
-      amount: m2 * rate,
+  // 13-14. Sciany dzialowe i azury - tylko garaze blaszane
+  if (productType === 'steel') {
+    // 13. Sciany dzialowe
+    input.partitionWalls.forEach((wall, i) => {
+      if (wall.width <= 0 || wall.height <= 0) return;
+      const m2 = wall.width * wall.height;
+      const rate = pl.partitionWallPerM2[sheet];
+      push({
+        key: `partitionWall:${i}`,
+        label: `Ściana działowa ${fmt(wall.width)} × ${fmt(wall.height)} m`,
+        qty: m2,
+        unit: 'm²',
+        unitPrice: rate,
+        amount: m2 * rate,
+      });
     });
-  });
 
-  // 14. Azury
-  if (input.openwork.mode === 'wall' && input.openwork.width > 0 && input.openwork.height > 0) {
-    const m2 = input.openwork.width * input.openwork.height;
-    const rateSheet: 'ral' | 'wood' = sheet === 'wood' ? 'wood' : 'ral';
-    if (sheet === 'ocynk') warnings.push('Ażury dostępne tylko w RAL / drewnopodobnym – przyjęto cenę RAL.');
-    const rate = pl.openwork.wallPerM2[rateSheet];
-    push({
-      key: 'openworkWall',
-      label: `Ściana ażurowa ${fmt(input.openwork.width)} × ${fmt(input.openwork.height)} m`,
-      qty: m2,
-      unit: 'm²',
-      unitPrice: rate,
-      amount: m2 * rate,
-    });
-  } else if (input.openwork.mode === 'whole') {
-    const m2 = (2 * S + 2 * D) * effectiveHeight;
-    push({
-      key: 'openworkWhole',
-      label: 'Cały garaż w ażurach',
-      qty: m2,
-      unit: 'm²',
-      unitPrice: pl.openwork.wholeGaragePerM2,
-      amount: m2 * pl.openwork.wholeGaragePerM2,
-    });
+    // 14. Azury
+    if (input.openwork.mode === 'wall' && input.openwork.width > 0 && input.openwork.height > 0) {
+      const m2 = input.openwork.width * input.openwork.height;
+      const rateSheet: 'ral' | 'wood' = sheet === 'wood' ? 'wood' : 'ral';
+      if (sheet === 'ocynk') warnings.push('Ażury dostępne tylko w RAL / drewnopodobnym – przyjęto cenę RAL.');
+      const rate = pl.openwork.wallPerM2[rateSheet];
+      push({
+        key: 'openworkWall',
+        label: `Ściana ażurowa ${fmt(input.openwork.width)} × ${fmt(input.openwork.height)} m`,
+        qty: m2,
+        unit: 'm²',
+        unitPrice: rate,
+        amount: m2 * rate,
+      });
+    } else if (input.openwork.mode === 'whole') {
+      const m2 = (2 * S + 2 * D) * effectiveHeight;
+      push({
+        key: 'openworkWhole',
+        label: 'Cały garaż w ażurach',
+        qty: m2,
+        unit: 'm²',
+        unitPrice: pl.openwork.wholeGaragePerM2,
+        amount: m2 * pl.openwork.wholeGaragePerM2,
+      });
+    }
+
   }
 
   const total = money(items.reduce((sum, it) => sum + it.amount, 0));
