@@ -26,12 +26,14 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
   if (!sandwich) {
     rows.push({ label: 'Dach', value: pl.roofTypes[input.roofType]?.label ?? input.roofType });
     rows.push({ label: 'Blacha', value: `${pl.sheetLabels[input.sheet]}${input.horizontalPanel ? ', poziomy panel' : ''}` });
+    const structure = input.structure ? pl.structures?.find((o) => o.key === input.structure) : undefined;
+    rows.push({ label: 'Konstrukcja', value: structure?.label ?? 'kątownik' });
   }
   if (input.gates.length) {
     rows.push({
       label: input.gates.length > 1 ? 'Bramy' : 'Brama',
       value: input.gates
-        .map((g) => `${GATE_LABELS[g.type]} ${fmt(g.width)} × ${fmt(g.height)} m${g.automat && g.type !== 'sectional' ? ' z automatem' : ''}${g.winchester ? ', winchester' : ''}${g.doorInGate ? ', drzwi w bramie' : ''}`)
+        .map((g) => `${GATE_LABELS[g.type]} ${fmt(g.width)} × ${fmt(g.height)} m${g.automat && g.type !== 'sectional' ? ' z automatem' : ''}${g.winchester ? ', winchester' : ''}${g.doorInGate ? ', drzwi w bramie' : ''}${g.lockKowal ? ', zamek kowal' : ''}`)
         .join('; '),
     });
   } else {
@@ -40,7 +42,7 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
   const roofOpts = [input.gutters && 'rynny', input.felt && 'filc antykondensacyjny', input.tile && 'blachodachówka'].filter(Boolean) as string[];
   if (!sandwich && roofOpts.length) rows.push({ label: 'Wyposażenie dachu', value: roofOpts.join(', ') });
   const openings: string[] = input.windows.filter((w) => w.qty > 0).map((w) => `${pl.windows[w.type]?.label ?? w.type} × ${w.qty}`);
-  if (input.doors > 0) openings.push(`drzwi × ${input.doors}`);
+  if (input.doors > 0) openings.push(`drzwi × ${input.doors}${input.doorLocks ? ` (zamek kowal × ${Math.min(input.doorLocks, input.doors)})` : ''}`);
   if (openings.length) rows.push({ label: 'Okna i drzwi', value: openings.join(', ') });
   const extras = [
     input.extras.lockKowal && 'zamek kowal',

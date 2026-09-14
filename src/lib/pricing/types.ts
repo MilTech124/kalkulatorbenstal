@@ -46,6 +46,13 @@ export interface HeightRule {
   label: string;
 }
 
+/** Rodzaj konstrukcji: katownik w cenie, inne profile = narzut % od ceny bazowej garazu. */
+export interface StructureOption {
+  key: string;
+  label: string;
+  pct: number;
+}
+
 export interface AnchoringTier {
   maxWidth: number;
   price: number;
@@ -64,6 +71,8 @@ export interface PriceList {
     feltPerM2: number;
     tilePerM2: number;
     roofAreaFactor: number;
+    /** Wypust filcu poza obrys garazu na kazda strone [m] (np. 0,3). */
+    feltOverhangM: number;
   };
   gate: {
     tilt: {
@@ -111,6 +120,12 @@ export interface PriceList {
   sandwich: {
     pricePerM3: number;
   };
+  /** Garaze blaszane spoza tabeli: a x b x h (w najwyzszym punkcie) x stawka + kolor za m3. */
+  custom: {
+    pricePerM3: number;
+    colorPerM3: Record<'ral' | 'wood', number>;
+  };
+  structures: StructureOption[];
 }
 
 export interface GateInput {
@@ -121,11 +136,17 @@ export interface GateInput {
   horizontalPanel: boolean;
   winchester: boolean;
   doorInGate: boolean;
+  /** Zamek kowal (klamka) w tej bramie. */
+  lockKowal?: boolean;
 }
 
 export interface QuoteInput {
   /** Rodzaj produktu; brak = garaz blaszany (stare wyceny). */
   productType?: ProductType;
+  /** Blaszak o wymiarach spoza tabeli - liczony z m3 (custom). */
+  customDims?: boolean;
+  /** Klucz z PriceList.structures; brak = katownik (w cenie). */
+  structure?: string;
   width: number;
   length: number;
   height: number;
@@ -139,6 +160,8 @@ export interface QuoteInput {
   gates: GateInput[];
   windows: { type: WindowType; qty: number }[];
   doors: number;
+  /** Liczba drzwi z zamkiem kowal. */
+  doorLocks?: number;
   extras: {
     lockKowal: boolean;
     anchoring: boolean;

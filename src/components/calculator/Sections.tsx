@@ -41,6 +41,44 @@ export function DimensionsSection({ input, pl, update }: SectionProps) {
     );
   }
 
+  const customToggle = (
+    <div className="mt-4">
+      <Checkbox
+        checked={Boolean(input.customDims)}
+        onChange={(customDims) => {
+          if (customDims) {
+            update({ customDims, horizontalPanel: false });
+          } else {
+            const w = widths.includes(input.width) ? input.width : widths[0];
+            const ls = availableLengths(pl, w);
+            update({ customDims: false, width: w, length: ls.includes(input.length) ? input.length : ls[0], height: pl.standardHeight });
+          }
+        }}
+        label="Wymiary spoza cennika"
+        hint={`Dowolne wymiary: szer. × dł. × wys. (w najwyższym punkcie) × ${formatPln(pl.custom?.pricePerM3 ?? 0)}/m³, kolor RAL/drewno za m³`}
+      />
+    </div>
+  );
+
+  if (input.customDims) {
+    return (
+      <Card title="Wymiary garażu (spoza cennika)" subtitle="Cena bazowa liczona z kubatury: szerokość × długość × wysokość w najwyższym punkcie.">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Szerokość [m]">
+            <NumberInput value={input.width} min={1} max={20} step={0.1} onChange={(width) => update({ width })} />
+          </Field>
+          <Field label="Długość [m]">
+            <NumberInput value={input.length} min={1} max={20} step={0.1} onChange={(length) => update({ length })} />
+          </Field>
+          <Field label="Wysokość w najwyższym punkcie [m]" hint="Brama może wymusić większą wysokość">
+            <NumberInput value={input.height} min={1.5} max={6} step={0.1} onChange={(height) => update({ height })} />
+          </Field>
+        </div>
+        {customToggle}
+      </Card>
+    );
+  }
+
   return (
     <Card title="Wymiary garażu" subtitle="Wybierz szerokość, długość i wysokość. Wysokość standardowa jest wliczona w cenę.">
       <div className="grid gap-4 sm:grid-cols-3">
@@ -72,6 +110,7 @@ export function DimensionsSection({ input, pl, update }: SectionProps) {
           </Select>
         </Field>
       </div>
+      {customToggle}
     </Card>
   );
 }
@@ -97,8 +136,21 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
             options={SHEET_ORDER.map((s) => ({ value: s, label: pl.sheetLabels[s], hint: sandwich ? 'dotyczy wiaty i ścian' : s === 'ocynk' ? 'w cenie' : 'dopłata wg wymiarów' }))}
           />
         </div>
+        {!sandwich && (pl.structures?.length ?? 0) > 0 && (
+          <div>
+            <p className="mb-2 text-sm font-medium text-slate-700">Konstrukcja</p>
+            <Segmented<string>
+              value={input.structure ?? ''}
+              onChange={(structure) => update({ structure: structure || undefined })}
+              options={[
+                { value: '', label: 'Kątownik', hint: 'w cenie' },
+                ...(pl.structures ?? []).map((o) => ({ value: o.key, label: o.label, hint: `${o.pct > 0 ? '+' : ''}${o.pct}% ceny bazowej` })),
+              ]}
+            />
+          </div>
+        )}
         <div className="grid gap-2 sm:grid-cols-2">
-          {!sandwich && (
+          {!sandwich && !input.customDims && (
             <Checkbox
               checked={input.horizontalPanel}
               onChange={(horizontalPanel) => update({ horizontalPanel })}
@@ -117,7 +169,7 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
               checked={input.felt}
               onChange={(felt) => update({ felt })}
               label="Filc (podbicie antykondensacyjne)"
-              hint={`${formatPln(pl.unit.feltPerM2)}/m² dachu (garaż + wiata)`}
+              hint={`${formatPln(pl.unit.feltPerM2)}/m² dachu z wypustem ${Math.round((pl.unit.feltOverhangM ?? 0) * 100)} cm na stronę (+ wiata)`}
             />
           )}
           <Checkbox
@@ -243,6 +295,7 @@ function GateCard({
         <div className="grid gap-2 sm:grid-cols-2">
           <Checkbox checked={g.winchester} onChange={(winchester) => onChange({ winchester })} label="Kolor winchester" hint="Dopłata za m² bramy" />
           <Checkbox checked={g.doorInGate} onChange={(doorInGate) => onChange({ doorInGate })} label="Drzwi w bramie" hint={formatPln(sec.doorInGate)} />
+          <Checkbox checked={Boolean(g.lockKowal)} onChange={(lockKowal) => onChange({ lockKowal })} label="Zamek kowal (klamka)" hint={formatPln(pl.extras.lockKowal)} />
         </div>
       ) : (
         <div className="grid gap-2 sm:grid-cols-2">
@@ -254,6 +307,7 @@ function GateCard({
             hint={`${formatPln(pl.gate.horizontalPanelOnGateOrDoor)} (gdy wybrano poziomy panel)`}
             disabled={!horizontalPanel}
           />
+          <Checkbox checked={Boolean(g.lockKowal)} onChange={(lockKowal) => onChange({ lockKowal })} label="Zamek kowal (klamka)" hint={formatPln(pl.extras.lockKowal)} />
         </div>
       )}
     </div>
@@ -284,7 +338,10 @@ export function WindowsDoorsSection({ input, pl, update }: SectionProps) {
             />
           );
         })}
-        <QtyRow label="Drzwi" hint={`${formatPln(pl.door)}/szt.`} value={input.doors} onChange={(doors) => update({ doors })} />
+        <QtyRow label="Drzwi" hint={`${formatPln(pl.door)}/szt.`} value={input.doors} onChange={(doors) => update({ doors, doorLocks: Math.min(input.doorLocks ?? 0, doors) })} />
+        {input.doors > 0 && (
+          <QtyRow label="Zamek kowal (klamka) w drzwiach" hint={`${formatPln(pl.extras.lockKowal)}/szt., max ${input.doors}`} value={input.doorLocks ?? 0} onChange={(doorLocks) => update({ doorLocks: Math.min(doorLocks, input.doors) })} />
+        )}
       </div>
     </Card>
   );
@@ -316,7 +373,6 @@ export function ExtrasSection({ input, pl, update }: SectionProps) {
   return (
     <Card title="Dodatki">
       <div className="grid gap-2 sm:grid-cols-2">
-        <Checkbox checked={e.lockKowal} onChange={(lockKowal) => setExtras({ lockKowal })} label="Zamek kowal" hint={formatPln(pl.extras.lockKowal)} />
         <Checkbox checked={e.padlockHolder} onChange={(padlockHolder) => setExtras({ padlockHolder })} label="Uchwyt na kłódkę" hint={formatPln(pl.extras.padlockHolder)} />
         <Checkbox
           checked={e.anchoring}

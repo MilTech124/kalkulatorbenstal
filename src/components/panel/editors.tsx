@@ -125,6 +125,7 @@ export function AddonsEditor({ pl, setPl }: EditorProps) {
         <NumField label="Filc [zł/m²]" value={u.feltPerM2} onChange={(v) => setUnit('feltPerM2', v)} />
         <NumField label="Blachodachówka [zł/m²]" value={u.tilePerM2} onChange={(v) => setUnit('tilePerM2', v)} />
         <NumField label="Współczynnik pow. dachu" value={u.roofAreaFactor} step={0.01} onChange={(v) => setUnit('roofAreaFactor', v)} hint="1,0 = szer. × dł.; np. 1,05 uwzględnia spadek/okap" />
+        <NumField label="Filc: wypust na stronę [m]" value={u.feltOverhangM ?? 0} step={0.05} onChange={(v) => setUnit('feltOverhangM', v)} hint="np. 0,3 = +30 cm z każdej strony" />
       </Group>
 
       <Group title="Okna i drzwi" description="Nazwa okna jest widoczna w kalkulatorze i w ofercie PDF.">
@@ -141,7 +142,7 @@ export function AddonsEditor({ pl, setPl }: EditorProps) {
       </Group>
 
       <Group title="Dodatki">
-        <NumField label="Zamek kowal [zł]" value={pl.extras.lockKowal} onChange={(v) => setExtra('lockKowal', v)} />
+        <NumField label="Zamek kowal (klamka) [zł/szt.]" value={pl.extras.lockKowal} onChange={(v) => setExtra('lockKowal', v)} hint="Doliczany do bramy lub drzwi" />
         <NumField label="Uchwyt na kłódkę [zł]" value={pl.extras.padlockHolder} onChange={(v) => setExtra('padlockHolder', v)} />
         <NumField label="Kratka wentylacyjna [zł/szt.]" value={pl.extras.ventGrille} onChange={(v) => setExtra('ventGrille', v)} />
         <div className="sm:col-span-2 lg:col-span-3">
@@ -170,6 +171,38 @@ export function AddonsEditor({ pl, setPl }: EditorProps) {
           </div>
         </div>
       </Group>
+
+      <Group title="Garaże blaszane spoza cennika" description="Gdy wymiarów nie ma w tabeli: szer. × dł. × wys. (najwyższy punkt) × stawka; kolor za m³.">
+        <NumField label="Stawka [zł/m³]" value={pl.custom?.pricePerM3 ?? 0} onChange={(v) => setPl((p) => ({ ...p, custom: { ...p.custom, pricePerM3: v } }))} />
+        <NumField label="Kolor RAL [zł/m³]" value={pl.custom?.colorPerM3.ral ?? 0} onChange={(v) => setPl((p) => ({ ...p, custom: { ...p.custom, colorPerM3: { ...p.custom.colorPerM3, ral: v } } }))} />
+        <NumField label="Drewnopodobny [zł/m³]" value={pl.custom?.colorPerM3.wood ?? 0} onChange={(v) => setPl((p) => ({ ...p, custom: { ...p.custom, colorPerM3: { ...p.custom.colorPerM3, wood: v } } }))} />
+      </Group>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="text-base font-semibold text-slate-900">Konstrukcja</h3>
+        <p className="mb-3 text-sm text-slate-500">Kątownik jest w cenie. Inne profile = narzut % od ceny bazowej garażu.</p>
+        <div className="space-y-2">
+          {(pl.structures ?? []).map((o, i) => (
+            <div key={i} className="grid grid-cols-[120px_1fr_90px_auto] items-end gap-2">
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-slate-600">Klucz</span>
+                <TextInput value={o.key} onChange={(e) => setPl((p) => ({ ...p, structures: p.structures.map((x, j) => (j === i ? { ...x, key: e.target.value } : x)) }))} />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-slate-600">Nazwa</span>
+                <TextInput value={o.label} onChange={(e) => setPl((p) => ({ ...p, structures: p.structures.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) }))} />
+              </label>
+              <NumField label="Narzut [%]" value={o.pct} onChange={(v) => setPl((p) => ({ ...p, structures: p.structures.map((x, j) => (j === i ? { ...x, pct: v } : x)) }))} />
+              <button type="button" className="pb-2 text-xs text-red-600 hover:underline" onClick={() => setPl((p) => ({ ...p, structures: p.structures.filter((_, j) => j !== i) }))}>
+                usuń
+              </button>
+            </div>
+          ))}
+          <button type="button" className="text-sm font-medium text-brand-600 hover:underline" onClick={() => setPl((p) => ({ ...p, structures: [...(p.structures ?? []), { key: `profil${(p.structures?.length ?? 0) + 1}`, label: 'Nowy profil', pct: 10 }] }))}>
+            + dodaj profil
+          </button>
+        </div>
+      </section>
 
       <Group title="Garaże warstwowe" description="Cena bazowa = szerokość × długość × wysokość × stawka. Dodatki (bramy, okna, rynny, wiata…) liczone jak w blaszanych.">
         <NumField label="Stawka [zł/m³]" value={pl.sandwich?.pricePerM3 ?? 0} onChange={(v) => setPl((p) => ({ ...p, sandwich: { ...p.sandwich, pricePerM3: v } }))} />

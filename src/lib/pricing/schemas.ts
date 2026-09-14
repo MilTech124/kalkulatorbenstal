@@ -13,6 +13,8 @@ export const productTypeSchema = z.enum(['steel', 'sandwich', 'bin']);
 
 export const quoteInputSchema = z.object({
   productType: productTypeSchema.optional(),
+  customDims: z.boolean().optional(),
+  structure: z.string().max(50).optional(),
   width: pos.max(20),
   length: pos.max(20),
   height: pos.max(6),
@@ -32,11 +34,13 @@ export const quoteInputSchema = z.object({
         horizontalPanel: z.boolean(),
         winchester: z.boolean(),
         doorInGate: z.boolean(),
+        lockKowal: z.boolean().optional(),
       }),
     )
     .max(6),
   windows: z.array(z.object({ type: windowTypeSchema, qty: z.number().int().min(0).max(50) })).max(20),
   doors: z.number().int().min(0).max(20),
+  doorLocks: z.number().int().min(0).max(20).optional(),
   extras: z.object({
     lockKowal: z.boolean(),
     anchoring: z.boolean(),
@@ -107,6 +111,7 @@ export const priceListSchema = z.object({
     feltPerM2: nonNeg,
     tilePerM2: nonNeg,
     roofAreaFactor: pos,
+    feltOverhangM: nonNeg.default(0),
   }),
   gate: z.object({
     tilt: z.object({
@@ -167,4 +172,6 @@ export const priceListSchema = z.object({
   openwork: z.object({ wallPerM2: z.object({ ral: nonNeg, wood: nonNeg }), wholeGaragePerM2: nonNeg }),
   sheetLabels: z.object({ ocynk: z.string(), ral: z.string(), wood: z.string() }),
   sandwich: z.object({ pricePerM3: nonNeg }).default({ pricePerM3: 0 }),
+  custom: z.object({ pricePerM3: nonNeg, colorPerM3: z.object({ ral: nonNeg, wood: nonNeg }) }).default({ pricePerM3: 0, colorPerM3: { ral: 0, wood: 0 } }),
+  structures: z.array(z.object({ key: z.string().min(1).max(50), label: z.string().min(1).max(100), pct: num })).default([]),
 });

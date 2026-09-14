@@ -54,7 +54,8 @@ describe('rynny / filc / blachodachówka', () => {
 
   it('filc liczy garaż + wiatę, blachodachówka tylko garaż', () => {
     const r = calculateQuote(base({ width: 3, length: 5, felt: true, tile: true, carport: { enabled: true, width: 3, length: 4 } }), PL);
-    expect(amount(r, 'felt')).toBe((15 + 12) * 20);
+    // filc z wypustem 30 cm: (3+0,6)·(5+0,6) + wiata 12 m²
+    expect(amount(r, 'felt')).toBe(Math.round((3.6 * 5.6 + 12) * 20));
     expect(amount(r, 'tile')).toBe(15 * 60);
     expect(amount(r, 'carport')).toBe(1200 * 4);
   });
@@ -182,5 +183,33 @@ describe('garaże warstwowe', () => {
     const r = calculateQuote(base({ productType: 'bin' }), PL);
     expect(r.total).toBe(0);
     expect(r.needsManualQuote).toBe(true);
+  });
+});
+
+describe('uwagi klienta 11.09', () => {
+  it('filc: powierzchnia z wypustem 30 cm na stronę', () => {
+    const r = calculateQuote(base({ width: 3, length: 5, felt: true }), PL);
+    expect(amount(r, 'felt')).toBe(Math.round(3.6 * 5.6 * 20));
+  });
+
+  it('konstrukcja: profil 30×30 malowany = +10% ceny bazowej', () => {
+    expect(amount(calculateQuote(base({ width: 3, length: 5, structure: 'painted30' }), PL), 'structure')).toBe(298);
+    expect(amount(calculateQuote(base({ width: 3, length: 5, structure: 'zinc4060' }), PL), 'structure')).toBe(894);
+  });
+
+  it('garaż spoza cennika: a×b×h × 90 + kolor za m³, bez dopłat tabelowych', () => {
+    const r = calculateQuote(base({ customDims: true, width: 4.2, length: 8, height: 2.5, sheet: 'wood', horizontalPanel: true }), PL);
+    const m3 = 4.2 * 8 * 2.5;
+    expect(amount(r, 'base')).toBe(Math.round(m3 * 90));
+    expect(amount(r, 'color')).toBe(Math.round(m3 * 30));
+    expect(amount(r, 'horizontalPanel')).toBeUndefined();
+    expect(amount(r, 'height')).toBeUndefined();
+    expect(amount(r, 'flashingRoof')).toBe((2 * 8 + 4.2) * 30);
+  });
+
+  it('zamek kowal: przy bramie i w drzwiach, 200 zł/szt.', () => {
+    const r = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), lockKowal: true }], doors: 2, doorLocks: 5 }), PL);
+    expect(amount(r, 'gate:0:lock')).toBe(200);
+    expect(amount(r, 'doorLocks')).toBe(400);
   });
 });

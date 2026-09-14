@@ -21,6 +21,7 @@ export const DEFAULT_PRICE_LIST: PriceList = {
     feltPerM2: 20,
     tilePerM2: 60,
     roofAreaFactor: 1,
+    feltOverhangM: 0.3,
   },
   gate: {
     tilt: {
@@ -82,4 +83,12 @@ export const DEFAULT_PRICE_LIST: PriceList = {
   sheetLabels: { ocynk: 'Ocynk', ral: 'Kolor RAL', wood: 'Drewnopodobny' },
   // TODO: stawka tymczasowa - do ustawienia w panelu
   sandwich: { pricePerM3: 350 },
+  custom: { pricePerM3: 90, colorPerM3: { ral: 20, wood: 30 } },
+  // Katownik w cenie; profile zamkniete = narzut % od ceny bazowej garazu
+  structures: [
+    { key: 'painted30', label: 'Profil zamknięty 30×30 malowany', pct: 10 },
+    { key: 'zinc30', label: 'Profil zamknięty 30×30 ocynk (od podstawy)', pct: 20 },
+    { key: 'painted4060', label: 'Profil zamknięty 40×60 malowany', pct: 20 },
+    { key: 'zinc4060', label: 'Profil zamknięty 40×60 ocynk', pct: 30 },
+  ],
 };

@@ -105,8 +105,10 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   }
 
   // Garaz warstwowy nie korzysta z tabeli bazowej (blaszaki); dopłaty z tabeli (kolor, panel, +10 cm) nie obowiazuja.
-  const row = productType === 'steel' ? findBaseRow(pl, S, D) : undefined;
-  if (productType === 'steel' && !row) {
+  // Blaszak spoza tabeli (customDims) liczony z m3 jak "garaze spoza cennika".
+  const customSteel = productType === 'steel' && Boolean(input.customDims);
+  const row = productType === 'steel' && !customSteel ? findBaseRow(pl, S, D) : undefined;
+  if (productType === 'steel' && !customSteel && !row) {
     warnings.push(`Brak w cenniku garażu ${fmt(S)} × ${fmt(D)} m.`);
     return { items, total: 0, effectiveHeight: input.height, warnings, needsManualQuote: true };
   }
@@ -163,6 +165,38 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
       amount: m3 * rate,
       note: heightNote,
     });
+  }
+
+  // 1c. Blaszak spoza cennika: a x b x h (najwyzszy punkt) x stawka + kolor za m3
+  if (customSteel) {
+    const m3 = S * D * effectiveHeight;
+    const rate = pl.custom?.pricePerM3 ?? 0;
+    if (rate <= 0) {
+      warnings.push('Brak stawki za m³ dla garaży spoza cennika – ustaw ją w panelu.');
+      needsManualQuote = true;
+    }
+    push({
+      key: 'base',
+      label: `Garaż ${fmt(S)} × ${fmt(D)} × ${fmt(effectiveHeight)} m (spoza cennika), ${roof.label.toLowerCase()}`,
+      qty: m3,
+      unit: 'm³',
+      unitPrice: rate,
+      amount: m3 * rate,
+      note: heightNote,
+    });
+    const colorRate = sheet === 'ral' ? (pl.custom?.colorPerM3.ral ?? 0) : sheet === 'wood' ? (pl.custom?.colorPerM3.wood ?? 0) : 0;
+    if (colorRate) {
+      push({ key: 'color', label: sheet === 'ral' ? 'Blacha w kolorze RAL' : 'Blacha drewnopodobna', qty: m3, unit: 'm³', unitPrice: colorRate, amount: m3 * colorRate });
+    }
+  }
+
+  // 1d. Konstrukcja: katownik w cenie, inne profile = % od ceny bazowej garazu
+  if (productType === 'steel' && input.structure) {
+    const opt = pl.structures?.find((o) => o.key === input.structure);
+    const baseAmount = items.find((i) => i.key === 'base')?.amount ?? 0;
+    if (opt && opt.pct !== 0) {
+      push({ key: 'structure', label: `Konstrukcja: ${opt.label} (${opt.pct > 0 ? '+' : ''}${fmt(opt.pct)}%)`, amount: (baseAmount * opt.pct) / 100 });
+    }
   }
 
   // 3. Podwyzszenie (tylko blaszaki - z tabeli)
@@ -231,7 +265,9 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     const garageArea = S * D * pl.unit.roofAreaFactor;
     const carportArea = input.carport.enabled ? input.carport.width * input.carport.length : 0;
     if (input.felt) {
-      const m2 = garageArea + carportArea;
+      // Filc: powierzchnia dachu z wypustem na kazda strone (np. +30 cm) + wiata
+      const o = pl.unit.feltOverhangM ?? 0;
+      const m2 = (S + 2 * o) * (D + 2 * o) * pl.unit.roofAreaFactor + carportArea;
       push({
         key: 'felt',
         label: carportArea ? 'Filc (garaż + wiata)' : 'Filc',
@@ -304,6 +340,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
         if (gate.doorInGate) push({ key: k('door'), label: `${prefix}drzwi w bramie segmentowej`, amount: pl.gate.sectional.doorInGate });
       }
     }
+    if (gate.lockKowal) push({ key: k('lock'), label: `${prefix}zamek kowal (klamka)`, amount: pl.extras.lockKowal });
   });
 
   // 10. Okna i drzwi
@@ -314,6 +351,8 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   }
   if (input.doors > 0) {
     push({ key: 'doors', label: 'Drzwi', qty: input.doors, unit: 'szt.', unitPrice: pl.door, amount: input.doors * pl.door });
+    const locks = Math.min(input.doorLocks ?? 0, input.doors);
+    if (locks > 0) push({ key: 'doorLocks', label: 'Zamek kowal (klamka) w drzwiach', qty: locks, unit: 'szt.', unitPrice: pl.extras.lockKowal, amount: locks * pl.extras.lockKowal });
     if (horizontalPanel) {
       push({
         key: 'doorsPanel',
@@ -327,6 +366,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   }
 
   // 11. Dodatki
+  // Stare wyceny: globalny zamek kowal (obecnie zaznaczany przy bramie/drzwiach)
   if (input.extras.lockKowal) push({ key: 'lockKowal', label: 'Zamek kowal', amount: pl.extras.lockKowal });
   if (input.extras.padlockHolder) push({ key: 'padlockHolder', label: 'Uchwyt na kłódkę', amount: pl.extras.padlockHolder });
   if (input.extras.ventGrilleQty > 0) {
