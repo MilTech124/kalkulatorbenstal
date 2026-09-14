@@ -6,6 +6,8 @@ Stack: **Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · MongoDB (Mon
 
 ## Uruchomienie lokalne
 
+> **Node:** używaj wersji z `.nvmrc` (`nvm use`). Node **22.22.x na Windows** ma błąd odczytu ustawień DNS (widzi `127.0.0.1`) i połączenie `mongodb+srv://` kończy się `querySrv ECONNREFUSED`; na 22.16 działa.
+
 ```bash
 npm install
 cp .env.example .env.local      # uzupełnij MONGODB_URI, ADMIN_EMAIL, ADMIN_PASSWORD, AUTH_SECRET
