@@ -23,6 +23,24 @@ export function DimensionsSection({ input, pl, update }: SectionProps) {
     update({ width: w, length: ls.includes(input.length) ? input.length : ls[0] });
   };
 
+  if (input.productType === 'sandwich') {
+    return (
+      <Card title="Wymiary garażu warstwowego" subtitle={`Cena bazowa: szerokość × długość × wysokość × ${formatPln(pl.sandwich?.pricePerM3 ?? 0)}/m³.`}>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Szerokość [m]">
+            <NumberInput value={input.width} min={2} max={15} step={0.5} onChange={(width) => update({ width })} />
+          </Field>
+          <Field label="Długość [m]">
+            <NumberInput value={input.length} min={2} max={20} step={0.5} onChange={(length) => update({ length })} />
+          </Field>
+          <Field label="Wysokość [m]" hint="Brama może wymusić większą wysokość">
+            <NumberInput value={input.height} min={2} max={5} step={0.1} onChange={(height) => update({ height })} />
+          </Field>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card title="Wymiary garażu" subtitle="Wybierz szerokość, długość i wysokość. Wysokość standardowa jest wliczona w cenę.">
       <div className="grid gap-4 sm:grid-cols-3">
@@ -59,6 +77,7 @@ export function DimensionsSection({ input, pl, update }: SectionProps) {
 }
 
 export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
+  const sandwich = input.productType === 'sandwich';
   return (
     <Card title="Dach i blacha">
       <div className="space-y-5">
@@ -75,28 +94,32 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
           <Segmented<SheetType>
             value={input.sheet}
             onChange={(sheet) => update({ sheet })}
-            options={SHEET_ORDER.map((s) => ({ value: s, label: pl.sheetLabels[s], hint: s === 'ocynk' ? 'w cenie' : 'dopłata wg wymiarów' }))}
+            options={SHEET_ORDER.map((s) => ({ value: s, label: pl.sheetLabels[s], hint: sandwich ? 'dotyczy wiaty i ścian' : s === 'ocynk' ? 'w cenie' : 'dopłata wg wymiarów' }))}
           />
         </div>
         <div className="grid gap-2 sm:grid-cols-2">
-          <Checkbox
-            checked={input.horizontalPanel}
-            onChange={(horizontalPanel) => update({ horizontalPanel })}
-            label="Poziomy panel blachy"
-            hint="Dopłata wg wymiarów garażu"
-          />
+          {!sandwich && (
+            <Checkbox
+              checked={input.horizontalPanel}
+              onChange={(horizontalPanel) => update({ horizontalPanel })}
+              label="Poziomy panel blachy"
+              hint="Dopłata wg wymiarów garażu"
+            />
+          )}
           <Checkbox
             checked={input.gutters}
             onChange={(gutters) => update({ gutters })}
             label="Rynny"
             hint={`${formatPln(pl.unit.gutterPerMb)}/mb, długość zależna od spadu`}
           />
-          <Checkbox
-            checked={input.felt}
-            onChange={(felt) => update({ felt })}
-            label="Filc (podbicie antykondensacyjne)"
-            hint={`${formatPln(pl.unit.feltPerM2)}/m² dachu (garaż + wiata)`}
-          />
+          {!sandwich && (
+            <Checkbox
+              checked={input.felt}
+              onChange={(felt) => update({ felt })}
+              label="Filc (podbicie antykondensacyjne)"
+              hint={`${formatPln(pl.unit.feltPerM2)}/m² dachu (garaż + wiata)`}
+            />
+          )}
           <Checkbox
             checked={input.tile}
             onChange={(tile) => update({ tile })}

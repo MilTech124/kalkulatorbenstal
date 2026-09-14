@@ -1,5 +1,6 @@
 // Typy wspoldzielone przez silnik wyceny (klient + serwer), panel admina i baze.
 
+export type ProductType = 'steel' | 'sandwich' | 'bin';
 export type SheetType = 'ocynk' | 'ral' | 'wood';
 export type RoofType = 'rear' | 'side' | 'gable';
 export type RoofPriceGroup = 'rear' | 'gable';
@@ -106,6 +107,10 @@ export interface PriceList {
     wholeGaragePerM2: number;
   };
   sheetLabels: Record<SheetType, string>;
+  /** Garaze warstwowe (plyta warstwowa): cena bazowa = szer. x dl. x wys. x stawka. */
+  sandwich: {
+    pricePerM3: number;
+  };
 }
 
 export interface GateInput {
@@ -119,6 +124,8 @@ export interface GateInput {
 }
 
 export interface QuoteInput {
+  /** Rodzaj produktu; brak = garaz blaszany (stare wyceny). */
+  productType?: ProductType;
   width: number;
   length: number;
   height: number;

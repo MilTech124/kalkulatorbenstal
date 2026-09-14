@@ -171,6 +171,10 @@ export function AddonsEditor({ pl, setPl }: EditorProps) {
         </div>
       </Group>
 
+      <Group title="Garaże warstwowe" description="Cena bazowa = szerokość × długość × wysokość × stawka. Dodatki (bramy, okna, rynny, wiata…) liczone jak w blaszanych.">
+        <NumField label="Stawka [zł/m³]" value={pl.sandwich?.pricePerM3 ?? 0} onChange={(v) => setPl((p) => ({ ...p, sandwich: { ...p.sandwich, pricePerM3: v } }))} />
+      </Group>
+
       <Group title="Ściany działowe / oblachowane [zł/m²]">
         <NumField label="Ocynk" value={pl.partitionWallPerM2.ocynk} onChange={(v) => setWall('ocynk', v)} />
         <NumField label="RAL" value={pl.partitionWallPerM2.ral} onChange={(v) => setWall('ral', v)} />

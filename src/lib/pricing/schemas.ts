@@ -9,7 +9,10 @@ export const roofTypeSchema = z.enum(['rear', 'side', 'gable']);
 export const gateTypeSchema = z.enum(['none', 'tilt', 'double', 'sectional']);
 export const windowTypeSchema = z.enum(['w100x60', 'w80x60', 'w60x40', 'plexi64x34', 'opening']);
 
+export const productTypeSchema = z.enum(['steel', 'sandwich', 'bin']);
+
 export const quoteInputSchema = z.object({
+  productType: productTypeSchema.optional(),
   width: pos.max(20),
   length: pos.max(20),
   height: pos.max(6),
@@ -163,4 +166,5 @@ export const priceListSchema = z.object({
   partitionWallPerM2: sheetRecord,
   openwork: z.object({ wallPerM2: z.object({ ral: nonNeg, wood: nonNeg }), wholeGaragePerM2: nonNeg }),
   sheetLabels: z.object({ ocynk: z.string(), ral: z.string(), wood: z.string() }),
+  sandwich: z.object({ pricePerM3: nonNeg }).default({ pricePerM3: 0 }),
 });

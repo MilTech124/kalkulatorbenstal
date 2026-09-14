@@ -5,6 +5,7 @@ import type {
   GateInput,
   GateType,
   LineItem,
+  ProductType,
   PriceList,
   QuoteInput,
   QuoteResult,
@@ -95,20 +96,29 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   const push = (item: LineItem) => items.push({ ...item, amount: money(item.amount) });
 
   const { width: S, length: D, roofType, sheet } = input;
+  const productType = input.productType ?? 'steel';
   const roof = pl.roofTypes[roofType];
-  const row = findBaseRow(pl, S, D);
 
-  if (!row) {
+  if (productType === 'bin') {
+    warnings.push('Wiaty śmietnikowe – wycena wkrótce.');
+    return { items, total: 0, effectiveHeight: input.height, warnings, needsManualQuote: true };
+  }
+
+  // Garaz warstwowy nie korzysta z tabeli bazowej (blaszaki); dopłaty z tabeli (kolor, panel, +10 cm) nie obowiazuja.
+  const row = productType === 'steel' ? findBaseRow(pl, S, D) : undefined;
+  if (productType === 'steel' && !row) {
     warnings.push(`Brak w cenniku garażu ${fmt(S)} × ${fmt(D)} m.`);
     return { items, total: 0, effectiveHeight: input.height, warnings, needsManualQuote: true };
   }
 
   // 1. Garaz bazowy
-  push({
-    key: 'base',
-    label: `Garaż ${fmt(S)} × ${fmt(D)} m, ${roof.label.toLowerCase()}`,
-    amount: roof.priceGroup === 'rear' ? row.rear : row.gable,
-  });
+  if (row) {
+    push({
+      key: 'base',
+      label: `Garaż ${fmt(S)} × ${fmt(D)} m, ${roof.label.toLowerCase()}`,
+      amount: roof.priceGroup === 'rear' ? row.rear : row.gable,
+    });
+  }
 
   // 2. Wymagana wysokosc (najwyzsza z bram moze wymusic podwyzszenie)
   const gates = input.gates.filter((g) => g.type !== 'none');
@@ -135,10 +145,29 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   const gatesWidth = gates.reduce((sum, g) => sum + g.width, 0);
   if (gates.length > 1 && gatesWidth >= S) warnings.push('Łączna szerokość bram jest większa lub równa szerokości garażu.');
 
-  // 3. Podwyzszenie
+  // 1b. Garaz warstwowy: kubatura x stawka (po ustaleniu wysokosci efektywnej)
+  if (productType === 'sandwich') {
+    const m3 = S * D * effectiveHeight;
+    const rate = pl.sandwich?.pricePerM3 ?? 0;
+    if (rate <= 0) {
+      warnings.push('Brak stawki za m³ dla garaży warstwowych – ustaw ją w panelu.');
+      needsManualQuote = true;
+    }
+    push({
+      key: 'base',
+      label: `Garaż warstwowy ${fmt(S)} × ${fmt(D)} × ${fmt(effectiveHeight)} m, ${roof.label.toLowerCase()}`,
+      qty: m3,
+      unit: 'm³',
+      unitPrice: rate,
+      amount: m3 * rate,
+      note: heightNote,
+    });
+  }
+
+  // 3. Podwyzszenie (tylko blaszaki - z tabeli)
   const steps = heightSteps(pl, effectiveHeight);
-  if (steps > pl.maxHeightSteps) warnings.push(`Wysokość ${fmt(effectiveHeight)} m przekracza maksymalną z cennika.`);
-  if (steps > 0) {
+  if (row && steps > pl.maxHeightSteps) warnings.push(`Wysokość ${fmt(effectiveHeight)} m przekracza maksymalną z cennika.`);
+  if (row && steps > 0) {
     const per = row.heightPer10 + (sheet === 'ral' ? row.colorPer10 : sheet === 'wood' ? row.woodPer10 : 0);
     push({
       key: 'height',
@@ -149,18 +178,18 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
       amount: steps * per,
       note: heightNote,
     });
-  } else if (heightNote) {
+  } else if (row && heightNote) {
     warnings.push(heightNote);
   }
 
   // 4. Kolor
-  if (sheet === 'ral') push({ key: 'color', label: 'Blacha w kolorze RAL', amount: row.color });
-  if (sheet === 'wood') push({ key: 'color', label: 'Blacha drewnopodobna', amount: row.wood });
+  if (row && sheet === 'ral') push({ key: 'color', label: 'Blacha w kolorze RAL', amount: row.color });
+  if (row && sheet === 'wood') push({ key: 'color', label: 'Blacha drewnopodobna', amount: row.wood });
 
   // 5. Poziomy panel (wymuszany przez okno fix)
   const plexiSelected = input.windows.some((w) => w.qty > 0 && pl.windows[w.type]?.requiresHorizontalPanel);
   const horizontalPanel = input.horizontalPanel || plexiSelected;
-  if (horizontalPanel) {
+  if (row && horizontalPanel) {
     push({
       key: 'horizontalPanel',
       label: 'Poziomy panel blachy',
@@ -389,6 +418,7 @@ export function emptyInput(pl: PriceList): QuoteInput {
   const width = 3;
   const lengths = availableLengths(pl, width);
   return {
+    productType: 'steel',
     width,
     length: lengths.includes(5) ? 5 : lengths[0],
     height: pl.standardHeight,
@@ -427,3 +457,9 @@ export const GATE_LABELS: Record<GateType, string> = {
 };
 
 export const SHEET_ORDER: SheetType[] = ['ocynk', 'ral', 'wood'];
+
+export const PRODUCT_LABELS: Record<ProductType, string> = {
+  steel: 'Garaże blaszane',
+  sandwich: 'Garaże warstwowe',
+  bin: 'Wiaty śmietnikowe',
+};

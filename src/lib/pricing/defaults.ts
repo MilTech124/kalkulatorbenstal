@@ -80,4 +80,6 @@ export const DEFAULT_PRICE_LIST: PriceList = {
     wholeGaragePerM2: 40,
   },
   sheetLabels: { ocynk: 'Ocynk', ral: 'Kolor RAL', wood: 'Drewnopodobny' },
+  // TODO: stawka tymczasowa - do ustawienia w panelu
+  sandwich: { pricePerM3: 350 },
 };

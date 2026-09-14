@@ -159,3 +159,26 @@ describe('okna, drzwi, dodatki', () => {
     expect(amount(r, 'openworkWhole')).toBe(Math.round(16 * 2.13 * 40));
   });
 });
+
+describe('garaże warstwowe', () => {
+  it('cena bazowa = S × D × H × stawka, bez dopłat z tabeli', () => {
+    const r = calculateQuote(base({ productType: 'sandwich', width: 4.5, length: 7, height: 2.5, sheet: 'ral', horizontalPanel: true, gutters: true }), PL);
+    expect(amount(r, 'base')).toBe(Math.round(4.5 * 7 * 2.5 * PL.sandwich.pricePerM3));
+    expect(amount(r, 'color')).toBeUndefined();
+    expect(amount(r, 'horizontalPanel')).toBeUndefined();
+    expect(amount(r, 'height')).toBeUndefined();
+    expect(amount(r, 'gutters')).toBe(4.5 * 80);
+  });
+
+  it('brama segmentowa podnosi wysokość garażu warstwowego (liczona w kubaturze)', () => {
+    const r = calculateQuote(base({ productType: 'sandwich', width: 4, length: 6, height: 2.2, gates: [{ ...defaultGate(), type: 'sectional', width: 3, height: 2.5 }] }), PL);
+    expect(r.effectiveHeight).toBe(3.03);
+    expect(amount(r, 'base')).toBe(Math.round(4 * 6 * 3.03 * PL.sandwich.pricePerM3));
+  });
+
+  it('wiaty śmietnikowe: jeszcze bez wyceny', () => {
+    const r = calculateQuote(base({ productType: 'bin' }), PL);
+    expect(r.total).toBe(0);
+    expect(r.needsManualQuote).toBe(true);
+  });
+});
