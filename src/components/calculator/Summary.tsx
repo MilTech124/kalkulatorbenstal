@@ -2,6 +2,7 @@
 
 import type { QuoteResult } from '@/lib/pricing/types';
 import { formatNum, formatPln } from '@/lib/format';
+import { convertFromPln, findCurrency, formatMoney, PLN, type CurrencyOption } from '@/lib/currency';
 
 export function QuoteBreakdown({ result, compact = false }: { result: QuoteResult; compact?: boolean }) {
   return (
@@ -24,7 +25,20 @@ export function QuoteBreakdown({ result, compact = false }: { result: QuoteResul
   );
 }
 
-export function Summary({ result, onSave }: { result: QuoteResult; onSave: () => void }) {
+export function Summary({
+  result,
+  onSave,
+  currencies = [],
+  currency,
+  onCurrencyChange,
+}: {
+  result: QuoteResult;
+  onSave: () => void;
+  currencies?: CurrencyOption[];
+  currency?: string;
+  onCurrencyChange?: (code: string) => void;
+}) {
+  const cur = findCurrency(currencies, currency);
   return (
     <aside className="rounded-xl border border-slate-200 bg-white shadow-sm lg:sticky lg:top-6">
       <div className="border-b border-slate-100 px-5 py-4">
@@ -42,10 +56,27 @@ export function Summary({ result, onSave }: { result: QuoteResult; onSave: () =>
         </ul>
       )}
       <div className="border-t border-slate-100 px-5 py-4">
+        {onCurrencyChange && currencies.length > 0 && (
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <span className="text-xs text-slate-500">Waluta</span>
+            <select value={cur.code} onChange={(e) => onCurrencyChange(e.target.value)} className="rounded-md border border-slate-300 px-2 py-1 text-xs">
+              {[PLN, ...currencies].map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="flex items-baseline justify-between">
           <span className="text-sm font-medium text-slate-600">Razem brutto</span>
-          <span className="text-2xl font-bold tabular-nums text-brand-700">{formatPln(result.total)}</span>
+          <span className="text-2xl font-bold tabular-nums text-brand-700">{cur.code === 'PLN' ? formatPln(result.total) : formatMoney(convertFromPln(result.total, cur), cur.code)}</span>
         </div>
+        {cur.code !== 'PLN' && (
+          <p className="text-right text-xs text-slate-500">
+            {formatPln(result.total)} · kurs 1 {cur.code} = {formatNum(cur.rate)} zł
+          </p>
+        )}
         {result.needsManualQuote && <p className="mt-1 text-xs text-amber-700">Część pozycji wymaga wyceny indywidualnej – suma jest orientacyjna.</p>}
         <button
           type="button"

@@ -64,7 +64,13 @@ export function Calculator({ priceList, isAdmin = false }: { priceList: PriceLis
         )}
       </div>
       <div>
-        <Summary result={result} onSave={openDialog} />
+        <Summary
+          result={result}
+          onSave={openDialog}
+          currencies={priceList.currencies ?? []}
+          currency={input.currency}
+          onCurrencyChange={(currency) => update({ currency: currency === 'PLN' ? undefined : currency })}
+        />
       </div>
       <MobileTotalBar total={result.total} onSave={openDialog} />
       <SaveQuoteDialog open={dialogOpen} onClose={closeDialog} input={input} total={result.total} isAdmin={isAdmin} />

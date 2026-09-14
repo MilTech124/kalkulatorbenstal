@@ -179,6 +179,32 @@ export function AddonsEditor({ pl, setPl }: EditorProps) {
       </Group>
 
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="text-base font-semibold text-slate-900">Waluty i kursy</h3>
+        <p className="mb-3 text-sm text-slate-500">Kurs = ile złotych za 1 jednostkę waluty. Klient może wybrać walutę przy wycenie; cena w PDF jest przeliczana po kursie z chwili zapisu.</p>
+        <div className="space-y-2">
+          {(pl.currencies ?? []).map((c, i) => (
+            <div key={i} className="grid grid-cols-[80px_1fr_120px_auto] items-end gap-2">
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-slate-600">Kod</span>
+                <TextInput value={c.code} maxLength={3} onChange={(e) => setPl((p) => ({ ...p, currencies: p.currencies.map((x, j) => (j === i ? { ...x, code: e.target.value.toUpperCase() } : x)) }))} />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-medium text-slate-600">Nazwa</span>
+                <TextInput value={c.label} onChange={(e) => setPl((p) => ({ ...p, currencies: p.currencies.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)) }))} />
+              </label>
+              <NumField label="Kurs [PLN]" value={c.rate} step={0.0001} onChange={(v) => setPl((p) => ({ ...p, currencies: p.currencies.map((x, j) => (j === i ? { ...x, rate: v } : x)) }))} />
+              <button type="button" className="pb-2 text-xs text-red-600 hover:underline" onClick={() => setPl((p) => ({ ...p, currencies: p.currencies.filter((_, j) => j !== i) }))}>
+                usuń
+              </button>
+            </div>
+          ))}
+          <button type="button" className="text-sm font-medium text-brand-600 hover:underline" onClick={() => setPl((p) => ({ ...p, currencies: [...(p.currencies ?? []), { code: 'USD', label: 'Dolar (USD)', rate: 4 }] }))}>
+            + dodaj walutę
+          </button>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <h3 className="text-base font-semibold text-slate-900">Konstrukcja</h3>
         <p className="mb-3 text-sm text-slate-500">Kątownik jest w cenie. Inne profile = narzut % od ceny bazowej garażu.</p>
         <div className="space-y-2">

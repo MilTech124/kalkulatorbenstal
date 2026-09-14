@@ -4,6 +4,7 @@ import path from 'node:path';
 import { Document, Font, Image, Page, StyleSheet, Text, View, renderToBuffer } from '@react-pdf/renderer';
 import { COMPANY, offerSummary } from '@/lib/offer';
 import { formatAddress } from '@/lib/customer';
+import { convertFromPln, formatMoney } from '@/lib/currency';
 import type { CustomerInfo, PriceList, QuoteInput } from '@/lib/pricing/types';
 
 const ASSETS = path.join(process.cwd(), 'src', 'assets');
@@ -68,6 +69,8 @@ export interface OfferPdfData {
   total: number;
   note?: string;
   validDays?: number;
+  /** Waluta prezentacji (kurs: ile PLN za 1 jednostke). */
+  currency?: { code: string; rate: number };
 }
 
 const fmt = (n: number) => n.toLocaleString('pl-PL', { maximumFractionDigits: 2 });
@@ -78,6 +81,7 @@ function OfferDocument({ d, logo }: { d: OfferPdfData; logo: Buffer }) {
   const date = d.createdAt.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
   const name = `${d.customer.firstName} ${d.customer.lastName}`.trim();
   const validDays = d.validDays ?? 14;
+  const foreign = d.currency && d.currency.code !== 'PLN' && d.currency.rate > 0 ? d.currency : null;
 
   return (
     <Document title={`Oferta BEN-STAL nr ${d.number}`} author={COMPANY.short} subject={`Wycena garażu ${fmt(d.input.width)} × ${fmt(d.input.length)} m`}>
@@ -126,9 +130,10 @@ function OfferDocument({ d, logo }: { d: OfferPdfData; logo: Buffer }) {
           <View style={s.priceBox} wrap={false}>
             <View>
               <Text style={s.priceLabel}>Cena całkowita brutto</Text>
-              <Text style={s.priceHint}>z montażem na terenie całej Polski · oferta ważna {validDays} dni</Text>
+              <Text style={s.priceHint}>z montażem · oferta ważna {validDays} dni</Text>
+              {foreign ? <Text style={s.priceHint}>{pln(d.total)} wg kursu 1 {foreign.code} = {fmt(foreign.rate)} zł</Text> : null}
             </View>
-            <Text style={s.price}>{pln(d.total)}</Text>
+            <Text style={s.price}>{foreign ? formatMoney(convertFromPln(d.total, foreign), foreign.code) : pln(d.total)}</Text>
           </View>
 
           {d.note ? <Text style={s.note}>{d.note}</Text> : null}

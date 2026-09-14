@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { QuoteBreakdown } from '@/components/calculator/Summary';
 import { formatAddress } from '@/lib/customer';
 import { formatPln } from '@/lib/format';
+import { convertFromPln, formatMoney } from '@/lib/currency';
 import { SendToTrackerButton, StatusSelect } from '@/components/panel/QuoteStatusControls';
 import { OfferPdfButton } from '@/components/panel/OfferPdfButton';
 import { connectDb } from '@/lib/db';
@@ -78,6 +79,11 @@ export default async function QuoteDetailsPage({ params }: { params: Promise<{ i
             {doc.offeredTotal != null && doc.offeredTotal !== doc.total && (
               <p className="text-xs text-amber-700">w ofercie: {formatPln(doc.offeredTotal)}</p>
             )}
+            {doc.currency?.code && doc.currency.code !== 'PLN' && doc.currency.rate ? (
+              <p className="text-xs text-slate-500">
+                {formatMoney(convertFromPln(doc.offeredTotal ?? doc.total, { rate: doc.currency.rate }), doc.currency.code)} (kurs {doc.currency.rate})
+              </p>
+            ) : null}
           </div>
         </div>
       </div>

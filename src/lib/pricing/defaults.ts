@@ -85,6 +85,12 @@ export const DEFAULT_PRICE_LIST: PriceList = {
   sandwich: { pricePerM3: 350 },
   custom: { pricePerM3: 90, colorPerM3: { ral: 20, wood: 30 } },
   // Katownik w cenie; profile zamkniete = narzut % od ceny bazowej garazu
+  // Kursy orientacyjne - do aktualizacji w panelu (ile PLN za 1 jednostke). Slowacja uzywa EUR.
+  currencies: [
+    { code: 'EUR', label: 'Euro (EUR)', rate: 4.3 },
+    { code: 'CZK', label: 'Korona czeska (CZK)', rate: 0.17 },
+    { code: 'HUF', label: 'Forint węgierski (HUF)', rate: 0.0108 },
+  ],
   structures: [
     { key: 'painted30', label: 'Profil zamknięty 30×30 malowany', pct: 10 },
     { key: 'zinc30', label: 'Profil zamknięty 30×30 ocynk (od podstawy)', pct: 20 },

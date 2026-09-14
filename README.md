@@ -63,6 +63,10 @@ Domyślne dane: [`src/lib/pricing/data/base-table.ts`](src/lib/pricing/data/base
 
 > Uwaga: dopłaty bramy uchylnej za +50 cm szerokości (150 zł) i +10 cm wysokości (50 zł) to wartości tymczasowe – do uzupełnienia w panelu. Pola `priceLow/priceHigh/lowMaxHeight` w cenniku nie są już używane.
 
+## Waluty
+
+Panel → Cennik → Dodatki → „Waluty i kursy”: lista walut z kursem (ile PLN za 1 jednostkę); domyślnie EUR, CZK, HUF (Słowacja używa EUR). W podsumowaniu wyceny jest wybór waluty – suma przeliczana po kursie, w PDF cena w wybranej walucie z adnotacją o kursie z chwili zapisu (kurs zapisywany przy wycenie). Rozbicie i edycja ceny zawsze w PLN.
+
 ## Oferta PDF
 
 Po zapisaniu wyceny klient dostaje przycisk **„Pobierz ofertę PDF”** (link z jednorazowym tokenem, `/api/quotes/[id]/pdf?t=…`). PDF zawiera logo, numer i datę oferty, dane zamawiającego, podsumowanie konfiguracji (bez rozbicia cen), cenę, dopisek i stopkę firmową; generowany serwerowo (`@react-pdf/renderer`, czcionka Roboto z polskimi znakami, szablon w [`src/lib/offerPdf.tsx`](src/lib/offerPdf.tsx), dane firmy w `COMPANY` w [`src/lib/offer.ts`](src/lib/offer.ts)).

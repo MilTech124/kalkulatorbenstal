@@ -32,6 +32,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     priceList: pl.data,
     effectiveHeight: quote.result?.effectiveHeight ?? quote.input.height,
     total: quote.offeredTotal ?? quote.total,
+    currency: quote.currency?.code && quote.currency.rate ? { code: quote.currency.code, rate: quote.currency.rate } : undefined,
     note: quote.offerNote ?? undefined,
   });
   const inline = request.nextUrl.searchParams.get('download') !== '1';
