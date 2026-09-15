@@ -32,6 +32,14 @@ describe('tabela bazowa', () => {
   });
 });
 
+describe('blacha w poziomie na bramie', () => {
+  it('liczona niezależnie od ułożenia blachy garażu', () => {
+    const r = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), horizontalPanel: true }] }), PL);
+    expect(amount(r, 'gate:0:panel')).toBe(100);
+    expect(amount(r, 'horizontalPanel')).toBeUndefined();
+  });
+});
+
 describe('okucia opcjonalne', () => {
   it('bez okuć brak pozycji okuć', () => {
     const r = calculateQuote(base({ width: 3, length: 5, flashings: false }), PL);
@@ -223,7 +231,8 @@ describe('uwagi klienta 11.09', () => {
     const m3 = 4.2 * 8 * 2.5;
     expect(amount(r, 'base')).toBe(Math.round(m3 * 90));
     expect(amount(r, 'color')).toBe(Math.round(m3 * 30));
-    expect(amount(r, 'horizontalPanel')).toBeUndefined();
+    // poziomy panel spoza cennika: wg najblizszego wiersza (4 x 7 -> 800)
+    expect(amount(r, 'horizontalPanel')).toBe(800);
     expect(amount(r, 'height')).toBeUndefined();
     expect(amount(r, 'flashingRoof')).toBe((2 * 8 + 4.2) * 30);
   });

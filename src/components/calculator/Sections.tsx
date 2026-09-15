@@ -47,7 +47,7 @@ export function DimensionsSection({ input, pl, update }: SectionProps) {
         checked={Boolean(input.customDims)}
         onChange={(customDims) => {
           if (customDims) {
-            update({ customDims, horizontalPanel: false });
+            update({ customDims });
           } else {
             const w = widths.includes(input.width) ? input.width : widths[0];
             const ls = availableLengths(pl, w);
@@ -149,15 +149,20 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
             />
           </div>
         )}
-        <div className="grid gap-2 sm:grid-cols-2">
-          {!sandwich && !input.customDims && (
-            <Checkbox
-              checked={input.horizontalPanel}
-              onChange={(horizontalPanel) => update({ horizontalPanel })}
-              label="Poziomy panel blachy"
-              hint="Dopłata wg wymiarów garażu"
+        {!sandwich && (
+          <div>
+            <p className="mb-2 text-sm font-medium text-slate-700">Ułożenie blachy</p>
+            <Segmented<'v' | 'h'>
+              value={input.horizontalPanel ? 'h' : 'v'}
+              onChange={(v) => update({ horizontalPanel: v === 'h' })}
+              options={[
+                { value: 'v', label: 'Pionowo', hint: 'w cenie' },
+                { value: 'h', label: 'Poziomo', hint: 'dopłata wg wymiarów garażu' },
+              ]}
             />
-          )}
+          </div>
+        )}
+        <div className="grid gap-2 sm:grid-cols-2">
           {!sandwich && (
             <Checkbox
               checked={input.flashings ?? true}
@@ -210,7 +215,6 @@ export function GateSection({ input, pl, update }: SectionProps) {
             total={gates.length}
             gate={g}
             pl={pl}
-            horizontalPanel={input.horizontalPanel}
             onChange={(patch) => patchGate(i, patch)}
             onRemove={() => setGates(gates.filter((_, j) => j !== i))}
           />
@@ -230,7 +234,6 @@ function GateCard({
   total,
   gate: g,
   pl,
-  horizontalPanel,
   onChange,
   onRemove,
 }: {
@@ -238,7 +241,6 @@ function GateCard({
   total: number;
   gate: GateInput;
   pl: PriceList;
-  horizontalPanel: boolean;
   onChange: (patch: Partial<GateInput>) => void;
   onRemove: () => void;
 }) {
@@ -311,9 +313,8 @@ function GateCard({
           <Checkbox
             checked={g.horizontalPanel}
             onChange={(horizontalPanel) => onChange({ horizontalPanel })}
-            label="Poziomy panel na bramie"
-            hint={`${formatPln(pl.gate.horizontalPanelOnGateOrDoor)} (gdy wybrano poziomy panel)`}
-            disabled={!horizontalPanel}
+            label="Blacha w poziomie na bramie"
+            hint={formatPln(pl.gate.horizontalPanelOnGateOrDoor)}
           />
           <Checkbox checked={Boolean(g.lockKowal)} onChange={(lockKowal) => onChange({ lockKowal })} label="Zamek kowal (klamka)" hint={formatPln(pl.extras.lockKowal)} />
         </div>

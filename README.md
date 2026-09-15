@@ -50,7 +50,7 @@ Cały algorytm jest w jednym pliku: [`src/lib/pricing/engine.ts`](src/lib/pricin
 
 1. **Garaż bazowy** – z tabeli szer. × dł. (Excel): kolumna „spad do tyłu” albo „dwuspadowy” (spad na bok i dwuspad używają tej drugiej).
 2. **Wysokość** – standard 2,13 m; za każde rozpoczęte 10 cm powyżej dopłata z tabeli (+ dopłata kolorowa/drewnopodobna za 10 cm). Brama segmentowa (i automat przy spadzie do tyłu) automatycznie wymusza minimalną wysokość garażu wg reguł z panelu (np. wys. bramy + 50 cm przy spadzie do tyłu).
-3. **Blacha** – dopłata RAL / drewnopodobna z tabeli; **poziomy panel** z tabeli. **Konstrukcja** – kątownik w cenie; profil zamknięty 30×30 malowany +10%, 30×30 ocynk +20%, 40×60 malowany +20%, 40×60 ocynk +30% ceny bazowej (lista edytowalna w panelu).
+3. **Blacha** – dopłata RAL / drewnopodobna z tabeli; **ułożenie blachy** pionowo (w cenie) lub poziomo – dopłata z tabeli (spoza cennika: wg najbliższego mniejszego wiersza); blacha w poziomie na bramie +100 zł niezależnie od garażu. **Konstrukcja** – kątownik w cenie; profil zamknięty 30×30 malowany +10%, 30×30 ocynk +20%, 40×60 malowany +20%, 40×60 ocynk +30% ceny bazowej (lista edytowalna w panelu).
 3a. **Wymiary spoza cennika** (checkbox przy wymiarach) – cena bazowa = szer. × dł. × wys. w najwyższym punkcie × 90 zł/m³; kolor RAL +20 zł/m³, drewnopodobny +30 zł/m³; bez dopłat tabelowych (+10 cm, poziomy panel).
 4. **Okucia** (opcjonalne, domyślnie zaznaczone) – pionowe `4 × wysokość` mb, dachu wg spadu (`2·D + S` dla spadu do tyłu, `2·S + D` dla pozostałych) × zł/mb.
 5. **Rynny** – `S` (spad do tyłu), `D` (na bok), `2·D` (dwuspad) × zł/mb. **Filc** – m² dachu z wypustem 30 cm na każdą stronę (`(S+0,6)·(D+0,6)`) + wiata. **Blachodachówka** – m² garażu.

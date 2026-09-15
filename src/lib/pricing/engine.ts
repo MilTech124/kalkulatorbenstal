@@ -20,6 +20,13 @@ export function findBaseRow(pl: PriceList, width: number, length: number): BaseT
   return pl.baseTable.find((r) => r.width === width && r.length === length);
 }
 
+/** Najblizszy wiersz tabeli nie wiekszy niz podane wymiary (fallback: najwiekszy). */
+export function nearestBaseRow(pl: PriceList, width: number, length: number): BaseTableRow | undefined {
+  const rows = [...pl.baseTable].sort((a, b) => a.width - b.width || a.length - b.length);
+  const fitting = rows.filter((r) => r.width <= width && r.length <= length);
+  return fitting[fitting.length - 1] ?? rows[rows.length - 1];
+}
+
 export function availableWidths(pl: PriceList): number[] {
   return [...new Set(pl.baseTable.map((r) => r.width))].sort((a, b) => a - b);
 }
@@ -221,14 +228,18 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   if (row && sheet === 'ral') push({ key: 'color', label: 'Blacha w kolorze RAL', amount: row.color });
   if (row && sheet === 'wood') push({ key: 'color', label: 'Blacha drewnopodobna', amount: row.wood });
 
-  // 5. Poziomy panel
-  const horizontalPanel = input.horizontalPanel;
-  if (row && horizontalPanel) {
-    push({
-      key: 'horizontalPanel',
-      label: 'Poziomy panel blachy',
-      amount: row.horizontalPanel,
-    });
+  // 5. Poziomy panel (blacha w poziomie). Spoza cennika: cena z najblizszego mniejszego wiersza tabeli.
+  const horizontalPanel = productType === 'steel' && input.horizontalPanel;
+  if (horizontalPanel) {
+    const ref = row ?? nearestBaseRow(pl, S, D);
+    if (ref) {
+      push({
+        key: 'horizontalPanel',
+        label: 'Blacha w poziomie (poziomy panel)',
+        amount: ref.horizontalPanel,
+        note: row ? undefined : `Dopłata wg tabeli dla ${fmt(ref.width)} × ${fmt(ref.length)} m`,
+      });
+    }
   }
 
   // 6-8. Elementy dachu i blachy - tylko garaze blaszane
@@ -316,8 +327,8 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
       }
       if (gate.type === 'double') push({ key: k('double'), label: `${prefix}dopłata: dwuskrzydłowa`, amount: pl.gate.doubleLeafExtra });
       if (gate.automat) push({ key: k('automat'), label: `${prefix}automat do bramy`, amount: pl.gate.automat });
-      if (horizontalPanel && gate.horizontalPanel) {
-        push({ key: k('panel'), label: `${prefix}poziomy panel na bramie`, amount: pl.gate.horizontalPanelOnGateOrDoor });
+      if (gate.horizontalPanel) {
+        push({ key: k('panel'), label: `${prefix}blacha w poziomie na bramie`, amount: pl.gate.horizontalPanelOnGateOrDoor });
       }
     } else if (gate.type === 'sectional') {
       const cell = sectionalCell(pl, gate.width, gate.height);

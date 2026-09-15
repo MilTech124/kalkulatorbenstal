@@ -25,7 +25,7 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
   const sandwich = input.productType === 'sandwich';
   if (!sandwich) {
     rows.push({ label: 'Dach', value: pl.roofTypes[input.roofType]?.label ?? input.roofType });
-    rows.push({ label: 'Blacha', value: `${pl.sheetLabels[input.sheet]}${input.horizontalPanel ? ', poziomy panel' : ''}` });
+    rows.push({ label: 'Blacha', value: `${pl.sheetLabels[input.sheet]}${input.horizontalPanel ? ', blacha w poziomie' : ''}` });
     const structure = input.structure ? pl.structures?.find((o) => o.key === input.structure) : undefined;
     rows.push({ label: 'Konstrukcja', value: structure?.label ?? 'kątownik' });
   }
