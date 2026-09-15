@@ -340,7 +340,7 @@ export function WindowsDoorsSection({ input, pl, update }: SectionProps) {
             <QtyRow
               key={t}
               label={def.label}
-              hint={`${formatPln(def.price)}/szt.${def.requiresHorizontalPanel ? ' · wymaga poziomego panelu' : ''}`}
+              hint={`${formatPln(def.price)}/szt.`}
               value={qtyOf(t)}
               onChange={(v) => setQty(t, v)}
             />

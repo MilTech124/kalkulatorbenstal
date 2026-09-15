@@ -160,8 +160,8 @@ describe('kilka bram', () => {
 });
 
 describe('okna, drzwi, dodatki', () => {
-  it('okno pleksa wymusza poziomy panel', () => {
-    const r = calculateQuote(base({ width: 3, length: 5, windows: [{ type: 'plexi64x34', qty: 1 }], doors: 1 }), PL);
+  it('okno fix + poziomy panel', () => {
+    const r = calculateQuote(base({ width: 3, length: 5, horizontalPanel: true, windows: [{ type: 'plexi64x34', qty: 1 }], doors: 1 }), PL);
     expect(amount(r, 'horizontalPanel')).toBe(600);
     expect(amount(r, 'window:plexi64x34')).toBe(500);
     expect(amount(r, 'doors')).toBe(0);

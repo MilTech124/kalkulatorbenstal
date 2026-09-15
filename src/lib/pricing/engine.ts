@@ -221,15 +221,13 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   if (row && sheet === 'ral') push({ key: 'color', label: 'Blacha w kolorze RAL', amount: row.color });
   if (row && sheet === 'wood') push({ key: 'color', label: 'Blacha drewnopodobna', amount: row.wood });
 
-  // 5. Poziomy panel (wymuszany przez okno fix)
-  const plexiSelected = input.windows.some((w) => w.qty > 0 && pl.windows[w.type]?.requiresHorizontalPanel);
-  const horizontalPanel = input.horizontalPanel || plexiSelected;
+  // 5. Poziomy panel
+  const horizontalPanel = input.horizontalPanel;
   if (row && horizontalPanel) {
     push({
       key: 'horizontalPanel',
       label: 'Poziomy panel blachy',
       amount: row.horizontalPanel,
-      note: !input.horizontalPanel && plexiSelected ? 'Wymagany przez okno fix (stałe przeszklenie).' : undefined,
     });
   }
 

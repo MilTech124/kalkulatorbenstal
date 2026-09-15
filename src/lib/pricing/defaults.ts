@@ -57,7 +57,7 @@ export const DEFAULT_PRICE_LIST: PriceList = {
     w100x60: { label: 'Okno 100×60', price: 700 },
     w80x60: { label: 'Okno 80×60', price: 600 },
     w60x40: { label: 'Okno 60×40', price: 500 },
-    plexi64x34: { label: 'Okno fix (stałe przeszklenie)', price: 500, requiresHorizontalPanel: true }, // TODO: wymiary i cena do potwierdzenia przez klienta
+    plexi64x34: { label: 'Okno fix (stałe przeszklenie)', price: 500 }, // TODO: wymiary i cena do potwierdzenia przez klienta
     opening: { label: 'Otwór okienny', price: 120 },
   },
   door: 300,
