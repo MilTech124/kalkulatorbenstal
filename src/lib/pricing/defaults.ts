@@ -82,7 +82,13 @@ export const DEFAULT_PRICE_LIST: PriceList = {
   },
   sheetLabels: { ocynk: 'Ocynk', ral: 'Kolor RAL', wood: 'Drewnopodobny' },
   // TODO: stawka tymczasowa - do ustawienia w panelu
-  sandwich: { pricePerM3: 350 },
+  sandwich: {
+    pricePerM3: 370,
+    panels: [
+      { key: 'p60', label: 'Płyta 6 cm', pricePerM3: 370 },
+      { key: 'p100', label: 'Płyta 10 cm', pricePerM3: 390 },
+    ],
+  },
   custom: { pricePerM3: 90, colorPerM3: { ral: 20, wood: 30 } },
   // Katownik w cenie; profile zamkniete = narzut % od ceny bazowej garazu
   // Kursy orientacyjne - do aktualizacji w panelu (ile PLN za 1 jednostke). Slowacja uzywa EUR.

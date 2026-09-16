@@ -118,7 +118,10 @@ export interface PriceList {
   sheetLabels: Record<SheetType, string>;
   /** Garaze warstwowe (plyta warstwowa): cena bazowa = szer. x dl. x wys. x stawka. */
   sandwich: {
+    /** Stara stawka (fallback, gdy brak listy plyt). */
     pricePerM3: number;
+    /** Rodzaje plyty warstwowej do wyboru: stawka za m3. */
+    panels: { key: string; label: string; pricePerM3: number }[];
   };
   /** Garaze blaszane spoza tabeli: a x b x h (w najwyzszym punkcie) x stawka + kolor za m3. */
   custom: {
@@ -149,6 +152,8 @@ export interface QuoteInput {
   customDims?: boolean;
   /** Klucz z PriceList.structures; brak = katownik (w cenie). */
   structure?: string;
+  /** Garaz warstwowy: klucz plyty z PriceList.sandwich.panels; brak = pierwsza. */
+  sandwichPanel?: string;
   width: number;
   length: number;
   height: number;

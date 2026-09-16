@@ -1,6 +1,6 @@
 'use client';
 
-import { availableLengths, availableWidths, defaultGate, GATE_LABELS, heightOptions, SHEET_ORDER } from '@/lib/pricing/engine';
+import { availableLengths, availableWidths, defaultGate, GATE_LABELS, heightOptions, sandwichPanel, SHEET_ORDER } from '@/lib/pricing/engine';
 import type { GateInput, GateType, PriceList, QuoteInput, RoofType, SheetType, WindowType } from '@/lib/pricing/types';
 import { Card, Checkbox, Field, NumberInput, Segmented, Select } from '@/components/ui';
 import { formatNum, formatPln } from '@/lib/format';
@@ -24,8 +24,20 @@ export function DimensionsSection({ input, pl, update }: SectionProps) {
   };
 
   if (input.productType === 'sandwich') {
+    const panels = pl.sandwich?.panels ?? [];
+    const panel = sandwichPanel(pl, input.sandwichPanel);
     return (
-      <Card title="Wymiary garażu warstwowego" subtitle={`Cena bazowa: szerokość × długość × wysokość × ${formatPln(pl.sandwich?.pricePerM3 ?? 0)}/m³.`}>
+      <Card title="Wymiary garażu warstwowego" subtitle={`Cena bazowa: szerokość × długość × wysokość × ${formatPln(panel?.pricePerM3 ?? pl.sandwich?.pricePerM3 ?? 0)}/m³.`}>
+        {panels.length > 0 && (
+          <div className="mb-4">
+            <p className="mb-2 text-sm font-medium text-slate-700">Płyta warstwowa</p>
+            <Segmented<string>
+              value={panel?.key ?? ''}
+              onChange={(sandwichPanel) => update({ sandwichPanel })}
+              options={panels.map((p) => ({ value: p.key, label: p.label, hint: `${formatPln(p.pricePerM3)}/m³` }))}
+            />
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Szerokość [m]">
             <NumberInput value={input.width} min={2} max={15} step={0.5} onChange={(width) => update({ width })} />

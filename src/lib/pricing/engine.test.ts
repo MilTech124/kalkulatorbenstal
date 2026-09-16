@@ -193,7 +193,8 @@ describe('okna, drzwi, dodatki', () => {
 describe('garaże warstwowe', () => {
   it('cena bazowa = S × D × H × stawka, bez dopłat z tabeli', () => {
     const r = calculateQuote(base({ productType: 'sandwich', width: 4.5, length: 7, height: 2.5, sheet: 'ral', horizontalPanel: true, gutters: true }), PL);
-    expect(amount(r, 'base')).toBe(Math.round(4.5 * 7 * 2.5 * PL.sandwich.pricePerM3));
+    expect(amount(r, 'base')).toBe(Math.round(4.5 * 7 * 2.5 * 370));
+    expect(amount(calculateQuote(base({ productType: 'sandwich', width: 4, length: 6, height: 2.5, sandwichPanel: 'p100' }), PL), 'base')).toBe(Math.round(4 * 6 * 2.5 * 390));
     expect(amount(r, 'color')).toBeUndefined();
     expect(amount(r, 'horizontalPanel')).toBeUndefined();
     expect(amount(r, 'height')).toBeUndefined();
@@ -205,7 +206,7 @@ describe('garaże warstwowe', () => {
     const r = calculateQuote(base({ productType: 'sandwich', width: 4, length: 6, height: 2.2, gates: [{ ...defaultGate(), type: 'sectional', width: 3, height: 2.5 }] }), PL);
     // bez zapasu z regul dachowych: 2,5 m -> 4 kroki od 2,13 -> 2,53
     expect(r.effectiveHeight).toBe(2.53);
-    expect(amount(r, 'base')).toBe(Math.round(4 * 6 * 2.53 * PL.sandwich.pricePerM3));
+    expect(amount(r, 'base')).toBe(Math.round(4 * 6 * 2.53 * 370));
   });
 
   it('wiaty śmietnikowe: jeszcze bez wyceny', () => {

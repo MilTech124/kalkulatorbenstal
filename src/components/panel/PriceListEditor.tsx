@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { PriceList } from '@/lib/pricing/types';
 import { Button } from '@/components/ui';
-import { AddonsEditor, AdvancedEditor, BaseTableEditor, CarportEditor, GatesEditor } from './editors';
+import { AddonsEditor, AdvancedEditor, BaseTableEditor, CarportEditor, GatesEditor, SandwichEditor } from './editors';
 
 export interface VersionInfo {
   version: number;
@@ -12,12 +12,13 @@ export interface VersionInfo {
   createdAt: string;
 }
 
-type Tab = 'base' | 'addons' | 'gates' | 'carport' | 'advanced' | 'versions';
+type Tab = 'base' | 'addons' | 'gates' | 'sandwich' | 'carport' | 'advanced' | 'versions';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'base', label: 'Tabela bazowa' },
   { id: 'addons', label: 'Dodatki' },
   { id: 'gates', label: 'Bramy' },
+  { id: 'sandwich', label: 'Warstwowe' },
   { id: 'carport', label: 'Wiata' },
   { id: 'advanced', label: 'Zaawansowane' },
   { id: 'versions', label: 'Wersje' },
@@ -136,6 +137,7 @@ export function PriceListEditor({ initial, version, versions }: { initial: Price
       {tab === 'base' && <BaseTableEditor pl={pl} setPl={setPl} />}
       {tab === 'addons' && <AddonsEditor pl={pl} setPl={setPl} />}
       {tab === 'gates' && <GatesEditor pl={pl} setPl={setPl} />}
+      {tab === 'sandwich' && <SandwichEditor pl={pl} setPl={setPl} />}
       {tab === 'carport' && <CarportEditor pl={pl} setPl={setPl} />}
       {tab === 'advanced' && <AdvancedEditor pl={pl} setPl={setPl} />}
       {tab === 'versions' && (

@@ -15,6 +15,7 @@ export const quoteInputSchema = z.object({
   productType: productTypeSchema.optional(),
   customDims: z.boolean().optional(),
   structure: z.string().max(50).optional(),
+  sandwichPanel: z.string().max(50).optional(),
   width: pos.max(20),
   length: pos.max(20),
   height: pos.max(6),
@@ -173,7 +174,9 @@ export const priceListSchema = z.object({
   partitionWallPerM2: sheetRecord,
   openwork: z.object({ wallPerM2: z.object({ ral: nonNeg, wood: nonNeg }), wholeGaragePerM2: nonNeg }),
   sheetLabels: z.object({ ocynk: z.string(), ral: z.string(), wood: z.string() }),
-  sandwich: z.object({ pricePerM3: nonNeg }).default({ pricePerM3: 0 }),
+  sandwich: z
+    .object({ pricePerM3: nonNeg, panels: z.array(z.object({ key: z.string().min(1).max(50), label: z.string().min(1).max(100), pricePerM3: nonNeg })).default([]) })
+    .default({ pricePerM3: 0, panels: [] }),
   custom: z.object({ pricePerM3: nonNeg, colorPerM3: z.object({ ral: nonNeg, wood: nonNeg }) }).default({ pricePerM3: 0, colorPerM3: { ral: 0, wood: 0 } }),
   structures: z.array(z.object({ key: z.string().min(1).max(50), label: z.string().min(1).max(100), pct: num })).default([]),
   currencies: z.array(z.object({ key: z.string().trim().min(1).max(20).optional(), code: z.string().trim().min(3).max(3).toUpperCase(), label: z.string().min(1).max(50), rate: pos })).default([]),

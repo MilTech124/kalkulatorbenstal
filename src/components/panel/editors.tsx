@@ -234,10 +234,6 @@ export function AddonsEditor({ pl, setPl }: EditorProps) {
         </div>
       </section>
 
-      <Group title="Garaże warstwowe" description="Cena bazowa = szerokość × długość × wysokość × stawka. Dodatki (bramy, okna, rynny, wiata…) liczone jak w blaszanych.">
-        <NumField label="Stawka [zł/m³]" value={pl.sandwich?.pricePerM3 ?? 0} onChange={(v) => setPl((p) => ({ ...p, sandwich: { ...p.sandwich, pricePerM3: v } }))} />
-      </Group>
-
       <Group title="Ściany działowe / oblachowane [zł/m²]">
         <NumField label="Ocynk" value={pl.partitionWallPerM2.ocynk} onChange={(v) => setWall('ocynk', v)} />
         <NumField label="RAL" value={pl.partitionWallPerM2.ral} onChange={(v) => setWall('ral', v)} />
@@ -418,6 +414,40 @@ export function GatesEditor({ pl, setPl }: EditorProps) {
         </div>
       </section>
     </div>
+  );
+}
+
+/* ---------- Warstwowe ---------- */
+
+export function SandwichEditor({ pl, setPl }: EditorProps) {
+  const panels = pl.sandwich?.panels ?? [];
+  const setPanels = (next: typeof panels) => setPl((p) => ({ ...p, sandwich: { ...p.sandwich, panels: next } }));
+  return (
+    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h3 className="text-base font-semibold text-slate-900">Garaże warstwowe – rodzaje płyty</h3>
+      <p className="mb-3 text-sm text-slate-500">Cena bazowa = szerokość × długość × wysokość × stawka wybranej płyty. Dodatki (bramy, okna, drzwi, zamek, kratka, kotwiczenie, wiata) liczone jak w blaszanych.</p>
+      <div className="space-y-2">
+        {panels.map((o, i) => (
+          <div key={i} className="grid grid-cols-[110px_1fr_130px_auto] items-end gap-2">
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-slate-600">Klucz</span>
+              <TextInput value={o.key} onChange={(e) => setPanels(panels.map((x, j) => (j === i ? { ...x, key: e.target.value } : x)))} />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs font-medium text-slate-600">Nazwa</span>
+              <TextInput value={o.label} onChange={(e) => setPanels(panels.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} />
+            </label>
+            <NumField label="Stawka [zł/m³]" value={o.pricePerM3} onChange={(v) => setPanels(panels.map((x, j) => (j === i ? { ...x, pricePerM3: v } : x)))} />
+            <button type="button" className="pb-2 text-xs text-red-600 hover:underline" onClick={() => setPanels(panels.filter((_, j) => j !== i))}>
+              usuń
+            </button>
+          </div>
+        ))}
+        <button type="button" className="text-sm font-medium text-brand-600 hover:underline" onClick={() => setPanels([...panels, { key: `p${panels.length + 1}`, label: 'Nowa płyta', pricePerM3: 400 }])}>
+          + dodaj płytę
+        </button>
+      </div>
+    </section>
   );
 }
 

@@ -27,6 +27,12 @@ export function nearestBaseRow(pl: PriceList, width: number, length: number): Ba
   return fitting[fitting.length - 1] ?? rows[rows.length - 1];
 }
 
+/** Wybrana plyta warstwowa (brak/nieznany klucz = pierwsza z listy). */
+export function sandwichPanel(pl: PriceList, key: string | undefined) {
+  const list = pl.sandwich?.panels ?? [];
+  return list.find((p) => p.key === key) ?? list[0];
+}
+
 export function availableWidths(pl: PriceList): number[] {
   return [...new Set(pl.baseTable.map((r) => r.width))].sort((a, b) => a - b);
 }
@@ -158,14 +164,15 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   // 1b. Garaz warstwowy: kubatura x stawka (po ustaleniu wysokosci efektywnej)
   if (productType === 'sandwich') {
     const m3 = S * D * effectiveHeight;
-    const rate = pl.sandwich?.pricePerM3 ?? 0;
+    const panel = sandwichPanel(pl, input.sandwichPanel);
+    const rate = panel?.pricePerM3 ?? pl.sandwich?.pricePerM3 ?? 0;
     if (rate <= 0) {
       warnings.push('Brak stawki za m³ dla garaży warstwowych – ustaw ją w panelu.');
       needsManualQuote = true;
     }
     push({
       key: 'base',
-      label: `Garaż warstwowy ${fmt(S)} × ${fmt(D)} × ${fmt(effectiveHeight)} m`,
+      label: `Garaż warstwowy ${fmt(S)} × ${fmt(D)} × ${fmt(effectiveHeight)} m${panel ? `, ${panel.label.toLowerCase()}` : ''}`,
       qty: m3,
       unit: 'm³',
       unitPrice: rate,

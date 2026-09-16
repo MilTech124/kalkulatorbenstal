@@ -1,5 +1,5 @@
 // Dane firmy i podsumowanie konfiguracji do oferty (PDF): bez rozbicia cen, tylko cena koncowa.
-import { GATE_LABELS, normalizeInput } from '@/lib/pricing/engine';
+import { GATE_LABELS, normalizeInput, sandwichPanel } from '@/lib/pricing/engine';
 import type { PriceList, QuoteInput } from '@/lib/pricing/types';
 
 export const COMPANY = {
@@ -19,7 +19,7 @@ const fmt = (n: number) => n.toLocaleString('pl-PL', { maximumFractionDigits: 2 
 export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: number): { label: string; value: string }[] {
   const input = normalizeInput(raw);
   const rows: { label: string; value: string }[] = [
-    { label: 'Rodzaj', value: input.productType === 'sandwich' ? 'Garaż warstwowy (płyta warstwowa)' : 'Garaż blaszany' },
+    { label: 'Rodzaj', value: input.productType === 'sandwich' ? `Garaż warstwowy${sandwichPanel(pl, input.sandwichPanel) ? ` – ${sandwichPanel(pl, input.sandwichPanel)!.label.toLowerCase()}` : ''}` : 'Garaż blaszany' },
     { label: 'Wymiary', value: `${fmt(input.width)} × ${fmt(input.length)} m, wysokość ${fmt(effectiveHeight)} m` },
   ];
   const sandwich = input.productType === 'sandwich';
