@@ -308,15 +308,26 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     const prefix = gates.length > 1 ? `Brama ${gi + 1}: ` : '';
     if (gate.type === 'tilt' || gate.type === 'double') {
       const t = pl.gate.tilt;
+      // Standard = brama dwuskrzydlowa (lub drzwi). Uchylna zawsze platna (900 / 1000 powyzej 220 cm), nawet zamiast standardu.
       const included = !includedOpeningUsed;
       includedOpeningUsed = true;
-      const label = gate.type === 'tilt' ? 'uchylna' : 'dwuskrzydłowa';
-      push({
-        key: k('base'),
-        label: `${prefix}Brama ${label} ${fmt(gate.width)} × ${fmt(gate.height)} m`,
-        amount: included ? 0 : pl.door,
-        note: included ? 'W cenie garażu' : 'Dodatkowa brama',
-      });
+      const extra = included ? 0 : pl.door;
+      if (gate.type === 'tilt') {
+        const tiltPrice = cm(gate.height) <= cm(t.lowMaxHeight) ? t.priceLow : t.priceHigh;
+        push({
+          key: k('base'),
+          label: `${prefix}Brama uchylna ${fmt(gate.width)} × ${fmt(gate.height)} m`,
+          amount: tiltPrice + extra,
+          note: included ? 'Zamiast bramy dwuskrzydłowej ze standardu' : 'Dodatkowa brama',
+        });
+      } else {
+        push({
+          key: k('base'),
+          label: `${prefix}Brama dwuskrzydłowa ${fmt(gate.width)} × ${fmt(gate.height)} m`,
+          amount: extra,
+          note: included ? 'W cenie garażu' : 'Dodatkowa brama',
+        });
+      }
       const w50 = Math.max(0, Math.ceil((cm(gate.width) - cm(t.baseWidth)) / 50));
       if (w50 > 0) {
         push({ key: k('width'), label: `${prefix}dodatkowa szerokość`, qty: w50, unit: '× 50 cm', unitPrice: t.per50cmWidth, amount: w50 * t.per50cmWidth });
@@ -325,7 +336,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
       if (h10 > 0) {
         push({ key: k('height'), label: `${prefix}dodatkowa wysokość`, qty: h10, unit: '× 10 cm', unitPrice: t.per10cmHeight, amount: h10 * t.per10cmHeight });
       }
-      if (gate.type === 'double') push({ key: k('double'), label: `${prefix}dopłata: dwuskrzydłowa`, amount: pl.gate.doubleLeafExtra });
+      if (gate.type === 'double' && pl.gate.doubleLeafExtra > 0) push({ key: k('double'), label: `${prefix}dopłata: dwuskrzydłowa`, amount: pl.gate.doubleLeafExtra });
       if (gate.automat) push({ key: k('automat'), label: `${prefix}automat do bramy`, amount: pl.gate.automat });
       if (gate.horizontalPanel) {
         push({ key: k('panel'), label: `${prefix}blacha w poziomie na bramie`, amount: pl.gate.horizontalPanelOnGateOrDoor });
@@ -524,7 +535,7 @@ export function normalizeInput(raw: QuoteInput & { gate?: GateInput }): QuoteInp
 }
 
 export function defaultGate(): GateInput {
-  return { type: 'tilt', width: 2.5, height: 2, automat: false, horizontalPanel: false, winchester: false, doorInGate: false };
+  return { type: 'double', width: 2.5, height: 2, automat: false, horizontalPanel: false, winchester: false, doorInGate: false };
 }
 
 export const GATE_LABELS: Record<GateType, string> = {

@@ -197,7 +197,7 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
   );
 }
 
-const GATE_ORDER: GateType[] = ['tilt', 'double', 'sectional'];
+const GATE_ORDER: GateType[] = ['double', 'tilt', 'sectional'];
 
 export function GateSection({ input, pl, update }: SectionProps) {
   const gates = input.gates;

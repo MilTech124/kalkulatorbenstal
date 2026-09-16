@@ -34,7 +34,7 @@ export const DEFAULT_PRICE_LIST: PriceList = {
       per50cmWidth: 150,
       per10cmHeight: 50,
     },
-    doubleLeafExtra: 500,
+    doubleLeafExtra: 0,
     automat: 1300,
     horizontalPanelOnGateOrDoor: 100,
     sectional: {

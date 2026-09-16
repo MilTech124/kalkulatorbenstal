@@ -79,11 +79,11 @@ describe('rynny / filc / blachodachówka', () => {
 });
 
 describe('brama uchylna / dwuskrzydłowa', () => {
-  it('pierwsza brama w cenie garażu; 3×2,3 = 0 + 3 × 50', () => {
+  it('uchylna zawsze płatna: 3×2 = 900; 3×2,3 = 1000 + 3 × 50', () => {
     const r1 = calculateQuote(base({ gates: [{ ...defaultGate(), type: 'tilt', width: 3, height: 2 }] }), PL);
-    expect(amount(r1, 'gate:0:base')).toBe(0);
+    expect(amount(r1, 'gate:0:base')).toBe(900);
     const r2 = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), type: 'tilt', width: 3, height: 2.3 }] }), PL);
-    expect(amount(r2, 'gate:0:base')).toBe(0);
+    expect(amount(r2, 'gate:0:base')).toBe(1000);
     expect(amount(r2, 'gate:0:height')).toBe(3 * 50);
   });
 
@@ -99,11 +99,11 @@ describe('brama uchylna / dwuskrzydłowa', () => {
     expect(amount(sec, 'doors')).toBe(0);
   });
 
-  it('dwuskrzydłowa 3,5×2 z automatem = 0 + 150 + 500 + 1300', () => {
+  it('dwuskrzydłowa 3,5×2 z automatem = 0 (w cenie) + 150 + 1300', () => {
     const r = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), type: 'double', width: 3.5, height: 2, automat: true }] }), PL);
     expect(amount(r, 'gate:0:base')).toBe(0);
     expect(amount(r, 'gate:0:width')).toBe(150);
-    expect(amount(r, 'gate:0:double')).toBe(500);
+    expect(amount(r, 'gate:0:double')).toBeUndefined();
     expect(amount(r, 'gate:0:automat')).toBe(1300);
   });
 
@@ -155,7 +155,7 @@ describe('kilka bram', () => {
       }),
       PL,
     );
-    expect(amount(r, 'gate:0:base')).toBe(0);
+    expect(amount(r, 'gate:0:base')).toBe(900);
     expect(amount(r, 'gate:1:base')).toBe(Math.round(3500 * 1.23 * 1.4));
     expect(r.effectiveHeight).toBe(3.03);
     expect(r.items.find((i) => i.key === 'gate:1:base')?.label).toMatch(/^Brama 2: /);

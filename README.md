@@ -54,14 +54,14 @@ Cały algorytm jest w jednym pliku: [`src/lib/pricing/engine.ts`](src/lib/pricin
 3a. **Wymiary spoza cennika** (checkbox przy wymiarach) – cena bazowa = szer. × dł. × wys. w najwyższym punkcie × 90 zł/m³; kolor RAL +20 zł/m³, drewnopodobny +30 zł/m³; bez dopłat tabelowych (+10 cm, poziomy panel).
 4. **Okucia** (opcjonalne, domyślnie zaznaczone) – pionowe `4 × wysokość` mb, dachu wg spadu (`2·D + S` dla spadu do tyłu, `2·S + D` dla pozostałych) × zł/mb.
 5. **Rynny** – `S` (spad do tyłu), `D` (na bok), `2·D` (dwuspad) × zł/mb. **Filc** – m² dachu z wypustem 30 cm na każdą stronę (`(S+0,6)·(D+0,6)`) + wiata. **Blachodachówka** – m² garażu.
-6. **Brama / drzwi** – w cenie garażu jest 1× brama uchylna/dwuskrzydłowa **lub** 1× drzwi; każda kolejna brama uchylna/dwuskrzydłowa lub drzwi +300 zł. Do bramy uchylnej/dwuskrzydłowej dopłaty za 50 cm szerokości i 10 cm wysokości ponad 3 × 2 m, dwuskrzydłowa +500, automat, poziomy panel; segmentowa: tabela Oknomont (netto) × 1,23 × 1,40, rozmiar zaokrąglany w górę, winchester za m², drzwi w bramie.
+6. **Brama / drzwi** – w cenie garażu jest 1× brama **dwuskrzydłowa** lub 1× drzwi; każda kolejna dwuskrzydłowa/drzwi +300 zł. Brama **uchylna** jest zawsze płatna: 900 zł (do 220 cm) / 1000 zł, także zamiast standardowej (jako dodatkowa: +300). Dopłaty za 50 cm szerokości i 10 cm wysokości ponad 3 × 2 m, automat, poziomy panel; segmentowa: tabela Oknomont (netto) × 1,23 × 1,40, rozmiar zaokrąglany w górę, winchester za m², drzwi w bramie.
 7. **Okna, drzwi, dodatki** (zamek kowal/klamka 200 zł – zaznaczany przy konkretnej bramie lub drzwiach; uchwyt, kratka, kotwiczenie wg szerokości), **wiata** (stawka za mb wg szerokości × długość + kolor za mb), **ściany działowe** (m²), **ażury** (ściana m² lub cały garaż `(2S+2D)·H × 40`).
 
 Wszystkie kwoty, mnożniki, wzory (współczynniki `s`/`d`) i reguły wysokości edytuje się w `/panel` → Cennik. Każdy zapis tworzy nową wersję; można wrócić do wcześniejszej lub przywrócić cennik domyślny.
 
 Domyślne dane: [`src/lib/pricing/data/base-table.ts`](src/lib/pricing/data/base-table.ts) (generowany skryptem `py scripts/import-xlsx.py plik.xlsx` z Excela) i [`src/lib/pricing/data/sectional.ts`](src/lib/pricing/data/sectional.ts) (przepisany cennik bram segmentowych).
 
-> Uwaga: dopłaty bramy uchylnej za +50 cm szerokości (150 zł) i +10 cm wysokości (50 zł) to wartości tymczasowe – do uzupełnienia w panelu. Pola `priceLow/priceHigh/lowMaxHeight` w cenniku nie są już używane.
+> Uwaga: dopłaty bramy uchylnej za +50 cm szerokości (150 zł) i +10 cm wysokości (50 zł) to wartości tymczasowe – do uzupełnienia w panelu.
 
 ## Waluty
 
