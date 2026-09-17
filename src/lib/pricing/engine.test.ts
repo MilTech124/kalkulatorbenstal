@@ -14,10 +14,10 @@ describe('tabela bazowa', () => {
   it('garaż 3×5 spad do tyłu ocynk = 2980 + okucia', () => {
     const r = calculateQuote(base({ width: 3, length: 5 }), PL);
     expect(amount(r, 'base')).toBe(2980);
-    // okucia pionowe 4*2.13*30 = 255.6 -> 256, okucia dachu (2*5+3)*30 = 390
+    // okucia pionowe 4*2.13*30 = 255.6 -> 256, okucia dachu spad = boki 2*5*30 = 300
     expect(amount(r, 'flashingVertical')).toBe(256);
-    expect(amount(r, 'flashingRoof')).toBe(390);
-    expect(r.total).toBe(2980 + 256 + 390);
+    expect(amount(r, 'flashingRoof')).toBe(300);
+    expect(r.total).toBe(2980 + 256 + 300);
   });
 
   it('spad na bok i dwuspadowy używają ceny dwuspadu', () => {
@@ -37,6 +37,25 @@ describe('blacha w poziomie na bramie', () => {
     const r = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), horizontalPanel: true }] }), PL);
     expect(amount(r, 'gate:0:panel')).toBe(100);
     expect(amount(r, 'horizontalPanel')).toBeUndefined();
+  });
+});
+
+describe('ułożenie blachy', () => {
+  it('poziomo = dopłata, pionowo szeroka = dopłata, poziomo szeroka = ×2', () => {
+    expect(amount(calculateQuote(base({ width: 3, length: 5, sheetLayout: 'h' }), PL), 'horizontalPanel')).toBe(600);
+    expect(amount(calculateQuote(base({ width: 3, length: 5, sheetLayout: 'vWide' }), PL), 'horizontalPanel')).toBe(600);
+    expect(amount(calculateQuote(base({ width: 3, length: 5, sheetLayout: 'hWide' }), PL), 'horizontalPanel')).toBe(1200);
+    expect(amount(calculateQuote(base({ width: 3, length: 5, sheetLayout: 'v', horizontalPanel: true }), PL), 'horizontalPanel')).toBeUndefined();
+  });
+});
+
+describe('druga brama uchylna', () => {
+  it('każda uchylna = 900, bez dopłaty za dodatkowy otwór; drzwi po uchylnej +300', () => {
+    const two = calculateQuote(base({ width: 6, length: 6, gates: [{ ...defaultGate(), type: 'tilt' }, { ...defaultGate(), type: 'tilt' }] }), PL);
+    expect(amount(two, 'gate:0:base')).toBe(900);
+    expect(amount(two, 'gate:1:base')).toBe(900);
+    const withDoor = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), type: 'tilt' }], doors: 1 }), PL);
+    expect(amount(withDoor, 'doors')).toBe(300);
   });
 });
 
@@ -64,9 +83,18 @@ describe('kolor i wysokość', () => {
 });
 
 describe('rynny / filc / blachodachówka', () => {
-  it('rynny: spad do tyłu = S, dwuspad = 2D', () => {
-    expect(amount(calculateQuote(base({ width: 3, length: 5, gutters: true }), PL), 'gutters')).toBe(3 * 80);
-    expect(amount(calculateQuote(base({ width: 3, length: 5, gutters: true, roofType: 'gable' }), PL), 'gutters')).toBe(10 * 80);
+  it('rynny: spad do tyłu = S + 1 rura, dwuspad = 2D + 2 rury', () => {
+    const rear = calculateQuote(base({ width: 3, length: 5, gutters: true }), PL);
+    expect(amount(rear, 'gutters')).toBe(3 * 80);
+    expect(amount(rear, 'downpipes')).toBe(150);
+    const gable = calculateQuote(base({ width: 3, length: 5, gutters: true, roofType: 'gable' }), PL);
+    expect(amount(gable, 'gutters')).toBe(10 * 80);
+    expect(amount(gable, 'downpipes')).toBe(300);
+  });
+
+  it('okucia dachu: dwuspad = przód + tył (2S), spad na bok = 2S', () => {
+    expect(amount(calculateQuote(base({ width: 3, length: 5, roofType: 'gable' }), PL), 'flashingRoof')).toBe(2 * 3 * 30);
+    expect(amount(calculateQuote(base({ width: 3, length: 5, roofType: 'side' }), PL), 'flashingRoof')).toBe(2 * 3 * 30);
   });
 
   it('filc liczy garaż + wiatę, blachodachówka tylko garaż', () => {
@@ -222,9 +250,15 @@ describe('uwagi klienta 11.09', () => {
     expect(amount(r, 'felt')).toBe(Math.round(3.6 * 5.6 * 20));
   });
 
-  it('konstrukcja: profil 30×30 malowany = +10% ceny bazowej', () => {
+  it('konstrukcja: +10% od bazy + elementów konstrukcyjnych (bez okuć/rynien)', () => {
     expect(amount(calculateQuote(base({ width: 3, length: 5, structure: 'painted30' }), PL), 'structure')).toBe(298);
     expect(amount(calculateQuote(base({ width: 3, length: 5, structure: 'zinc4060' }), PL), 'structure')).toBe(894);
+    // 2980 + uchylna 900 + okno 700 = 4580 -> 458; okucia i rynny nie wchodzą do podstawy
+    const r = calculateQuote(
+      base({ width: 3, length: 5, structure: 'painted30', gutters: true, gates: [{ ...defaultGate(), type: 'tilt', width: 2.5, height: 2 }], windows: [{ type: 'w100x60', qty: 1 }] }),
+      PL,
+    );
+    expect(amount(r, 'structure')).toBe(458);
   });
 
   it('garaż spoza cennika: a×b×h × 90 + kolor za m³, bez dopłat tabelowych', () => {
@@ -235,7 +269,7 @@ describe('uwagi klienta 11.09', () => {
     // poziomy panel spoza cennika: wg najblizszego wiersza (4 x 7 -> 800)
     expect(amount(r, 'horizontalPanel')).toBe(800);
     expect(amount(r, 'height')).toBeUndefined();
-    expect(amount(r, 'flashingRoof')).toBe((2 * 8 + 4.2) * 30);
+    expect(amount(r, 'flashingRoof')).toBe(2 * 8 * 30);
   });
 
   it('zamek kowal: przy bramie i w drzwiach, 200 zł/szt.', () => {

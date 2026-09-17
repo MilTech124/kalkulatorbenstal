@@ -7,6 +7,8 @@ export type RoofPriceGroup = 'rear' | 'gable';
 export type GateType = 'none' | 'tilt' | 'double' | 'sectional';
 export type WindowType = 'w100x60' | 'w80x60' | 'w60x40' | 'plexi64x34' | 'opening';
 export type OpenworkMode = 'none' | 'wall' | 'whole';
+/** Ulozenie blachy: pionowo (w cenie), poziomo (doplata), pionowo szeroka (doplata), poziomo szeroka (doplata x2). */
+export type SheetLayout = 'v' | 'h' | 'vWide' | 'hWide';
 
 /** Wiersz tabeli bazowej z Excela (ceny w zl). */
 export interface BaseTableRow {
@@ -33,6 +35,8 @@ export interface RoofTypeConfig {
   priceGroup: RoofPriceGroup;
   gutter: LinearFormula;
   roofFlashing: LinearFormula;
+  /** Liczba rur spustowych (spad: 1, dwuspad: 2). */
+  downpipes?: number;
 }
 
 export interface HeightRule {
@@ -73,6 +77,8 @@ export interface PriceList {
     roofAreaFactor: number;
     /** Wypust filcu poza obrys garazu na kazda strone [m] (np. 0,3). */
     feltOverhangM: number;
+    /** Rura spustowa [zl/szt.] (doliczana przy rynnach). */
+    downpipePrice?: number;
   };
   gate: {
     tilt: {
@@ -159,7 +165,9 @@ export interface QuoteInput {
   height: number;
   roofType: RoofType;
   sheet: SheetType;
+  /** Zachowane dla zgodnosci: true = blacha w poziomie (h/hWide). Zrodlem prawdy jest sheetLayout, gdy ustawione. */
   horizontalPanel: boolean;
+  sheetLayout?: SheetLayout;
   felt: boolean;
   /** Okucia (pionowe + dachu); brak pola = tak (stare wyceny). */
   flashings?: boolean;

@@ -10,6 +10,7 @@ import type {
   QuoteInput,
   QuoteResult,
   RoofType,
+  SheetLayout,
   SheetType,
 } from './types';
 
@@ -31,6 +32,24 @@ export function nearestBaseRow(pl: PriceList, width: number, length: number): Ba
 export function sandwichPanel(pl: PriceList, key: string | undefined) {
   const list = pl.sandwich?.panels ?? [];
   return list.find((p) => p.key === key) ?? list[0];
+}
+
+/** Pozycje wliczane do podstawy narzutu za konstrukcje (klucz lub prefiks "klucz:"). */
+const STRUCTURE_BASE_KEYS = ['base', 'height', 'color', 'horizontalPanel', 'gate', 'window', 'doors', 'doorsPanel', 'doorLocks', 'carport', 'carportColor', 'partitionWall', 'openworkWall', 'openworkWhole'];
+
+export const SHEET_LAYOUT_LABELS: Record<SheetLayout, string> = {
+  v: 'Pionowo',
+  h: 'Poziomo',
+  vWide: 'Pionowo szeroka',
+  hWide: 'Poziomo szeroka',
+};
+
+/** Mnoznik doplaty z tabeli ("poziomy panel") dla ulozenia blachy. */
+export const SHEET_LAYOUT_MULTIPLIER: Record<SheetLayout, number> = { v: 0, h: 1, vWide: 1, hWide: 2 };
+
+/** Ulozenie blachy z wejscia (stare wyceny: tylko horizontalPanel). */
+export function sheetLayout(input: Pick<QuoteInput, 'sheetLayout' | 'horizontalPanel'>): SheetLayout {
+  return input.sheetLayout ?? (input.horizontalPanel ? 'h' : 'v');
 }
 
 export function availableWidths(pl: PriceList): number[] {
@@ -204,15 +223,6 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     }
   }
 
-  // 1d. Konstrukcja: katownik w cenie, inne profile = % od ceny bazowej garazu
-  if (productType === 'steel' && input.structure) {
-    const opt = pl.structures?.find((o) => o.key === input.structure);
-    const baseAmount = items.find((i) => i.key === 'base')?.amount ?? 0;
-    if (opt && opt.pct !== 0) {
-      push({ key: 'structure', label: `Konstrukcja: ${opt.label} (${opt.pct > 0 ? '+' : ''}${fmt(opt.pct)}%)`, amount: (baseAmount * opt.pct) / 100 });
-    }
-  }
-
   // 3. Podwyzszenie (tylko blaszaki - z tabeli)
   const steps = heightSteps(pl, effectiveHeight);
   if (row && steps > pl.maxHeightSteps) warnings.push(`Wysokość ${fmt(effectiveHeight)} m przekracza maksymalną z cennika.`);
@@ -235,15 +245,18 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   if (row && sheet === 'ral') push({ key: 'color', label: 'Blacha w kolorze RAL', amount: row.color });
   if (row && sheet === 'wood') push({ key: 'color', label: 'Blacha drewnopodobna', amount: row.wood });
 
-  // 5. Poziomy panel (blacha w poziomie). Spoza cennika: cena z najblizszego mniejszego wiersza tabeli.
-  const horizontalPanel = productType === 'steel' && input.horizontalPanel;
-  if (horizontalPanel) {
+  // 5. Ulozenie blachy: pionowo (w cenie), poziomo / pionowo szeroka (doplata z tabeli), poziomo szeroka (x2).
+  // Spoza cennika: doplata z najblizszego mniejszego wiersza tabeli.
+  const layout = sheetLayout(input);
+  const horizontalPanel = productType === 'steel' && (layout === 'h' || layout === 'hWide');
+  const layoutMultiplier = SHEET_LAYOUT_MULTIPLIER[layout];
+  if (productType === 'steel' && layoutMultiplier > 0) {
     const ref = row ?? nearestBaseRow(pl, S, D);
     if (ref) {
       push({
         key: 'horizontalPanel',
-        label: 'Blacha w poziomie (poziomy panel)',
-        amount: ref.horizontalPanel,
+        label: `Blacha: ${SHEET_LAYOUT_LABELS[layout].toLowerCase()}${layoutMultiplier > 1 ? ` (×${layoutMultiplier})` : ''}`,
+        amount: ref.horizontalPanel * layoutMultiplier,
         note: row ? undefined : `Dopłata wg tabeli dla ${fmt(ref.width)} × ${fmt(ref.length)} m`,
       });
     }
@@ -276,6 +289,11 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     if (input.gutters) {
       const mb = linear(roof.gutter, S, D);
       push({ key: 'gutters', label: 'Rynny', qty: mb, unit: 'mb', unitPrice: pl.unit.gutterPerMb, amount: mb * pl.unit.gutterPerMb });
+      const downpipes = roof.downpipes ?? 0;
+      const downpipePrice = pl.unit.downpipePrice ?? 0;
+      if (downpipes > 0 && downpipePrice > 0) {
+        push({ key: 'downpipes', label: 'Rury spustowe', qty: downpipes, unit: 'szt.', unitPrice: downpipePrice, amount: downpipes * downpipePrice });
+      }
     }
 
     // 8. Filc / blachodachowka
@@ -320,12 +338,13 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
       includedOpeningUsed = true;
       const extra = included ? 0 : pl.door;
       if (gate.type === 'tilt') {
+        // Uchylna: zawsze stala cena (bez doplaty za "dodatkowy otwor"), zajmuje standardowy otwor jesli wolny.
         const tiltPrice = cm(gate.height) <= cm(t.lowMaxHeight) ? t.priceLow : t.priceHigh;
         push({
           key: k('base'),
           label: `${prefix}Brama uchylna ${fmt(gate.width)} × ${fmt(gate.height)} m`,
-          amount: tiltPrice + extra,
-          note: included ? 'Zamiast bramy dwuskrzydłowej ze standardu' : 'Dodatkowa brama',
+          amount: tiltPrice,
+          note: included ? 'Zamiast bramy dwuskrzydłowej ze standardu' : 'Dodatkowa brama uchylna',
         });
       } else {
         push({
@@ -503,6 +522,21 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
       });
     }
 
+  }
+
+  // 15. Konstrukcja: katownik w cenie; inne profile = % od ceny bazowej + elementow konstrukcyjnych
+  // (wysokosc, kolor, ulozenie blachy, bramy, okna, drzwi, wiata, sciany, azury) - bez oku, rynien, filcu, blachodachowki i drobnych dodatkow.
+  if (productType === 'steel' && input.structure) {
+    const opt = pl.structures?.find((o) => o.key === input.structure);
+    if (opt && opt.pct !== 0) {
+      const baseSum = items.filter((i) => STRUCTURE_BASE_KEYS.some((p) => i.key === p || i.key.startsWith(`${p}:`))).reduce((sum, i) => sum + i.amount, 0);
+      push({
+        key: 'structure',
+        label: `Konstrukcja: ${opt.label} (${opt.pct > 0 ? '+' : ''}${fmt(opt.pct)}%)`,
+        amount: (baseSum * opt.pct) / 100,
+        note: `${fmt(opt.pct)}% od ${money(baseSum).toLocaleString('pl-PL')} zł (garaż + elementy konstrukcyjne)`,
+      });
+    }
   }
 
   const total = money(items.reduce((sum, it) => sum + it.amount, 0));

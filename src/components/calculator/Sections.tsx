@@ -1,7 +1,7 @@
 'use client';
 
-import { availableLengths, availableWidths, defaultGate, GATE_LABELS, heightOptions, sandwichPanel, SHEET_ORDER } from '@/lib/pricing/engine';
-import type { GateInput, GateType, PriceList, QuoteInput, RoofType, SheetType, WindowType } from '@/lib/pricing/types';
+import { availableLengths, availableWidths, defaultGate, GATE_LABELS, heightOptions, sandwichPanel, SHEET_LAYOUT_LABELS, sheetLayout, SHEET_ORDER } from '@/lib/pricing/engine';
+import type { GateInput, GateType, PriceList, SheetLayout, QuoteInput, RoofType, SheetType, WindowType } from '@/lib/pricing/types';
 import { Card, Checkbox, Field, NumberInput, Segmented, Select } from '@/components/ui';
 import { formatNum, formatPln } from '@/lib/format';
 
@@ -164,12 +164,14 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
         {!sandwich && (
           <div>
             <p className="mb-2 text-sm font-medium text-slate-700">Ułożenie blachy</p>
-            <Segmented<'v' | 'h'>
-              value={input.horizontalPanel ? 'h' : 'v'}
-              onChange={(v) => update({ horizontalPanel: v === 'h' })}
+            <Segmented<SheetLayout>
+              value={sheetLayout(input)}
+              onChange={(sheetLayout) => update({ sheetLayout, horizontalPanel: sheetLayout === 'h' || sheetLayout === 'hWide' })}
               options={[
-                { value: 'v', label: 'Pionowo', hint: 'w cenie' },
-                { value: 'h', label: 'Poziomo', hint: 'dopłata wg wymiarów garażu' },
+                { value: 'v', label: SHEET_LAYOUT_LABELS.v, hint: 'w cenie' },
+                { value: 'h', label: SHEET_LAYOUT_LABELS.h, hint: 'dopłata wg wymiarów garażu' },
+                { value: 'vWide', label: SHEET_LAYOUT_LABELS.vWide, hint: 'dopłata jak za poziomo' },
+                { value: 'hWide', label: SHEET_LAYOUT_LABELS.hWide, hint: 'dopłata ×2' },
               ]}
             />
           </div>

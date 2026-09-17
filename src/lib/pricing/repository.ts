@@ -16,6 +16,16 @@ export function withDefaults(data: Partial<PriceList>): PriceList {
   const out = { ...DEFAULT_PRICE_LIST, ...data } as PriceList;
   const d = DEFAULT_PRICE_LIST;
   out.unit = { ...d.unit, ...(data.unit ?? {}) };
+  // Dachy: uzupelnij liczbe rur spustowych, gdy stary cennik jej nie ma (wzory okuc zostaja jak zapisano)
+  out.roofTypes = { ...d.roofTypes, ...(data.roofTypes ?? {}) };
+  // Stare domyslne wzory okuc dachu (bledne wg klienta) podmieniamy na nowe - tylko gdy nikt ich nie edytowal.
+  const OLD_ROOF_FLASHING: Record<'rear' | 'side' | 'gable', { s: number; d: number }> = { rear: { s: 1, d: 2 }, side: { s: 2, d: 1 }, gable: { s: 2, d: 1 } };
+  for (const k of ['rear', 'side', 'gable'] as const) {
+    if (!out.roofTypes[k]) continue;
+    if (out.roofTypes[k].downpipes === undefined) out.roofTypes[k] = { ...out.roofTypes[k], downpipes: d.roofTypes[k].downpipes };
+    const rf = out.roofTypes[k].roofFlashing;
+    if (rf.s === OLD_ROOF_FLASHING[k].s && rf.d === OLD_ROOF_FLASHING[k].d) out.roofTypes[k] = { ...out.roofTypes[k], roofFlashing: d.roofTypes[k].roofFlashing };
+  }
   out.gate = { ...d.gate, ...(data.gate ?? {}), tilt: { ...d.gate.tilt, ...(data.gate?.tilt ?? {}) }, sectional: { ...d.gate.sectional, ...(data.gate?.sectional ?? {}) } };
   out.extras = { ...d.extras, ...(data.extras ?? {}) };
   out.carport = { ...d.carport, ...(data.carport ?? {}) };

@@ -22,6 +22,7 @@ export const quoteInputSchema = z.object({
   roofType: roofTypeSchema,
   sheet: sheetSchema,
   horizontalPanel: z.boolean(),
+  sheetLayout: z.enum(['v', 'h', 'vWide', 'hWide']).optional(),
   felt: z.boolean(),
   flashings: z.boolean().optional(),
   tile: z.boolean(),
@@ -82,6 +83,7 @@ const roofTypeConfigSchema = z.object({
   priceGroup: z.enum(['rear', 'gable']),
   gutter: linearSchema,
   roofFlashing: linearSchema,
+  downpipes: z.number().int().min(0).max(10).optional(),
 });
 
 const sheetRecord = z.object({ ocynk: nonNeg, ral: nonNeg, wood: nonNeg });
@@ -115,6 +117,7 @@ export const priceListSchema = z.object({
     tilePerM2: nonNeg,
     roofAreaFactor: pos,
     feltOverhangM: nonNeg.default(0),
+    downpipePrice: nonNeg.optional(),
   }),
   gate: z.object({
     tilt: z.object({

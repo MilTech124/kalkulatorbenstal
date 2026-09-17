@@ -1,5 +1,5 @@
 // Dane firmy i podsumowanie konfiguracji do oferty (PDF): bez rozbicia cen, tylko cena koncowa.
-import { GATE_LABELS, normalizeInput, sandwichPanel } from '@/lib/pricing/engine';
+import { GATE_LABELS, normalizeInput, sandwichPanel, SHEET_LAYOUT_LABELS, sheetLayout } from '@/lib/pricing/engine';
 import type { PriceList, QuoteInput } from '@/lib/pricing/types';
 
 export const COMPANY = {
@@ -25,7 +25,7 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
   const sandwich = input.productType === 'sandwich';
   if (!sandwich) {
     rows.push({ label: 'Dach', value: pl.roofTypes[input.roofType]?.label ?? input.roofType });
-    rows.push({ label: 'Blacha', value: `${pl.sheetLabels[input.sheet]}${input.horizontalPanel ? ', blacha w poziomie' : ''}` });
+    rows.push({ label: 'Blacha', value: `${pl.sheetLabels[input.sheet]}, ${SHEET_LAYOUT_LABELS[sheetLayout(input)].toLowerCase()}` });
     const structure = input.structure ? pl.structures?.find((o) => o.key === input.structure) : undefined;
     rows.push({ label: 'Konstrukcja', value: structure?.label ?? 'kątownik' });
   }

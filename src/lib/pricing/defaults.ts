@@ -10,9 +10,10 @@ export const DEFAULT_PRICE_LIST: PriceList = {
   maxHeightSteps: 14,
   baseTable: BASE_TABLE,
   roofTypes: {
-    rear: { label: 'Spad do tyłu', priceGroup: 'rear', gutter: { s: 1, d: 0 }, roofFlashing: { s: 1, d: 2 } },
-    side: { label: 'Spad na bok', priceGroup: 'gable', gutter: { s: 0, d: 1 }, roofFlashing: { s: 2, d: 1 } },
-    gable: { label: 'Dwuspadowy', priceGroup: 'gable', gutter: { s: 0, d: 2 }, roofFlashing: { s: 2, d: 1 } },
+    // Okucia dachu: spad = tylko krawedzie ze spadkiem (boki), dwuspad = przod + tyl. Rury spustowe: spad 1, dwuspad 2.
+    rear: { label: 'Spad do tyłu', priceGroup: 'rear', gutter: { s: 1, d: 0 }, roofFlashing: { s: 0, d: 2 }, downpipes: 1 },
+    side: { label: 'Spad na bok', priceGroup: 'gable', gutter: { s: 0, d: 1 }, roofFlashing: { s: 2, d: 0 }, downpipes: 1 },
+    gable: { label: 'Dwuspadowy', priceGroup: 'gable', gutter: { s: 0, d: 2 }, roofFlashing: { s: 2, d: 0 }, downpipes: 2 },
   },
   verticalFlashingPerHeight: 4,
   unit: {
@@ -22,6 +23,8 @@ export const DEFAULT_PRICE_LIST: PriceList = {
     tilePerM2: 60,
     roofAreaFactor: 1,
     feltOverhangM: 0.3,
+    // Rura spustowa - wartosc wyliczona z Excela (rynna spad = 80*S + 150); do potwierdzenia
+    downpipePrice: 150,
   },
   gate: {
     tilt: {

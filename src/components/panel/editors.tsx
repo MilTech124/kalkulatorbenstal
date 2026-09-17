@@ -126,6 +126,7 @@ export function AddonsEditor({ pl, setPl }: EditorProps) {
         <NumField label="Blachodachówka [zł/m²]" value={u.tilePerM2} onChange={(v) => setUnit('tilePerM2', v)} />
         <NumField label="Współczynnik pow. dachu" value={u.roofAreaFactor} step={0.01} onChange={(v) => setUnit('roofAreaFactor', v)} hint="1,0 = szer. × dł.; np. 1,05 uwzględnia spadek/okap" />
         <NumField label="Filc: wypust na stronę [m]" value={u.feltOverhangM ?? 0} step={0.05} onChange={(v) => setUnit('feltOverhangM', v)} hint="np. 0,3 = +30 cm z każdej strony" />
+        <NumField label="Rura spustowa [zł/szt.]" value={u.downpipePrice ?? 0} onChange={(v) => setUnit('downpipePrice', v)} hint="Doliczana przy rynnach; liczba rur wg dachu (Zaawansowane)" />
       </Group>
 
       <Group title="Okna i drzwi" description="Nazwa okna jest widoczna w kalkulatorze i w ofercie PDF.">
@@ -210,7 +211,7 @@ export function AddonsEditor({ pl, setPl }: EditorProps) {
 
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <h3 className="text-base font-semibold text-slate-900">Konstrukcja</h3>
-        <p className="mb-3 text-sm text-slate-500">Kątownik jest w cenie. Inne profile = narzut % od ceny bazowej garażu.</p>
+        <p className="mb-3 text-sm text-slate-500">Kątownik jest w cenie. Inne profile = narzut % od ceny bazowej garażu + elementów konstrukcyjnych (wysokość, kolor, ułożenie blachy, bramy, okna, drzwi, wiata, ściany, ażury); bez okuć, rynien, filcu, blachodachówki i drobnych dodatków.</p>
         <div className="space-y-2">
           {(pl.structures ?? []).map((o, i) => (
             <div key={i} className="grid grid-cols-[120px_1fr_90px_auto] items-end gap-2">
@@ -507,7 +508,7 @@ export function AdvancedEditor({ pl, setPl }: EditorProps) {
 
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <h3 className="text-base font-semibold text-slate-900">Rodzaje dachu – wzory na metry bieżące</h3>
-        <p className="mb-3 text-sm text-slate-500">mb = s × szerokość + d × długość. Grupa cenowa wskazuje kolumnę tabeli bazowej.</p>
+        <p className="mb-3 text-sm text-slate-500">mb = s × szerokość + d × długość. Okucia dachu: spad = krawędzie ze spadkiem (boki), dwuspad = przód + tył. Grupa cenowa wskazuje kolumnę tabeli bazowej.</p>
         <div className="grid gap-4 lg:grid-cols-3">
           {(['rear', 'side', 'gable'] as RoofType[]).map((rt) => {
             const r = pl.roofTypes[rt];
@@ -529,6 +530,7 @@ export function AdvancedEditor({ pl, setPl }: EditorProps) {
                   <NumField label="Rynny: d" value={r.gutter.d} step={0.5} onChange={(v) => setRoof(rt, { gutter: { ...r.gutter, d: v } })} />
                   <NumField label="Okucia dachu: s" value={r.roofFlashing.s} step={0.5} onChange={(v) => setRoof(rt, { roofFlashing: { ...r.roofFlashing, s: v } })} />
                   <NumField label="Okucia dachu: d" value={r.roofFlashing.d} step={0.5} onChange={(v) => setRoof(rt, { roofFlashing: { ...r.roofFlashing, d: v } })} />
+                  <NumField label="Rury spustowe [szt.]" value={r.downpipes ?? 0} onChange={(v) => setRoof(rt, { downpipes: Math.max(0, Math.round(v)) })} />
                 </div>
               </div>
             );
