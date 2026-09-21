@@ -40,15 +40,32 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
         .map((g) => `${GATE_LABELS[g.type]} ${fmt(g.width)} × ${fmt(g.height)} m${g.automat && g.type !== 'sectional' ? ' z automatem' : ''}${g.winchester ? ', winchester' : ''}${g.doorInGate ? ', drzwi w bramie' : ''}${g.lockKowal ? ', zamek kowal' : ''}`)
         .join('; '),
     });
-    if (!sandwich) rows.push({ label: 'Poszycie bramy', value: `blacha trapezowa, kolor: ${sheetColorLabel(input.sheet, input.sheetColor)}` });
+    input.gates.forEach((gate, index) => {
+      const label = `${sandwich ? 'Kolor' : 'Poszycie'} bramy${input.gates.length > 1 ? ` ${index + 1}` : ''}`;
+      const color = gate.winchester && gate.type === 'sectional' ? 'Winchester' : sheetColorLabel(input.sheet, gate.color ?? input.sheetColor);
+      rows.push({ label, value: gate.type === 'sectional' || sandwich ? color : `blacha trapezowa, kolor: ${color}` });
+    });
   } else {
     rows.push({ label: 'Brama', value: 'bez bramy' });
   }
   const roofOpts = [(input.flashings ?? true) && 'okucia', input.gutters && 'rynny', input.felt && 'filc antykondensacyjny', input.tile && 'blachodachówka'].filter(Boolean) as string[];
   if (!sandwich && roofOpts.length) rows.push({ label: 'Wyposażenie dachu', value: roofOpts.join(', ') });
+  if (!sandwich && (input.flashings ?? true)) rows.push({ label: 'Kolor okuć', value: sheetColorLabel(input.sheet, input.flashingColor ?? input.sheetColor) });
   const openings: string[] = input.windows.filter((w) => w.qty > 0).map((w) => `${pl.windows[w.type]?.label ?? w.type} × ${w.qty}`);
-  if (input.doors > 0) openings.push(`drzwi wejściowe × ${input.doors}${input.doorLocks ? ` (zamek kowal × ${Math.min(input.doorLocks, input.doors)})` : ''}${!sandwich ? `, poszycie: ${sheetColorLabel(input.sheet, input.sheetColor)}` : ''}`);
+  if (input.doors > 0) openings.push(`drzwi wejściowe × ${input.doors}${input.doorLocks ? ` (zamek kowal × ${Math.min(input.doorLocks, input.doors)})` : ''}`);
   if (openings.length) rows.push({ label: 'Okna i drzwi', value: openings.join(', ') });
+  const windowColors = input.windows.filter((w) => w.qty > 0 && w.type !== 'opening');
+  if (windowColors.length) rows.push({
+    label: 'Kolor okien',
+    value: windowColors.map((window) => `${pl.windows[window.type]?.label ?? window.type}: ${sheetColorLabel(input.sheet, window.color ?? input.sheetColor)}`).join('; '),
+  });
+  for (let index = 0; index < input.doors; index++) {
+    const color = sheetColorLabel(input.sheet, input.doorColors?.[index] ?? input.sheetColor);
+    rows.push({
+      label: `${sandwich ? 'Kolor' : 'Poszycie'} drzwi${input.doors > 1 ? ` ${index + 1}` : ''}`,
+      value: sandwich ? color : `blacha trapezowa, kolor: ${color}`,
+    });
+  }
   const extras = [
     input.extras.lockKowal && 'zamek kowal',
     input.extras.padlockHolder && 'uchwyt na kłódkę',

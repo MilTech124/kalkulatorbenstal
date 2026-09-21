@@ -18,7 +18,7 @@ function Swatch({ color }: { color: string }) {
   );
 }
 
-export function ColorSelect({ options, value, onChange }: { options: readonly ColorOption[]; value?: string; onChange: (key: string) => void }) {
+export function ColorSelect({ options, value, onChange, label = 'Kolor blachy' }: { options: readonly ColorOption[]; value?: string; onChange: (key: string) => void; label?: string }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -64,6 +64,7 @@ export function ColorSelect({ options, value, onChange }: { options: readonly Co
       <button
         ref={triggerRef}
         type="button"
+        aria-label={label}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listId}
@@ -77,7 +78,7 @@ export function ColorSelect({ options, value, onChange }: { options: readonly Co
         </svg>
       </button>
       {open && (
-        <div id={listId} role="listbox" aria-label="Kolor blachy" className="absolute left-0 right-0 z-30 mt-1 max-h-64 overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 shadow-lg">
+        <div id={listId} role="listbox" aria-label={label} className="absolute left-0 right-0 z-30 mt-1 max-h-64 overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 shadow-lg">
           {options.map((option, index) => (
             <button
               key={option.key}

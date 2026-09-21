@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import fs from 'node:fs';
 import { DEFAULT_PRICE_LIST } from './pricing/defaults';
 import { calculateQuote, emptyInput } from './pricing/engine';
 import { renderOfferPdf } from './offerPdf';
@@ -10,8 +9,10 @@ describe('układ oferty PDF', () => {
       ...emptyInput(DEFAULT_PRICE_LIST),
       sheet: 'ral' as const,
       sheetColor: 'btx-7016',
+      gates: [{ ...emptyInput(DEFAULT_PRICE_LIST).gates[0], color: 'btx-8017' }],
       roofType: 'gable' as const,
       doors: 1,
+      doorColors: ['btx-3011'],
       windows: [{ type: 'w100x60' as const, qty: 2 }],
       gutters: true,
       felt: true,
@@ -30,8 +31,6 @@ describe('układ oferty PDF', () => {
       note: 'Wszystkie szczegóły do potwierdzenia przed realizacją.',
     });
     expect(pdf.subarray(0, 4).toString()).toBe('%PDF');
-    fs.mkdirSync('tmp/pdfs', { recursive: true });
-    fs.writeFileSync('tmp/pdfs/offer-a4.pdf', pdf);
     expect(pdf.toString('latin1').match(/\/Type\s*\/Page\b/g)).toHaveLength(1);
   });
 
@@ -62,8 +61,6 @@ describe('układ oferty PDF', () => {
       total: result.total,
       note: 'Uzgodnienie szczegółów technicznych i terminu dostawy podczas składania zamówienia. '.repeat(24).slice(0, 1900),
     });
-    fs.mkdirSync('tmp/pdfs', { recursive: true });
-    fs.writeFileSync('tmp/pdfs/offer-a3.pdf', pdf);
     expect(pdf.toString('latin1').match(/\/Type\s*\/Page\b/g)).toHaveLength(1);
   });
 

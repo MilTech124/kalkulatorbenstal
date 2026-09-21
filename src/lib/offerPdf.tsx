@@ -80,7 +80,7 @@ export interface OfferPdfData {
 const fmt = (n: number) => n.toLocaleString('pl-PL', { maximumFractionDigits: 2 });
 const pln = (n: number) => `${n.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`;
 
-function OfferDocument({ d, logo, pageSize }: { d: OfferPdfData; logo: Buffer; pageSize: 'A4' | 'A3' }) {
+function OfferDocument({ d, logo, pageSize }: { d: OfferPdfData; logo: Buffer; pageSize: 'A4' | 'A3' | 'A2' }) {
   const rows = offerSummary(d.input, d.priceList, d.effectiveHeight);
   const date = d.createdAt.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
   const name = `${d.customer.firstName} ${d.customer.lastName}`.trim();
@@ -178,10 +178,12 @@ function OfferDocument({ d, logo, pageSize }: { d: OfferPdfData; logo: Buffer; p
 export async function renderOfferPdf(d: OfferPdfData): Promise<Buffer> {
   registerFonts();
   const logo = fs.readFileSync(path.join(ASSETS, 'benstal-logo.png'));
-  const a4 = await renderToBuffer(<OfferDocument d={d} logo={logo} pageSize="A4" />);
-  if ((a4.toString('latin1').match(/\/Type\s*\/Page\b/g) ?? []).length === 1) return a4;
-  // Przy bardzo długiej specyfikacji lub notatce zachowujemy komplet informacji na jednym arkuszu.
-  return renderToBuffer(<OfferDocument d={d} logo={logo} pageSize="A3" />);
+  // Większy arkusz jest potrzebny wyłącznie przy rozbudowanej specyfikacji lub długiej notatce.
+  for (const pageSize of ['A4', 'A3', 'A2'] as const) {
+    const pdf = await renderToBuffer(<OfferDocument d={d} logo={logo} pageSize={pageSize} />);
+    if ((pdf.toString('latin1').match(/\/Type\s*\/Page\b/g) ?? []).length === 1) return pdf;
+  }
+  throw new Error('Oferta nie mieści się na jednej stronie PDF.');
 }
 
 export function offerPdfFilename(number: number): string {

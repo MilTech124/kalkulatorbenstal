@@ -141,6 +141,8 @@ export interface PriceList {
 
 export interface GateInput {
   type: GateType;
+  /** Kolor bramy z palety wybranego rodzaju blachy; brak = kolor poszycia garażu. */
+  color?: string;
   width: number;
   height: number;
   automat: boolean;
@@ -167,6 +169,8 @@ export interface QuoteInput {
   sheet: SheetType;
   /** Kolor poszycia; brak w starszych wycenach oznacza pierwszy kolor danej palety. */
   sheetColor?: string;
+  /** Kolor okuć dachowych i narożnych; brak = kolor poszycia. */
+  flashingColor?: string;
   /** Zachowane dla zgodnosci: true = blacha w poziomie (h/hWide). Zrodlem prawdy jest sheetLayout, gdy ustawione. */
   horizontalPanel: boolean;
   sheetLayout?: SheetLayout;
@@ -177,8 +181,10 @@ export interface QuoteInput {
   gutters: boolean;
   /** Lista bram (moze byc pusta = bez bramy). */
   gates: GateInput[];
-  windows: { type: WindowType; qty: number }[];
+  windows: { type: WindowType; qty: number; color?: string }[];
   doors: number;
+  /** Kolory kolejnych drzwi; brak pozycji = kolor poszycia garażu. */
+  doorColors?: string[];
   /** Liczba drzwi z zamkiem kowal. */
   doorLocks?: number;
   /** Waluta prezentacji ceny (klucz pozycji z PriceList.currencies); brak = PLN. */

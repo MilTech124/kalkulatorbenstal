@@ -133,8 +133,9 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
   const sandwich = input.productType === 'sandwich';
   const colorFamily = sheetColorFamily(input.sheet, input.sheetColor);
   const setColorFamily = (family: SheetColorFamily | 'ocynk') => {
+    if (family === colorFamily) return;
     const sheet: SheetType = family === 'ocynk' ? 'ocynk' : family === 'wood' ? 'wood' : 'ral';
-    update({ sheet, sheetColor: family === 'ocynk' ? undefined : SHEET_COLORS[family][0].key });
+    update({ sheet, sheetColor: family === 'ocynk' ? undefined : SHEET_COLORS[family][0].key, flashingColor: undefined, gates: input.gates.map((gate) => ({ ...gate, color: undefined })), doorColors: undefined, windows: input.windows.map((window) => ({ ...window, color: undefined })) });
   };
   return (
     <Card title="Dach i blacha">
@@ -199,7 +200,7 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
           {!sandwich && (
             <Checkbox
               checked={input.flashings ?? true}
-              onChange={(flashings) => update({ flashings })}
+              onChange={(flashings) => update({ flashings, flashingColor: flashings ? input.flashingColor : undefined })}
               label="Okucia (pionowe + dachu)"
               hint={`${formatPln(pl.unit.flashingPerMb)}/mb, długość zależna od wysokości i spadu`}
             />
@@ -225,6 +226,12 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
             hint={`${formatPln(pl.unit.tilePerM2)}/m² dachu`}
           />
         </div>
+        {!sandwich && (input.flashings ?? true) && colorFamily !== 'ocynk' && (
+          <div>
+            <p className="mb-1 text-sm font-medium text-slate-700">Kolor okuć</p>
+            <ColorSelect label="Kolor okuć" options={SHEET_COLORS[colorFamily]} value={normalizedSheetColor(input.sheet, input.flashingColor ?? input.sheetColor)} onChange={(flashingColor) => update({ flashingColor })} />
+          </div>
+        )}
       </div>
     </Card>
   );
@@ -247,6 +254,8 @@ export function GateSection({ input, pl, update }: SectionProps) {
             index={i}
             total={gates.length}
             gate={g}
+            sheet={input.sheet}
+            sheetColor={input.sheetColor}
             pl={pl}
             onChange={(patch) => patchGate(i, patch)}
             onRemove={() => setGates(gates.filter((_, j) => j !== i))}
@@ -266,6 +275,8 @@ function GateCard({
   index,
   total,
   gate: g,
+  sheet,
+  sheetColor,
   pl,
   onChange,
   onRemove,
@@ -273,12 +284,15 @@ function GateCard({
   index: number;
   total: number;
   gate: GateInput;
+  sheet: SheetType;
+  sheetColor?: string;
   pl: PriceList;
   onChange: (patch: Partial<GateInput>) => void;
   onRemove: () => void;
 }) {
   const isSectional = g.type === 'sectional';
   const sec = pl.gate.sectional;
+  const colorFamily = sheetColorFamily(sheet, sheetColor);
 
   return (
     <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50/60 p-4">
@@ -288,6 +302,7 @@ function GateCard({
           usuń bramę
         </button>
       </div>
+
       <Segmented<GateType>
         value={g.type}
         onChange={(type) => {
@@ -334,6 +349,15 @@ function GateCard({
         )}
       </div>
 
+      {colorFamily !== 'ocynk' && !(isSectional && g.winchester) && (
+        <div>
+          <p className="mb-1 text-sm font-medium text-slate-700">Kolor bramy</p>
+          <ColorSelect label={`Kolor bramy ${index + 1}`} options={SHEET_COLORS[colorFamily]} value={normalizedSheetColor(sheet, g.color ?? sheetColor)} onChange={(color) => onChange({ color })} />
+          {isSectional && <p className="mt-1 text-xs text-slate-500">Dostępność koloru bramy segmentowej wymaga potwierdzenia.</p>}
+        </div>
+      )}
+      {isSectional && g.winchester && <p className="text-sm text-slate-600">Kolor bramy: Winchester</p>}
+
       {isSectional ? (
         <div className="grid gap-2 sm:grid-cols-2">
           <Checkbox checked={g.winchester} onChange={(winchester) => onChange({ winchester })} label="Kolor winchester" hint="Dopłata za m² bramy" />
@@ -359,11 +383,15 @@ function GateCard({
 const WINDOW_ORDER: WindowType[] = ['w100x60', 'w80x60', 'w60x40', 'plexi64x34', 'opening'];
 
 export function WindowsDoorsSection({ input, pl, update }: SectionProps) {
+  const colorFamily = sheetColorFamily(input.sheet, input.sheetColor);
+  const defaultColor = normalizedSheetColor(input.sheet, input.sheetColor);
   const qtyOf = (t: WindowType) => input.windows.find((w) => w.type === t)?.qty ?? 0;
   const setQty = (t: WindowType, qty: number) => {
+    const current = input.windows.find((w) => w.type === t);
     const rest = input.windows.filter((w) => w.type !== t);
-    update({ windows: qty > 0 ? [...rest, { type: t, qty }] : rest });
+    update({ windows: qty > 0 ? [...rest, { ...current, type: t, qty }] : rest });
   };
+  const setWindowColor = (type: WindowType, color: string) => update({ windows: input.windows.map((window) => window.type === type ? { ...window, color } : window) });
 
   return (
     <Card title="Okna i drzwi">
@@ -380,11 +408,38 @@ export function WindowsDoorsSection({ input, pl, update }: SectionProps) {
             />
           );
         })}
-        <QtyRow label="Drzwi" hint={`1 szt. drzwi lub bramy w cenie garażu, kolejne ${formatPln(pl.door)}/szt.`} value={input.doors} onChange={(doors) => update({ doors, doorLocks: Math.min(input.doorLocks ?? 0, doors) })} />
+        <QtyRow label="Drzwi" hint={`1 szt. drzwi lub bramy w cenie garażu, kolejne ${formatPln(pl.door)}/szt.`} value={input.doors} onChange={(doors) => update({ doors, doorLocks: Math.min(input.doorLocks ?? 0, doors), doorColors: input.doorColors?.slice(0, doors) })} />
         {input.doors > 0 && (
           <QtyRow label="Zamek kowal (klamka) w drzwiach" hint={`${formatPln(pl.extras.lockKowal)}/szt., max ${input.doors}`} value={input.doorLocks ?? 0} onChange={(doorLocks) => update({ doorLocks: Math.min(doorLocks, input.doors) })} />
         )}
       </div>
+
+      {colorFamily !== 'ocynk' && input.windows.some((window) => window.qty > 0 && window.type !== 'opening') && (
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {input.windows.filter((window) => window.qty > 0 && window.type !== 'opening').map((window) => (
+            <div key={window.type}>
+              <p className="mb-1 text-sm font-medium text-slate-700">Kolor: {pl.windows[window.type].label} ({window.qty} szt.)</p>
+              <ColorSelect label={`Kolor: ${pl.windows[window.type].label}`} options={SHEET_COLORS[colorFamily]} value={normalizedSheetColor(input.sheet, window.color ?? input.sheetColor)} onChange={(color) => setWindowColor(window.type, color)} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {input.doors > 0 && colorFamily !== 'ocynk' && (
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {Array.from({ length: input.doors }, (_, index) => (
+            <div key={index}>
+              <p className="mb-1 text-sm font-medium text-slate-700">Kolor drzwi {index + 1}</p>
+              <ColorSelect
+                label={`Kolor drzwi ${index + 1}`}
+                options={SHEET_COLORS[colorFamily]}
+                value={normalizedSheetColor(input.sheet, input.doorColors?.[index] ?? input.sheetColor)}
+                onChange={(color) => update({ doorColors: Array.from({ length: input.doors }, (_, doorIndex) => doorIndex === index ? color : input.doorColors?.[doorIndex] ?? defaultColor ?? color) })}
+              />
+            </div>
+          ))}
+        </div>
+      )}
     </Card>
   );
 }

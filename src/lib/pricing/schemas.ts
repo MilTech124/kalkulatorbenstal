@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SHEET_COLORS } from '@/lib/sheetColors';
+import { SHEET_COLORS, sheetColorFamily } from '@/lib/sheetColors';
 
 const num = z.number().finite();
 const nonNeg = num.min(0);
@@ -23,6 +23,7 @@ export const quoteInputSchema = z.object({
   roofType: roofTypeSchema,
   sheet: sheetSchema,
   sheetColor: z.string().max(40).optional(),
+  flashingColor: z.string().max(40).optional(),
   horizontalPanel: z.boolean(),
   sheetLayout: z.enum(['v', 'h', 'vWide', 'hWide']).optional(),
   felt: z.boolean(),
@@ -33,6 +34,7 @@ export const quoteInputSchema = z.object({
     .array(
       z.object({
         type: gateTypeSchema,
+        color: z.string().max(40).optional(),
         width: nonNeg.max(20),
         height: nonNeg.max(6),
         automat: z.boolean(),
@@ -43,8 +45,9 @@ export const quoteInputSchema = z.object({
       }),
     )
     .max(6),
-  windows: z.array(z.object({ type: windowTypeSchema, qty: z.number().int().min(0).max(50) })).max(20),
+  windows: z.array(z.object({ type: windowTypeSchema, qty: z.number().int().min(0).max(50), color: z.string().max(40).optional() })).max(20),
   doors: z.number().int().min(0).max(20),
+  doorColors: z.array(z.string().max(40)).max(20).optional(),
   doorLocks: z.number().int().min(0).max(20).optional(),
   currency: z.string().trim().max(20).optional(),
   extras: z.object({
@@ -56,12 +59,22 @@ export const quoteInputSchema = z.object({
   carport: z.object({ enabled: z.boolean(), width: nonNeg.max(20), length: nonNeg.max(50) }),
   partitionWalls: z.array(z.object({ width: nonNeg.max(20), height: nonNeg.max(6) })).max(10),
   openwork: z.object({ mode: z.enum(['none', 'wall', 'whole']), width: nonNeg.max(20), height: nonNeg.max(6) }),
-}).refine((input) => {
-  if (!input.sheetColor) return true; // zgodność ze starszymi wycenami
-  if (input.sheet === 'ocynk') return false;
-  const family = input.sheet === 'wood' ? 'wood' : input.sheetColor.startsWith('btx-') ? 'btx' : 'ral';
-  return SHEET_COLORS[family].some((color) => color.key === input.sheetColor);
-}, { path: ['sheetColor'], message: 'Wybierz kolor dostępny dla rodzaju blachy' });
+}).superRefine((input, ctx) => {
+  const family = sheetColorFamily(input.sheet, input.sheetColor);
+  const valid = (color: string) => family !== 'ocynk' && SHEET_COLORS[family].some((option) => option.key === color);
+  if (input.sheetColor && !valid(input.sheetColor)) ctx.addIssue({ code: 'custom', path: ['sheetColor'], message: 'Wybierz kolor dostępny dla rodzaju blachy' });
+  if (input.flashingColor && (!valid(input.flashingColor) || input.flashings === false)) ctx.addIssue({ code: 'custom', path: ['flashingColor'], message: 'Wybierz kolor okuć z aktualnej palety' });
+  input.gates.forEach((gate, index) => {
+    if (gate.color && !valid(gate.color)) ctx.addIssue({ code: 'custom', path: ['gates', index, 'color'], message: 'Wybierz kolor bramy z aktualnej palety' });
+  });
+  input.windows.forEach((window, index) => {
+    if (window.color && (window.type === 'opening' || !valid(window.color))) ctx.addIssue({ code: 'custom', path: ['windows', index, 'color'], message: 'Wybierz kolor okna z aktualnej palety' });
+  });
+  if (input.doorColors && input.doorColors.length > input.doors) ctx.addIssue({ code: 'custom', path: ['doorColors'], message: 'Liczba kolorów przekracza liczbę drzwi' });
+  input.doorColors?.forEach((color, index) => {
+    if (!valid(color)) ctx.addIssue({ code: 'custom', path: ['doorColors', index], message: 'Wybierz kolor drzwi z aktualnej palety' });
+  });
+});
 
 export const customerSchema = z.object({
   firstName: z.string().trim().min(1, 'Podaj imię').max(100),
