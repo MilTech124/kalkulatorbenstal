@@ -169,6 +169,10 @@ export interface QuoteInput {
   sheet: SheetType;
   /** Kolor poszycia; brak w starszych wycenach oznacza pierwszy kolor danej palety. */
   sheetColor?: string;
+  /** Rodzaj blachy dachu; brak = taki sam jak ścian. */
+  roofSheet?: SheetType;
+  /** Kolor dachu; brak = kolor poszycia garażu. */
+  roofColor?: string;
   /** Kolor okuć dachowych i narożnych; brak = kolor poszycia. */
   flashingColor?: string;
   /** Zachowane dla zgodnosci: true = blacha w poziomie (h/hWide). Zrodlem prawdy jest sheetLayout, gdy ustawione. */

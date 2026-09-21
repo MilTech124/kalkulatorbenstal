@@ -5,6 +5,21 @@ import { quoteInputSchema } from './pricing/schemas';
 import { offerSummary } from './offer';
 
 describe('kolor blachy w zapisanej wycenie i PDF', () => {
+  it('pozwala wybrać dach BTX przy drewnopodobnych ścianach i oznacza cenę do potwierdzenia', () => {
+    const input = { ...emptyInput(DEFAULT_PRICE_LIST), sheet: 'wood' as const, sheetColor: 'wood-grafit', roofSheet: 'ral' as const, roofColor: 'btx-7016' };
+    expect(quoteInputSchema.safeParse(input).success).toBe(true);
+    const rows = offerSummary(input, DEFAULT_PRICE_LIST, input.height);
+    expect(rows.find((row) => row.label === 'Poszycie dachu')?.value).toBe('blacha trapezowa, kolor: BTX 7016 antracyt');
+    expect(calculateQuote(input, DEFAULT_PRICE_LIST).needsManualQuote).toBe(true);
+  });
+
+  it('odrzuca kolor dachu spoza wybranej palety', () => {
+    const input = { ...emptyInput(DEFAULT_PRICE_LIST), roofSheet: 'wood' as const, roofColor: 'btx-7016' };
+    const result = quoteInputSchema.safeParse(input);
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues.map((issue) => issue.path.join('.'))).toContain('roofColor');
+  });
+
   it('zachowuje matowy BTX i pokazuje jego kolor w ofercie', () => {
     const input = { ...emptyInput(DEFAULT_PRICE_LIST), sheet: 'ral' as const, sheetColor: 'btx-7016' };
     expect(quoteInputSchema.safeParse(input).success).toBe(true);

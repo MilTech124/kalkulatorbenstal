@@ -131,6 +131,11 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   const productType = input.productType ?? 'steel';
   const roof = pl.roofTypes[roofType];
 
+  if (productType === 'steel' && input.roofSheet && input.roofSheet !== sheet) {
+    warnings.push('Inny rodzaj blachy na dachu wymaga potwierdzenia ceny.');
+    needsManualQuote = true;
+  }
+
   if (productType === 'bin') {
     warnings.push('Wiaty śmietnikowe – wycena wkrótce.');
     return { items, total: 0, effectiveHeight: input.height, warnings, needsManualQuote: true };

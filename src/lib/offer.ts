@@ -27,9 +27,11 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
   ];
   const sandwich = input.productType === 'sandwich';
   if (!sandwich) {
+    const roofSheet = input.roofSheet ?? input.sheet;
+    const roofColor = input.roofColor ?? (input.roofSheet ? undefined : input.sheetColor);
     rows.push({ label: 'Rodzaj spadu dachu', value: pl.roofTypes[input.roofType]?.label ?? input.roofType });
     rows.push({ label: 'Poszycie ścian', value: `blacha trapezowa, ${SHEET_LAYOUT_LABELS[sheetLayout(input)].toLowerCase()}, kolor: ${sheetColorLabel(input.sheet, input.sheetColor)}` });
-    rows.push({ label: 'Poszycie dachu', value: input.tile ? `blachodachówka, kolor: ${sheetColorLabel(input.sheet, input.sheetColor)}` : `blacha trapezowa, kolor: ${sheetColorLabel(input.sheet, input.sheetColor)}` });
+    rows.push({ label: 'Poszycie dachu', value: input.tile ? `blachodachówka, kolor: ${sheetColorLabel(roofSheet, roofColor)}` : `blacha trapezowa, kolor: ${sheetColorLabel(roofSheet, roofColor)}` });
     const structure = input.structure ? pl.structures?.find((o) => o.key === input.structure) : undefined;
     rows.push({ label: 'Konstrukcja', value: structure?.label ?? 'kątownik' });
   }

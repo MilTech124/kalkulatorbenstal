@@ -137,6 +137,7 @@ function OfferDocument({ d, logo, pageSize }: { d: OfferPdfData; logo: Buffer; p
                 <Text style={s.priceLabel}>Łącznie brutto</Text>
                 <Text style={s.price}>{foreign ? formatMoney(convertFromPln(d.total, foreign), foreign.code) : pln(d.total)}</Text>
                 <Text style={s.priceHint}>Transport i montaż GRATIS · oferta ważna {validDays} dni</Text>
+                {d.input.roofSheet && d.input.roofSheet !== d.input.sheet ? <Text style={s.priceHint}>Cena przy innym rodzaju blachy na dachu wymaga potwierdzenia.</Text> : null}
                 {foreign ? <Text style={s.priceHint}>{pln(d.total)} wg kursu 1 {foreign.code} = {fmt(foreign.rate)} zł{foreign.label ? ` (${foreign.label})` : ''}</Text> : null}
               </View>
             </View>

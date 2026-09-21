@@ -23,6 +23,8 @@ export const quoteInputSchema = z.object({
   roofType: roofTypeSchema,
   sheet: sheetSchema,
   sheetColor: z.string().max(40).optional(),
+  roofSheet: sheetSchema.optional(),
+  roofColor: z.string().max(40).optional(),
   flashingColor: z.string().max(40).optional(),
   horizontalPanel: z.boolean(),
   sheetLayout: z.enum(['v', 'h', 'vWide', 'hWide']).optional(),
@@ -63,6 +65,13 @@ export const quoteInputSchema = z.object({
   const family = sheetColorFamily(input.sheet, input.sheetColor);
   const valid = (color: string) => family !== 'ocynk' && SHEET_COLORS[family].some((option) => option.key === color);
   if (input.sheetColor && !valid(input.sheetColor)) ctx.addIssue({ code: 'custom', path: ['sheetColor'], message: 'Wybierz kolor dostępny dla rodzaju blachy' });
+  if (input.roofColor) {
+    const roofSheet = input.roofSheet ?? input.sheet;
+    const roofFamily = sheetColorFamily(roofSheet, input.roofColor);
+    if (roofFamily === 'ocynk' || !SHEET_COLORS[roofFamily].some((option) => option.key === input.roofColor)) {
+      ctx.addIssue({ code: 'custom', path: ['roofColor'], message: 'Wybierz kolor dachu z wybranej palety' });
+    }
+  }
   if (input.flashingColor && (!valid(input.flashingColor) || input.flashings === false)) ctx.addIssue({ code: 'custom', path: ['flashingColor'], message: 'Wybierz kolor okuć z aktualnej palety' });
   input.gates.forEach((gate, index) => {
     if (gate.color && !valid(gate.color)) ctx.addIssue({ code: 'custom', path: ['gates', index, 'color'], message: 'Wybierz kolor bramy z aktualnej palety' });

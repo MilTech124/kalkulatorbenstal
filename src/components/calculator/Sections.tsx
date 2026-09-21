@@ -132,10 +132,17 @@ export function DimensionsSection({ input, pl, update }: SectionProps) {
 export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
   const sandwich = input.productType === 'sandwich';
   const colorFamily = sheetColorFamily(input.sheet, input.sheetColor);
+  const roofSheet = input.roofSheet ?? input.sheet;
+  const roofFamily = sheetColorFamily(roofSheet, input.roofColor ?? (input.roofSheet ? undefined : input.sheetColor));
   const setColorFamily = (family: SheetColorFamily | 'ocynk') => {
     if (family === colorFamily) return;
     const sheet: SheetType = family === 'ocynk' ? 'ocynk' : family === 'wood' ? 'wood' : 'ral';
     update({ sheet, sheetColor: family === 'ocynk' ? undefined : SHEET_COLORS[family][0].key, flashingColor: undefined, gates: input.gates.map((gate) => ({ ...gate, color: undefined })), doorColors: undefined, windows: input.windows.map((window) => ({ ...window, color: undefined })) });
+  };
+  const setRoofFamily = (family: SheetColorFamily | 'ocynk') => {
+    if (family === roofFamily) return;
+    const roofSheet: SheetType = family === 'ocynk' ? 'ocynk' : family === 'wood' ? 'wood' : 'ral';
+    update({ roofSheet, roofColor: family === 'ocynk' ? undefined : SHEET_COLORS[family][0].key });
   };
   return (
     <Card title="Dach i blacha">
@@ -166,6 +173,33 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
             <p className="mb-1 text-sm font-medium text-slate-700">Kolor blachy</p>
             <ColorSelect options={SHEET_COLORS[colorFamily]} value={normalizedSheetColor(input.sheet, input.sheetColor)} onChange={(sheetColor) => update({ sheetColor })} />
             <p className="mt-1 text-xs text-slate-500">Próbki mają charakter poglądowy. Wybrany kolor pojawi się w ofercie PDF.</p>
+          </div>
+        )}
+        {!sandwich && (
+          <div>
+            <p className="mb-2 text-sm font-medium text-slate-700">Rodzaj blachy dachu</p>
+            <Segmented<SheetColorFamily | 'ocynk'>
+              value={roofFamily}
+              onChange={setRoofFamily}
+              options={[
+                { value: 'ocynk', label: pl.sheetLabels.ocynk },
+                { value: 'ral', label: 'Błyszczący RAL' },
+                { value: 'btx', label: 'Matowy BTX' },
+                { value: 'wood', label: pl.sheetLabels.wood },
+              ]}
+            />
+            {roofSheet !== input.sheet && <p className="mt-1 text-xs text-amber-700">Cena przy innym rodzaju blachy na dachu wymaga potwierdzenia.</p>}
+          </div>
+        )}
+        {!sandwich && roofFamily !== 'ocynk' && (
+          <div>
+            <p className="mb-1 text-sm font-medium text-slate-700">Kolor dachu</p>
+            <ColorSelect
+              label="Kolor dachu"
+              options={SHEET_COLORS[roofFamily]}
+              value={normalizedSheetColor(roofSheet, input.roofColor ?? (input.roofSheet ? undefined : input.sheetColor))}
+              onChange={(roofColor) => update({ roofSheet, roofColor })}
+            />
           </div>
         )}
         {!sandwich && (pl.structures?.length ?? 0) > 0 && (
