@@ -35,7 +35,7 @@ export function trackerTitle(quote: Pick<QuoteDoc, 'number' | 'input'>): string 
 }
 
 /** Skrocony opis konfiguracji do pola "details" w trackerze. */
-export function trackerDetails(quote: Pick<QuoteDoc, 'number' | 'input' | 'result' | 'total'>): string {
+export function trackerDetails(quote: Pick<QuoteDoc, 'number' | 'input' | 'result' | 'total' | 'offeredTotal'>): string {
   const input = normalizeInput(quote.input);
   const sheet = { ocynk: 'ocynk', ral: 'RAL', wood: 'drewnopodobny' }[input.sheet];
   const roof = { rear: 'spad do tyłu', side: 'spad na bok', gable: 'dwuspadowy' }[input.roofType];
@@ -54,7 +54,7 @@ export function trackerDetails(quote: Pick<QuoteDoc, 'number' | 'input' | 'resul
     lines.push(`Okna/drzwi: ${[...windows, input.doors ? `drzwi × ${input.doors}` : ''].filter(Boolean).join(', ')}`);
   }
   if (input.carport.enabled) lines.push(`Wiata ${input.carport.width} × ${input.carport.length} m`);
-  lines.push(`Kwota brutto: ${quote.total.toLocaleString('pl-PL')} zł`);
+  lines.push(`Kwota brutto: ${(quote.offeredTotal ?? quote.total).toLocaleString('pl-PL')} zł`);
   return lines.join('\n');
 }
 
@@ -74,7 +74,7 @@ export async function sendQuoteToTracker(quote: QuoteDoc, opts: TrackerSendOptio
     country: 'pl',
     deliveryDate: opts.deliveryDate || undefined,
     details: opts.details ?? trackerDetails(quote),
-    amount: quote.total,
+    amount: quote.offeredTotal ?? quote.total,
     status: opts.status,
   };
   const res = await fetch(`${trackerBaseUrl()}/api/integration/orders`, {

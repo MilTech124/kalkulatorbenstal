@@ -1,9 +1,11 @@
 'use client';
 
-import { availableLengths, availableWidths, defaultGate, GATE_LABELS, heightOptions, sandwichPanel, SHEET_LAYOUT_LABELS, sheetLayout, SHEET_ORDER } from '@/lib/pricing/engine';
+import { availableLengths, availableWidths, defaultGate, GATE_LABELS, heightOptions, sandwichPanel, SHEET_LAYOUT_LABELS, sheetLayout } from '@/lib/pricing/engine';
 import type { GateInput, GateType, PriceList, SheetLayout, QuoteInput, RoofType, SheetType, WindowType } from '@/lib/pricing/types';
 import { Card, Checkbox, Field, NumberInput, Segmented, Select } from '@/components/ui';
 import { formatNum, formatPln } from '@/lib/format';
+import { SHEET_COLORS, normalizedSheetColor, sheetColorFamily, type SheetColorFamily } from '@/lib/sheetColors';
+import { ColorSelect } from './ColorSelect';
 
 export interface SectionProps {
   input: QuoteInput;
@@ -129,6 +131,11 @@ export function DimensionsSection({ input, pl, update }: SectionProps) {
 
 export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
   const sandwich = input.productType === 'sandwich';
+  const colorFamily = sheetColorFamily(input.sheet, input.sheetColor);
+  const setColorFamily = (family: SheetColorFamily | 'ocynk') => {
+    const sheet: SheetType = family === 'ocynk' ? 'ocynk' : family === 'wood' ? 'wood' : 'ral';
+    update({ sheet, sheetColor: family === 'ocynk' ? undefined : SHEET_COLORS[family][0].key });
+  };
   return (
     <Card title="Dach i blacha">
       <div className="space-y-5">
@@ -142,12 +149,24 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
         </div>
         <div>
           <p className="mb-2 text-sm font-medium text-slate-700">Rodzaj blachy</p>
-          <Segmented<SheetType>
-            value={input.sheet}
-            onChange={(sheet) => update({ sheet })}
-            options={SHEET_ORDER.map((s) => ({ value: s, label: pl.sheetLabels[s], hint: sandwich ? 'dotyczy wiaty i ścian' : s === 'ocynk' ? 'w cenie' : 'dopłata wg wymiarów' }))}
+          <Segmented<SheetColorFamily | 'ocynk'>
+            value={colorFamily}
+            onChange={setColorFamily}
+            options={[
+              { value: 'ocynk', label: pl.sheetLabels.ocynk, hint: 'w cenie' },
+              { value: 'ral', label: 'Błyszczący RAL', hint: 'dopłata wg wymiarów' },
+              { value: 'btx', label: 'Matowy BTX', hint: 'dopłata jak za RAL' },
+              { value: 'wood', label: pl.sheetLabels.wood, hint: 'dopłata wg wymiarów' },
+            ]}
           />
         </div>
+        {colorFamily !== 'ocynk' && (
+          <div>
+            <p className="mb-1 text-sm font-medium text-slate-700">Kolor blachy</p>
+            <ColorSelect options={SHEET_COLORS[colorFamily]} value={normalizedSheetColor(input.sheet, input.sheetColor)} onChange={(sheetColor) => update({ sheetColor })} />
+            <p className="mt-1 text-xs text-slate-500">Próbki mają charakter poglądowy. Wybrany kolor pojawi się w ofercie PDF.</p>
+          </div>
+        )}
         {!sandwich && (pl.structures?.length ?? 0) > 0 && (
           <div>
             <p className="mb-2 text-sm font-medium text-slate-700">Konstrukcja</p>

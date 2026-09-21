@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SHEET_COLORS } from '@/lib/sheetColors';
 
 const num = z.number().finite();
 const nonNeg = num.min(0);
@@ -21,6 +22,7 @@ export const quoteInputSchema = z.object({
   height: pos.max(6),
   roofType: roofTypeSchema,
   sheet: sheetSchema,
+  sheetColor: z.string().max(40).optional(),
   horizontalPanel: z.boolean(),
   sheetLayout: z.enum(['v', 'h', 'vWide', 'hWide']).optional(),
   felt: z.boolean(),
@@ -54,7 +56,12 @@ export const quoteInputSchema = z.object({
   carport: z.object({ enabled: z.boolean(), width: nonNeg.max(20), length: nonNeg.max(50) }),
   partitionWalls: z.array(z.object({ width: nonNeg.max(20), height: nonNeg.max(6) })).max(10),
   openwork: z.object({ mode: z.enum(['none', 'wall', 'whole']), width: nonNeg.max(20), height: nonNeg.max(6) }),
-});
+}).refine((input) => {
+  if (!input.sheetColor) return true; // zgodność ze starszymi wycenami
+  if (input.sheet === 'ocynk') return false;
+  const family = input.sheet === 'wood' ? 'wood' : input.sheetColor.startsWith('btx-') ? 'btx' : 'ral';
+  return SHEET_COLORS[family].some((color) => color.key === input.sheetColor);
+}, { path: ['sheetColor'], message: 'Wybierz kolor dostępny dla rodzaju blachy' });
 
 export const customerSchema = z.object({
   firstName: z.string().trim().min(1, 'Podaj imię').max(100),

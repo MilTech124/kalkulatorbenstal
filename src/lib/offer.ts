@@ -1,6 +1,7 @@
 // Dane firmy i podsumowanie konfiguracji do oferty (PDF): bez rozbicia cen, tylko cena koncowa.
 import { GATE_LABELS, normalizeInput, sandwichPanel, SHEET_LAYOUT_LABELS, sheetLayout } from '@/lib/pricing/engine';
 import type { PriceList, QuoteInput } from '@/lib/pricing/types';
+import { sheetColorLabel } from '@/lib/sheetColors';
 
 export const COMPANY = {
   name: 'F.P.H.U. „BEN-STAL” Galica Beniamin',
@@ -20,12 +21,15 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
   const input = normalizeInput(raw);
   const rows: { label: string; value: string }[] = [
     { label: 'Rodzaj', value: input.productType === 'sandwich' ? `Garaż warstwowy${sandwichPanel(pl, input.sandwichPanel) ? ` – ${sandwichPanel(pl, input.sandwichPanel)!.label.toLowerCase()}` : ''}` : 'Garaż blaszany' },
-    { label: 'Wymiary', value: `${fmt(input.width)} × ${fmt(input.length)} m, wysokość ${fmt(effectiveHeight)} m` },
+    { label: 'Szerokość (ściana przednia i tylna)', value: `${fmt(input.width)} m` },
+    { label: 'Długość (ściany boczne)', value: `${fmt(input.length)} m` },
+    { label: 'Wysokość w najwyższym punkcie', value: `${fmt(effectiveHeight)} m` },
   ];
   const sandwich = input.productType === 'sandwich';
   if (!sandwich) {
-    rows.push({ label: 'Dach', value: pl.roofTypes[input.roofType]?.label ?? input.roofType });
-    rows.push({ label: 'Blacha', value: `${pl.sheetLabels[input.sheet]}, ${SHEET_LAYOUT_LABELS[sheetLayout(input)].toLowerCase()}` });
+    rows.push({ label: 'Rodzaj spadu dachu', value: pl.roofTypes[input.roofType]?.label ?? input.roofType });
+    rows.push({ label: 'Poszycie ścian', value: `blacha trapezowa, ${SHEET_LAYOUT_LABELS[sheetLayout(input)].toLowerCase()}, kolor: ${sheetColorLabel(input.sheet, input.sheetColor)}` });
+    rows.push({ label: 'Poszycie dachu', value: input.tile ? `blachodachówka, kolor: ${sheetColorLabel(input.sheet, input.sheetColor)}` : `blacha trapezowa, kolor: ${sheetColorLabel(input.sheet, input.sheetColor)}` });
     const structure = input.structure ? pl.structures?.find((o) => o.key === input.structure) : undefined;
     rows.push({ label: 'Konstrukcja', value: structure?.label ?? 'kątownik' });
   }
@@ -36,13 +40,14 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
         .map((g) => `${GATE_LABELS[g.type]} ${fmt(g.width)} × ${fmt(g.height)} m${g.automat && g.type !== 'sectional' ? ' z automatem' : ''}${g.winchester ? ', winchester' : ''}${g.doorInGate ? ', drzwi w bramie' : ''}${g.lockKowal ? ', zamek kowal' : ''}`)
         .join('; '),
     });
+    if (!sandwich) rows.push({ label: 'Poszycie bramy', value: `blacha trapezowa, kolor: ${sheetColorLabel(input.sheet, input.sheetColor)}` });
   } else {
     rows.push({ label: 'Brama', value: 'bez bramy' });
   }
   const roofOpts = [(input.flashings ?? true) && 'okucia', input.gutters && 'rynny', input.felt && 'filc antykondensacyjny', input.tile && 'blachodachówka'].filter(Boolean) as string[];
   if (!sandwich && roofOpts.length) rows.push({ label: 'Wyposażenie dachu', value: roofOpts.join(', ') });
   const openings: string[] = input.windows.filter((w) => w.qty > 0).map((w) => `${pl.windows[w.type]?.label ?? w.type} × ${w.qty}`);
-  if (input.doors > 0) openings.push(`drzwi × ${input.doors}${input.doorLocks ? ` (zamek kowal × ${Math.min(input.doorLocks, input.doors)})` : ''}`);
+  if (input.doors > 0) openings.push(`drzwi wejściowe × ${input.doors}${input.doorLocks ? ` (zamek kowal × ${Math.min(input.doorLocks, input.doors)})` : ''}${!sandwich ? `, poszycie: ${sheetColorLabel(input.sheet, input.sheetColor)}` : ''}`);
   if (openings.length) rows.push({ label: 'Okna i drzwi', value: openings.join(', ') });
   const extras = [
     input.extras.lockKowal && 'zamek kowal',

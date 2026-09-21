@@ -47,7 +47,11 @@ export function OfferPdfButton({ quoteId, total, offeredTotal, note }: { quoteId
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setPrice(offeredTotal ?? total);
+          setText(note ?? '');
+          setOpen(true);
+        }}
         className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">

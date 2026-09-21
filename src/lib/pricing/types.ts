@@ -165,6 +165,8 @@ export interface QuoteInput {
   height: number;
   roofType: RoofType;
   sheet: SheetType;
+  /** Kolor poszycia; brak w starszych wycenach oznacza pierwszy kolor danej palety. */
+  sheetColor?: string;
   /** Zachowane dla zgodnosci: true = blacha w poziomie (h/hWide). Zrodlem prawdy jest sheetLayout, gdy ustawione. */
   horizontalPanel: boolean;
   sheetLayout?: SheetLayout;
