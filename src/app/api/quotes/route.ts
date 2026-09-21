@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
   const id = doc._id.toString();
   return NextResponse.json(
-    { id, number, total: result.total, offeredTotal: offeredTotal ?? null, pdfUrl: `/api/quotes/${id}/pdf?t=${accessToken}` },
+    { id, number, total: result.total, offeredTotal: offeredTotal ?? null, pdfUrl: `/api/quotes/${id}/pdf?t=${accessToken}`, wordUrl: `/api/quotes/${id}/word?t=${accessToken}` },
     { status: 201 },
   );
 }

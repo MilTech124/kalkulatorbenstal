@@ -172,7 +172,7 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
           <div>
             <p className="mb-1 text-sm font-medium text-slate-700">Kolor blachy</p>
             <ColorSelect options={SHEET_COLORS[colorFamily]} value={normalizedSheetColor(input.sheet, input.sheetColor)} onChange={(sheetColor) => update({ sheetColor })} />
-            <p className="mt-1 text-xs text-slate-500">Próbki mają charakter poglądowy. Wybrany kolor pojawi się w ofercie PDF.</p>
+            <p className="mt-1 text-xs text-slate-500">Próbki mają charakter poglądowy. Wybrany kolor pojawi się w ofercie PDF i Word.</p>
           </div>
         )}
         {!sandwich && (

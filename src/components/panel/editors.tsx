@@ -129,7 +129,7 @@ export function AddonsEditor({ pl, setPl }: EditorProps) {
         <NumField label="Rura spustowa [zł/szt.]" value={u.downpipePrice ?? 0} onChange={(v) => setUnit('downpipePrice', v)} hint="Doliczana przy rynnach; liczba rur wg dachu (Zaawansowane)" />
       </Group>
 
-      <Group title="Okna i drzwi" description="Nazwa okna jest widoczna w kalkulatorze i w ofercie PDF.">
+      <Group title="Okna i drzwi" description="Nazwa okna jest widoczna w kalkulatorze oraz w ofertach PDF i Word.">
         {(Object.keys(pl.windows) as (keyof PriceList['windows'])[]).map((k) => (
           <div key={k} className="grid grid-cols-[1fr_100px] gap-2 rounded-lg border border-slate-200 p-2">
             <label className="block">

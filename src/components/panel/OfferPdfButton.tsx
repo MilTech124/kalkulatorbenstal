@@ -5,7 +5,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { formatPln } from '@/lib/format';
 import { Button, Field, TextInput } from '@/components/ui';
 
-/** Przycisk "Oferta PDF": okno z edycja ceny i dopisku, zapis (PATCH) i otwarcie PDF. */
+/** Przyciski oferty: edycja ceny i dopisku, zapis oraz pobranie wybranego formatu. */
 export function OfferPdfButton({ quoteId, total, offeredTotal, note }: { quoteId: string; total: number; offeredTotal?: number | null; note?: string | null }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -13,6 +13,7 @@ export function OfferPdfButton({ quoteId, total, offeredTotal, note }: { quoteId
   const [text, setText] = useState(note ?? '');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [format, setFormat] = useState<'pdf' | 'word'>('pdf');
 
   useEffect(() => {
     if (!open) return;
@@ -33,7 +34,12 @@ export function OfferPdfButton({ quoteId, total, offeredTotal, note }: { quoteId
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Błąd zapisu');
-      window.open(`/api/quotes/${quoteId}/pdf`, '_blank');
+      if (format === 'pdf') window.open(`/api/quotes/${quoteId}/pdf`, '_blank');
+      else {
+        const download = document.createElement('a');
+        download.href = `/api/quotes/${quoteId}/word`;
+        download.click();
+      }
       setOpen(false);
       router.refresh();
     } catch (err) {
@@ -48,6 +54,7 @@ export function OfferPdfButton({ quoteId, total, offeredTotal, note }: { quoteId
       <button
         type="button"
         onClick={() => {
+          setFormat('pdf');
           setPrice(offeredTotal ?? total);
           setText(note ?? '');
           setOpen(true);
@@ -60,13 +67,25 @@ export function OfferPdfButton({ quoteId, total, offeredTotal, note }: { quoteId
         </svg>
         Oferta PDF
       </button>
+      <button
+        type="button"
+        onClick={() => {
+          setFormat('word');
+          setPrice(offeredTotal ?? total);
+          setText(note ?? '');
+          setOpen(true);
+        }}
+        className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-50"
+      >
+        Oferta Word
+      </button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 sm:items-center sm:p-4" onClick={() => setOpen(false)}>
           <div className="w-full max-w-lg rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <form onSubmit={submit} className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">Oferta PDF</h3>
+                <h3 className="text-lg font-semibold text-slate-900">Oferta {format === 'pdf' ? 'PDF' : 'Word'}</h3>
                 <p className="text-sm text-slate-500">Podsumowanie konfiguracji (bez rozbicia) i cena podana poniżej. Zmiany zostaną zapisane przy wycenie.</p>
               </div>
               <Field label="Cena w ofercie [zł]" hint={`Wyliczona z cennika: ${formatPln(total)}`}>
@@ -87,7 +106,7 @@ export function OfferPdfButton({ quoteId, total, offeredTotal, note }: { quoteId
                   Anuluj
                 </Button>
                 <Button type="submit" disabled={busy}>
-                  {busy ? 'Generowanie…' : 'Zapisz i otwórz PDF'}
+                  {busy ? 'Generowanie…' : format === 'pdf' ? 'Zapisz i otwórz PDF' : 'Zapisz i pobierz Word'}
                 </Button>
               </div>
             </form>

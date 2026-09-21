@@ -22,7 +22,7 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
   const [errors, setErrors] = useState<Partial<Record<keyof CustomerInfo, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saving' | 'done' | 'error'>('idle');
   const [message, setMessage] = useState('');
-  const [saved, setSaved] = useState<{ number: number; total: number; pdfUrl: string } | null>(null);
+  const [saved, setSaved] = useState<{ number: number; total: number; pdfUrl: string; wordUrl: string } | null>(null);
   const [markupPct, setMarkupPct] = useState(0);
   const [offeredTotal, setOfferedTotal] = useState<number | null>(null);
   const [note, setNote] = useState('');
@@ -67,7 +67,7 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Błąd zapisu');
-      setSaved({ number: data.number, total: data.offeredTotal ?? data.total, pdfUrl: data.pdfUrl });
+      setSaved({ number: data.number, total: data.offeredTotal ?? data.total, pdfUrl: data.pdfUrl, wordUrl: data.wordUrl });
       setStatus('done');
     } catch (err) {
       setStatus('error');
@@ -93,6 +93,12 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
                 className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-600"
               >
                 Pobierz ofertę PDF
+              </a>
+              <a
+                href={saved.wordUrl}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-accent-500 bg-white px-4 py-2 text-sm font-semibold text-accent-700 hover:bg-accent-50"
+              >
+                Pobierz ofertę Word
               </a>
               <Button variant="secondary" onClick={onClose}>
                 Zamknij
