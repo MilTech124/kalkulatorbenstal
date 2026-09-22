@@ -4,7 +4,7 @@ import { availableLengths, availableWidths, defaultGate, GATE_LABELS, heightOpti
 import type { GateInput, GateType, PriceList, SheetLayout, QuoteInput, RoofType, SheetType, WindowType } from '@/lib/pricing/types';
 import { Card, Checkbox, Field, NumberInput, Segmented, Select } from '@/components/ui';
 import { formatNum, formatPln } from '@/lib/format';
-import { SHEET_COLORS, normalizedSheetColor, sheetColorFamily, type SheetColorFamily } from '@/lib/sheetColors';
+import { INHERIT_COLOR, SHEET_COLORS, colorOptionsWithInherit, normalizedSheetColor, resolvedRoof, sheetColorFamily, type SheetColorFamily } from '@/lib/sheetColors';
 import { ColorSelect } from './ColorSelect';
 
 export interface SectionProps {
@@ -132,8 +132,11 @@ export function DimensionsSection({ input, pl, update }: SectionProps) {
 export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
   const sandwich = input.productType === 'sandwich';
   const colorFamily = sheetColorFamily(input.sheet, input.sheetColor);
-  const roofSheet = input.roofSheet ?? input.sheet;
-  const roofFamily = sheetColorFamily(roofSheet, input.roofColor ?? (input.roofSheet ? undefined : input.sheetColor));
+  const roof = resolvedRoof(input);
+  const roofSheet = roof.sheet;
+  const roofFamily = sheetColorFamily(roofSheet, roof.color);
+  // Dach idzie za poszyciem tylko wtedy, gdy nie wybrano dla niego wlasnego rodzaju blachy ani koloru.
+  const roofFollowsWalls = input.roofSheet === undefined && input.roofColor === undefined;
   const setColorFamily = (family: SheetColorFamily | 'ocynk') => {
     if (family === colorFamily) return;
     const sheet: SheetType = family === 'ocynk' ? 'ocynk' : family === 'wood' ? 'wood' : 'ral';
@@ -141,6 +144,8 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
   };
   const setRoofFamily = (family: SheetColorFamily | 'ocynk') => {
     if (family === roofFamily) return;
+    // Powrot do rodzaju blachy scian = dach znowu idzie za poszyciem.
+    if (family === colorFamily) return update({ roofSheet: undefined, roofColor: undefined });
     const roofSheet: SheetType = family === 'ocynk' ? 'ocynk' : family === 'wood' ? 'wood' : 'ral';
     update({ roofSheet, roofColor: family === 'ocynk' ? undefined : SHEET_COLORS[family][0].key });
   };
@@ -170,9 +175,11 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
         </div>
         {colorFamily !== 'ocynk' && (
           <div>
-            <p className="mb-1 text-sm font-medium text-slate-700">Kolor blachy</p>
-            <ColorSelect options={SHEET_COLORS[colorFamily]} value={normalizedSheetColor(input.sheet, input.sheetColor)} onChange={(sheetColor) => update({ sheetColor })} />
-            <p className="mt-1 text-xs text-slate-500">Próbki mają charakter poglądowy. Wybrany kolor pojawi się w ofercie PDF i Word.</p>
+            <p className="mb-1 text-sm font-medium text-slate-700">Kolor ścian</p>
+            <ColorSelect label="Kolor ścian" options={SHEET_COLORS[colorFamily]} value={normalizedSheetColor(input.sheet, input.sheetColor)} onChange={(sheetColor) => update({ sheetColor })} />
+            <p className="mt-1 text-xs text-slate-500">
+              Próbki mają charakter poglądowy. Elementy ustawione na „Taki jak poszycie garażu” idą za tym kolorem; element z własnym kolorem zostaje bez zmian.
+            </p>
           </div>
         )}
         {!sandwich && (
@@ -196,9 +203,9 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
             <p className="mb-1 text-sm font-medium text-slate-700">Kolor dachu</p>
             <ColorSelect
               label="Kolor dachu"
-              options={SHEET_COLORS[roofFamily]}
-              value={normalizedSheetColor(roofSheet, input.roofColor ?? (input.roofSheet ? undefined : input.sheetColor))}
-              onChange={(roofColor) => update({ roofSheet, roofColor })}
+              options={roofFamily === colorFamily ? colorOptionsWithInherit(roofFamily, normalizedSheetColor(input.sheet, input.sheetColor)) : SHEET_COLORS[roofFamily]}
+              value={roofFollowsWalls && roofFamily === colorFamily ? INHERIT_COLOR : normalizedSheetColor(roofSheet, roof.color)}
+              onChange={(key) => update(key === INHERIT_COLOR ? { roofSheet: undefined, roofColor: undefined } : { roofSheet, roofColor: key })}
             />
           </div>
         )}
@@ -263,7 +270,12 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
         {!sandwich && (input.flashings ?? true) && colorFamily !== 'ocynk' && (
           <div>
             <p className="mb-1 text-sm font-medium text-slate-700">Kolor okuć</p>
-            <ColorSelect label="Kolor okuć" options={SHEET_COLORS[colorFamily]} value={normalizedSheetColor(input.sheet, input.flashingColor ?? input.sheetColor)} onChange={(flashingColor) => update({ flashingColor })} />
+            <ColorSelect
+              label="Kolor okuć"
+              options={colorOptionsWithInherit(colorFamily, normalizedSheetColor(input.sheet, input.sheetColor))}
+              value={input.flashingColor ? normalizedSheetColor(input.sheet, input.flashingColor) : INHERIT_COLOR}
+              onChange={(key) => update({ flashingColor: key === INHERIT_COLOR ? undefined : key })}
+            />
           </div>
         )}
       </div>
@@ -386,7 +398,12 @@ function GateCard({
       {colorFamily !== 'ocynk' && !(isSectional && g.winchester) && (
         <div>
           <p className="mb-1 text-sm font-medium text-slate-700">Kolor bramy</p>
-          <ColorSelect label={`Kolor bramy ${index + 1}`} options={SHEET_COLORS[colorFamily]} value={normalizedSheetColor(sheet, g.color ?? sheetColor)} onChange={(color) => onChange({ color })} />
+          <ColorSelect
+            label={`Kolor bramy ${index + 1}`}
+            options={colorOptionsWithInherit(colorFamily, normalizedSheetColor(sheet, sheetColor))}
+            value={g.color ? normalizedSheetColor(sheet, g.color) : INHERIT_COLOR}
+            onChange={(key) => onChange({ color: key === INHERIT_COLOR ? undefined : key })}
+          />
           {isSectional && <p className="mt-1 text-xs text-slate-500">Dostępność koloru bramy segmentowej wymaga potwierdzenia.</p>}
         </div>
       )}
@@ -425,7 +442,7 @@ export function WindowsDoorsSection({ input, pl, update }: SectionProps) {
     const rest = input.windows.filter((w) => w.type !== t);
     update({ windows: qty > 0 ? [...rest, { ...current, type: t, qty }] : rest });
   };
-  const setWindowColor = (type: WindowType, color: string) => update({ windows: input.windows.map((window) => window.type === type ? { ...window, color } : window) });
+  const setWindowColor = (type: WindowType, color?: string) => update({ windows: input.windows.map((window) => (window.type === type ? { ...window, color } : window)) });
 
   return (
     <Card title="Okna i drzwi">
@@ -453,7 +470,12 @@ export function WindowsDoorsSection({ input, pl, update }: SectionProps) {
           {input.windows.filter((window) => window.qty > 0 && window.type !== 'opening').map((window) => (
             <div key={window.type}>
               <p className="mb-1 text-sm font-medium text-slate-700">Kolor: {pl.windows[window.type].label} ({window.qty} szt.)</p>
-              <ColorSelect label={`Kolor: ${pl.windows[window.type].label}`} options={SHEET_COLORS[colorFamily]} value={normalizedSheetColor(input.sheet, window.color ?? input.sheetColor)} onChange={(color) => setWindowColor(window.type, color)} />
+              <ColorSelect
+                label={`Kolor: ${pl.windows[window.type].label}`}
+                options={colorOptionsWithInherit(colorFamily, defaultColor)}
+                value={window.color ? normalizedSheetColor(input.sheet, window.color) : INHERIT_COLOR}
+                onChange={(key) => setWindowColor(window.type, key === INHERIT_COLOR ? undefined : key)}
+              />
             </div>
           ))}
         </div>
@@ -466,9 +488,12 @@ export function WindowsDoorsSection({ input, pl, update }: SectionProps) {
               <p className="mb-1 text-sm font-medium text-slate-700">Kolor drzwi {index + 1}</p>
               <ColorSelect
                 label={`Kolor drzwi ${index + 1}`}
-                options={SHEET_COLORS[colorFamily]}
-                value={normalizedSheetColor(input.sheet, input.doorColors?.[index] ?? input.sheetColor)}
-                onChange={(color) => update({ doorColors: Array.from({ length: input.doors }, (_, doorIndex) => doorIndex === index ? color : input.doorColors?.[doorIndex] ?? defaultColor ?? color) })}
+                options={colorOptionsWithInherit(colorFamily, defaultColor)}
+                value={input.doorColors?.[index] ? normalizedSheetColor(input.sheet, input.doorColors[index]) : INHERIT_COLOR}
+                onChange={(key) =>
+                  // Pozostale drzwi zostaja przy swoim ustawieniu; pusty klucz = ida za poszyciem garazu.
+                  update({ doorColors: Array.from({ length: input.doors }, (_, doorIndex) => (doorIndex === index ? key : (input.doorColors?.[doorIndex] ?? INHERIT_COLOR))) })
+                }
               />
             </div>
           ))}

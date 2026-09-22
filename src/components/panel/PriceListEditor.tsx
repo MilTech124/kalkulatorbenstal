@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import type { PriceList } from '@/lib/pricing/types';
 import { Button } from '@/components/ui';
-import { AddonsEditor, AdvancedEditor, BaseTableEditor, CarportEditor, GatesEditor, SandwichEditor } from './editors';
+import { AddonsEditor, CarportEditor, CurrenciesEditor, GatesEditor, RoofEditor, SandwichEditor, SteelEditor } from './editors';
 
 export interface VersionInfo {
   version: number;
@@ -12,23 +12,61 @@ export interface VersionInfo {
   createdAt: string;
 }
 
-type Tab = 'base' | 'addons' | 'gates' | 'sandwich' | 'carport' | 'advanced' | 'versions';
+type Tab = 'steel' | 'roof' | 'gates' | 'addons' | 'carport' | 'sandwich' | 'currencies' | 'versions';
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'base', label: 'Tabela bazowa' },
-  { id: 'addons', label: 'Dodatki' },
+  { id: 'steel', label: 'Garaże blaszane' },
+  { id: 'roof', label: 'Dach i poszycie' },
   { id: 'gates', label: 'Bramy' },
-  { id: 'sandwich', label: 'Warstwowe' },
-  { id: 'carport', label: 'Wiata' },
-  { id: 'advanced', label: 'Zaawansowane' },
-  { id: 'versions', label: 'Wersje' },
+  { id: 'addons', label: 'Okna, drzwi i dodatki' },
+  { id: 'carport', label: 'Wiata i ściany' },
+  { id: 'sandwich', label: 'Garaże warstwowe' },
+  { id: 'currencies', label: 'Waluty' },
+  { id: 'versions', label: 'Wersje cennika' },
 ];
+
+/** Gdzie w panelu szukac pola, ktore zablokowalo zapis, i jak sie ono nazywa po ludzku. */
+const FIELD_MAP: Record<string, { tab: Tab; label: string }> = {
+  baseTable: { tab: 'steel', label: 'Ceny bazowe garaży blaszanych' },
+  standardHeight: { tab: 'steel', label: 'Wysokość standardowa' },
+  heightStep: { tab: 'steel', label: 'Krok podwyższenia' },
+  maxHeightSteps: { tab: 'steel', label: 'Ile kroków do wyboru' },
+  structures: { tab: 'steel', label: 'Konstrukcja (rodzaj profilu)' },
+  custom: { tab: 'steel', label: 'Wymiary spoza tabeli' },
+  unit: { tab: 'roof', label: 'Ceny jednostkowe pokrycia i obróbek' },
+  roofTypes: { tab: 'roof', label: 'Rodzaje dachu' },
+  verticalFlashingPerHeight: { tab: 'roof', label: 'Okucia pionowe – mb na 1 m wysokości' },
+  sheetLabels: { tab: 'roof', label: 'Nazwy rodzajów blachy' },
+  gate: { tab: 'gates', label: 'Bramy' },
+  windows: { tab: 'addons', label: 'Okna' },
+  door: { tab: 'addons', label: 'Kolejne drzwi lub brama' },
+  extras: { tab: 'addons', label: 'Dodatki i kotwiczenie' },
+  carport: { tab: 'carport', label: 'Wiata' },
+  partitionWallPerM2: { tab: 'carport', label: 'Ściany działowe' },
+  openwork: { tab: 'carport', label: 'Ażury' },
+  sandwich: { tab: 'sandwich', label: 'Garaże warstwowe' },
+  currencies: { tab: 'currencies', label: 'Waluty i kursy' },
+};
+
+interface SaveIssue {
+  path?: (string | number)[];
+  message?: string;
+}
+
+/** Zamienia blad walidacji na komunikat typu: „Bramy → gate.tilt.lowMaxHeight: wartość musi być większa od 0”. */
+function describeIssue(issue: SaveIssue): { tab?: Tab; text: string } {
+  const path = issue.path ?? [];
+  const root = typeof path[0] === 'string' ? path[0] : '';
+  const field = FIELD_MAP[root];
+  const where = path.length > 1 ? ` (${path.join(' → ')})` : '';
+  return { tab: field?.tab, text: `${field?.label ?? root ?? 'Cennik'}${where}: ${issue.message ?? 'nieprawidłowa wartość'}` };
+}
 
 export function PriceListEditor({ initial, version, versions }: { initial: PriceList; version: number; versions: VersionInfo[] }) {
   const router = useRouter();
   const [pl, setPlState] = useState<PriceList>(initial);
   const [dirty, setDirty] = useState(false);
-  const [tab, setTab] = useState<Tab>('base');
+  const [tab, setTab] = useState<Tab>('steel');
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
 
@@ -46,7 +84,8 @@ export function PriceListEditor({ initial, version, versions }: { initial: Price
 
   useEffect(() => {
     if (!toast) return;
-    const t = setTimeout(() => setToast(null), 4000);
+    // Komunikaty bledu sa dluzsze (wskazuja pole do poprawy), wiec zostaja na ekranie dluzej.
+    const t = setTimeout(() => setToast(null), toast.kind === 'ok' ? 4000 : 15000);
     return () => clearTimeout(t);
   }, [toast]);
 
@@ -65,8 +104,13 @@ export function PriceListEditor({ initial, version, versions }: { initial: Price
       const res = await fetch('/api/admin/pricing', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pl) });
       const data = await res.json();
       if (!res.ok) {
-        const detail = data.issues?.[0] ? ` (${data.issues[0].path?.join('.')}: ${data.issues[0].message})` : '';
-        throw new Error((data.error ?? 'Błąd zapisu') + detail);
+        const issues: SaveIssue[] = data.issues ?? [];
+        if (issues.length === 0) throw new Error(data.error ?? 'Błąd zapisu');
+        const described = issues.slice(0, 3).map(describeIssue);
+        const firstTab = described.find((d) => d.tab)?.tab;
+        if (firstTab) setTab(firstTab);
+        const more = issues.length > described.length ? ` …i jeszcze ${issues.length - described.length}` : '';
+        throw new Error(`Nie zapisano – popraw: ${described.map((d) => d.text).join('; ')}${more}`);
       }
       setDirty(false);
       setToast({ kind: 'ok', text: `Zapisano cennik jako wersję ${data.version}.` });
@@ -134,12 +178,13 @@ export function PriceListEditor({ initial, version, versions }: { initial: Price
         ))}
       </nav>
 
-      {tab === 'base' && <BaseTableEditor pl={pl} setPl={setPl} />}
-      {tab === 'addons' && <AddonsEditor pl={pl} setPl={setPl} />}
+      {tab === 'steel' && <SteelEditor pl={pl} setPl={setPl} />}
+      {tab === 'roof' && <RoofEditor pl={pl} setPl={setPl} />}
       {tab === 'gates' && <GatesEditor pl={pl} setPl={setPl} />}
-      {tab === 'sandwich' && <SandwichEditor pl={pl} setPl={setPl} />}
+      {tab === 'addons' && <AddonsEditor pl={pl} setPl={setPl} />}
       {tab === 'carport' && <CarportEditor pl={pl} setPl={setPl} />}
-      {tab === 'advanced' && <AdvancedEditor pl={pl} setPl={setPl} />}
+      {tab === 'sandwich' && <SandwichEditor pl={pl} setPl={setPl} />}
+      {tab === 'currencies' && <CurrenciesEditor pl={pl} setPl={setPl} />}
       {tab === 'versions' && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h3 className="text-base font-semibold text-slate-900">Historia wersji</h3>
@@ -174,7 +219,13 @@ export function PriceListEditor({ initial, version, versions }: { initial: Price
       )}
 
       {toast && (
-        <div className={`fixed bottom-4 right-4 z-50 rounded-lg px-4 py-3 text-sm shadow-lg ${toast.kind === 'ok' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>{toast.text}</div>
+        <button
+          type="button"
+          onClick={() => setToast(null)}
+          className={`fixed bottom-4 right-4 z-50 max-w-md rounded-lg px-4 py-3 text-left text-sm shadow-lg ${toast.kind === 'ok' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}
+        >
+          {toast.text}
+        </button>
       )}
     </div>
   );

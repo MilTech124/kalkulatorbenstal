@@ -1,7 +1,7 @@
 // Dane firmy i podsumowanie konfiguracji do oferty (PDF): bez rozbicia cen, tylko cena koncowa.
 import { GATE_LABELS, normalizeInput, sandwichPanel, SHEET_LAYOUT_LABELS, sheetLayout } from '@/lib/pricing/engine';
 import type { PriceList, QuoteInput } from '@/lib/pricing/types';
-import { sheetColorLabel } from '@/lib/sheetColors';
+import { resolvedRoof, sheetColorLabel } from '@/lib/sheetColors';
 
 export const COMPANY = {
   name: 'F.P.H.U. „BEN-STAL” Galica Beniamin',
@@ -27,8 +27,7 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
   ];
   const sandwich = input.productType === 'sandwich';
   if (!sandwich) {
-    const roofSheet = input.roofSheet ?? input.sheet;
-    const roofColor = input.roofColor ?? (input.roofSheet ? undefined : input.sheetColor);
+    const { sheet: roofSheet, color: roofColor } = resolvedRoof(input);
     rows.push({ label: 'Rodzaj spadu dachu', value: pl.roofTypes[input.roofType]?.label ?? input.roofType });
     rows.push({ label: 'Poszycie ścian', value: `blacha trapezowa, ${SHEET_LAYOUT_LABELS[sheetLayout(input)].toLowerCase()}, kolor: ${sheetColorLabel(input.sheet, input.sheetColor)}` });
     rows.push({ label: 'Poszycie dachu', value: input.tile ? `blachodachówka, kolor: ${sheetColorLabel(roofSheet, roofColor)}` : `blacha trapezowa, kolor: ${sheetColorLabel(roofSheet, roofColor)}` });
@@ -62,7 +61,8 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
     value: windowColors.map((window) => `${pl.windows[window.type]?.label ?? window.type}: ${sheetColorLabel(input.sheet, window.color ?? input.sheetColor)}`).join('; '),
   });
   for (let index = 0; index < input.doors; index++) {
-    const color = sheetColorLabel(input.sheet, input.doorColors?.[index] ?? input.sheetColor);
+    // Pusty klucz w doorColors = drzwi w kolorze poszycia garazu.
+    const color = sheetColorLabel(input.sheet, input.doorColors?.[index] || input.sheetColor);
     rows.push({
       label: `${sandwich ? 'Kolor' : 'Poszycie'} drzwi${input.doors > 1 ? ` ${index + 1}` : ''}`,
       value: sandwich ? color : `blacha trapezowa, kolor: ${color}`,

@@ -40,6 +40,24 @@ export function normalizedSheetColor(sheet: SheetType, color?: string): string |
   return SHEET_COLORS[family].find((option) => option.key === color)?.key ?? SHEET_COLORS[family][0].key;
 }
 
+/**
+ * Klucz oznaczajacy "taki jak poszycie garazu". Element bez wlasnego koloru (brama, drzwi, okno, okucia, dach)
+ * idzie za kolorem scian; wybor konkretnego koloru przypina go na stale i zmiana koloru scian go nie rusza.
+ */
+export const INHERIT_COLOR = '';
+
+/** Lista kolorow danej palety z pozycja "jak poszycie garazu" na poczatku. */
+export function colorOptionsWithInherit(family: SheetColorFamily, baseColor: string | undefined, inheritLabel = 'Taki jak poszycie garażu') {
+  const base = SHEET_COLORS[family].find((option) => option.key === baseColor) ?? SHEET_COLORS[family][0];
+  return [{ key: INHERIT_COLOR, label: `${inheritLabel} – ${base.label}`, swatch: base.swatch }, ...SHEET_COLORS[family]];
+}
+
+/** Blacha i kolor dachu z uwzglednieniem dziedziczenia po scianach. */
+export function resolvedRoof(input: { sheet: SheetType; sheetColor?: string; roofSheet?: SheetType; roofColor?: string }): { sheet: SheetType; color?: string } {
+  const sheet = input.roofSheet ?? input.sheet;
+  return { sheet, color: input.roofColor ?? (sheet === input.sheet ? input.sheetColor : undefined) };
+}
+
 export function sheetColorLabel(sheet: SheetType, color?: string): string {
   const family = sheetColorFamily(sheet, color);
   if (family === 'ocynk') return 'ocynkowana';

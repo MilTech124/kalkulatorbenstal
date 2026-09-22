@@ -1,6 +1,6 @@
 'use client';
 
-import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react';
+import { useState, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
 
 export function Card({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   return (
@@ -35,33 +35,88 @@ export function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={`${inputClass} ${props.className ?? ''}`} />;
 }
 
-export function NumberInput({
+type NumericProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'type' | 'min' | 'max' | 'step'> & {
+  min?: number;
+  max?: number;
+  /** Skok wartosci - podpowiedz dla klawiatury i strzalek gora/dol. */
+  step?: number;
+  /** true = bez domyslnego stylu pola (np. ciasna komorka tabeli w panelu). */
+  unstyled?: boolean;
+};
+
+/**
+ * Pole liczbowe odporne na wpisywanie ulamkow: trzyma tekst wpisany przez uzytkownika
+ * (dopuszcza przecinek i chwilowo puste pole), a liczbe oddaje w gore, gdy tylko da sie ja sparsowac.
+ * Dzieki temu "12,5" albo wyczyszczenie pola nie gubi wpisywanej ceny.
+ */
+function NumericField({
   value,
   onChange,
+  allowEmpty = false,
   min,
   max,
-  step,
+  step = 1,
+  unstyled,
+  className,
+  onBlur,
+  onKeyDown,
   ...rest
-}: Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> & {
-  value: number;
-  onChange: (v: number) => void;
-}) {
+}: NumericProps & { value: number | null; onChange: (v: number | null) => void; allowEmpty?: boolean }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const text = draft ?? (value === null || !Number.isFinite(value) ? '' : String(value));
+
+  const parse = (raw: string): number | null => {
+    if (raw === '' || raw === '-' || raw === ',' || raw === '.') return null;
+    const v = Number(raw.replace(',', '.'));
+    return Number.isFinite(v) ? v : null;
+  };
+  const clamp = (v: number) => Math.min(max ?? Infinity, Math.max(min ?? -Infinity, v));
+
   return (
     <input
       {...rest}
-      type="number"
+      type="text"
       inputMode="decimal"
-      value={Number.isFinite(value) ? value : ''}
-      min={min}
-      max={max}
-      step={step}
+      value={text}
       onChange={(e) => {
-        const v = e.target.valueAsNumber;
-        onChange(Number.isFinite(v) ? v : 0);
+        const raw = e.target.value.replace(/\s/g, '');
+        if (raw !== '' && !/^-?\d*[.,]?\d*$/.test(raw)) return;
+        setDraft(raw);
+        const parsed = parse(raw);
+        if (parsed !== null) onChange(parsed);
+        else if (allowEmpty) onChange(null);
       }}
-      className={`${inputClass} ${rest.className ?? ''}`}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          // Zaokraglenie do dokladnosci kroku eliminuje bledy zmiennoprzecinkowe (0,1 + 0,2).
+          const decimals = (String(step).split('.')[1] ?? '').length;
+          const next = Number(clamp((parse(text) ?? 0) + (e.key === 'ArrowUp' ? step : -step)).toFixed(decimals));
+          setDraft(String(next));
+          onChange(next);
+        }
+        onKeyDown?.(e);
+      }}
+      onBlur={(e) => {
+        setDraft(null);
+        const parsed = parse(text);
+        if (parsed === null) onChange(allowEmpty ? null : 0);
+        else if (clamp(parsed) !== parsed) onChange(clamp(parsed));
+        onBlur?.(e);
+      }}
+      className={`${unstyled ? '' : inputClass} ${className ?? ''}`}
     />
   );
+}
+
+/** Pole liczbowe zawsze z wartoscia (puste pole = 0 po jego opuszczeniu). */
+export function NumberInput({ value, onChange, ...rest }: NumericProps & { value: number; onChange: (v: number) => void }) {
+  return <NumericField {...rest} value={value} onChange={(v) => onChange(v ?? 0)} />;
+}
+
+/** Pole liczbowe, ktore moze zostac puste (null = brak wartosci, np. rozmiar niedostepny). */
+export function NullableNumberInput({ value, onChange, ...rest }: NumericProps & { value: number | null; onChange: (v: number | null) => void }) {
+  return <NumericField {...rest} allowEmpty value={value} onChange={onChange} />;
 }
 
 export function Checkbox({

@@ -3,6 +3,7 @@ import { DEFAULT_PRICE_LIST } from './pricing/defaults';
 import { calculateQuote, emptyInput } from './pricing/engine';
 import { quoteInputSchema } from './pricing/schemas';
 import { offerSummary } from './offer';
+import { INHERIT_COLOR, SHEET_COLORS, colorOptionsWithInherit, resolvedRoof } from './sheetColors';
 
 describe('kolor blachy w zapisanej wycenie i PDF', () => {
   it('pozwala wybrać dach BTX przy drewnopodobnych ścianach i oznacza cenę do potwierdzenia', () => {
@@ -85,6 +86,43 @@ describe('kolor blachy w zapisanej wycenie i PDF', () => {
     expect(rows.find((row) => row.label === 'Kolor okien')?.value).toContain('Okno 80×60: BTX 6020 zielony');
     expect(rows.find((row) => row.label === 'Kolor okien')?.value).not.toContain('Otwór okienny');
     expect(calculateQuote(input, DEFAULT_PRICE_LIST).total).toBe(calculateQuote({ ...input, flashingColor: undefined, windows: input.windows.map((window) => ({ ...window, color: undefined })) }, DEFAULT_PRICE_LIST).total);
+  });
+
+  it('zmiana koloru ścian nie rusza elementów z własnym kolorem, a dziedziczące idą za nią', () => {
+    const base = emptyInput(DEFAULT_PRICE_LIST);
+    const czerwone = {
+      ...base,
+      sheet: 'ral' as const,
+      sheetColor: 'ral-3011',
+      // brama ma wlasny kolor, drzwi i okucia ida za poszyciem
+      gates: [{ ...base.gates[0], color: 'ral-9010' }],
+      doors: 1,
+      doorColors: [INHERIT_COLOR],
+    };
+    const niebieskie = { ...czerwone, sheetColor: 'ral-5010' };
+    expect(quoteInputSchema.safeParse(niebieskie).success).toBe(true);
+
+    const przed = offerSummary(czerwone, DEFAULT_PRICE_LIST, czerwone.height);
+    const po = offerSummary(niebieskie, DEFAULT_PRICE_LIST, niebieskie.height);
+    expect(przed.find((row) => row.label === 'Poszycie bramy')?.value).toContain('RAL 9010 biały');
+    expect(po.find((row) => row.label === 'Poszycie bramy')?.value).toContain('RAL 9010 biały');
+    expect(przed.find((row) => row.label === 'Poszycie drzwi')?.value).toContain('RAL 3011 czerwony');
+    expect(po.find((row) => row.label === 'Poszycie drzwi')?.value).toContain('RAL 5010 niebieski');
+    expect(po.find((row) => row.label === 'Kolor okuć')?.value).toBe('RAL 5010 niebieski');
+  });
+
+  it('dach bez własnego ustawienia idzie za kolorem ścian', () => {
+    const input = { ...emptyInput(DEFAULT_PRICE_LIST), sheet: 'ral' as const, sheetColor: 'ral-9006' };
+    expect(resolvedRoof(input)).toEqual({ sheet: 'ral', color: 'ral-9006' });
+    expect(resolvedRoof({ ...input, roofSheet: 'wood', roofColor: 'wood-orzech' })).toEqual({ sheet: 'wood', color: 'wood-orzech' });
+    expect(offerSummary(input, DEFAULT_PRICE_LIST, input.height).find((row) => row.label === 'Poszycie dachu')?.value).toContain('RAL 9006 srebrny');
+  });
+
+  it('lista kolorów zaczyna się od pozycji „taki jak poszycie” z aktualnym kolorem ścian', () => {
+    const options = colorOptionsWithInherit('ral', 'ral-8017');
+    expect(options[0].key).toBe(INHERIT_COLOR);
+    expect(options[0].label).toContain('RAL 8017 brązowy');
+    expect(options).toHaveLength(SHEET_COLORS.ral.length + 1);
   });
 
   it('odrzuca kolor otworu okiennego i kolor okuć spoza palety', () => {

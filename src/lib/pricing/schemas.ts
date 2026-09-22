@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { SHEET_COLORS, sheetColorFamily } from '@/lib/sheetColors';
 
 const num = z.number().finite();
-const nonNeg = num.min(0);
-const pos = num.positive();
+const nonNeg = num.min(0, 'wartość nie może być ujemna');
+const pos = num.positive('wartość musi być większa od zera');
 
 export const sheetSchema = z.enum(['ocynk', 'ral', 'wood']);
 export const roofTypeSchema = z.enum(['rear', 'side', 'gable']);
@@ -80,8 +80,9 @@ export const quoteInputSchema = z.object({
     if (window.color && (window.type === 'opening' || !valid(window.color))) ctx.addIssue({ code: 'custom', path: ['windows', index, 'color'], message: 'Wybierz kolor okna z aktualnej palety' });
   });
   if (input.doorColors && input.doorColors.length > input.doors) ctx.addIssue({ code: 'custom', path: ['doorColors'], message: 'Liczba kolorów przekracza liczbę drzwi' });
+  // Pusty klucz = drzwi ida za kolorem poszycia garazu.
   input.doorColors?.forEach((color, index) => {
-    if (!valid(color)) ctx.addIssue({ code: 'custom', path: ['doorColors', index], message: 'Wybierz kolor drzwi z aktualnej palety' });
+    if (color && !valid(color)) ctx.addIssue({ code: 'custom', path: ['doorColors', index], message: 'Wybierz kolor drzwi z aktualnej palety' });
   });
 });
 
