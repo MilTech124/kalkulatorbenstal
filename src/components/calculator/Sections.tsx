@@ -180,6 +180,10 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
             <p className="mt-1 text-xs text-slate-500">
               Próbki mają charakter poglądowy. Elementy ustawione na „Taki jak poszycie garażu” idą za tym kolorem; element z własnym kolorem zostaje bez zmian.
             </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Okucia, bramy, drzwi i okna są z blachy poszycia, więc ich kolory pochodzą z tej samej palety – przy poszyciu drewnopodobnym nie ma kolorów RAL/BTX i odwrotnie. Sam dach można
+              zamówić z innego rodzaju blachy.
+            </p>
           </div>
         )}
         {!sandwich && (

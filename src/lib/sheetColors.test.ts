@@ -88,6 +88,55 @@ describe('kolor blachy w zapisanej wycenie i PDF', () => {
     expect(calculateQuote(input, DEFAULT_PRICE_LIST).total).toBe(calculateQuote({ ...input, flashingColor: undefined, windows: input.windows.map((window) => ({ ...window, color: undefined })) }, DEFAULT_PRICE_LIST).total);
   });
 
+  // Uwaga klienta 22.09.2026: kolor poszycia narzuca palete okuc, bram, drzwi i okien - w obie strony.
+  it('nie pozwala zestawić poszycia drewnopodobnego z okuciami, oknami, bramą ani drzwiami z palety RAL/BTX', () => {
+    const base = emptyInput(DEFAULT_PRICE_LIST);
+    const input = {
+      ...base,
+      sheet: 'wood' as const,
+      sheetColor: 'wood-zloty-dab',
+      flashingColor: 'ral-9010',
+      gates: [{ ...base.gates[0], color: 'btx-9005' }],
+      doors: 1,
+      doorColors: ['ral-3011'],
+      windows: [{ type: 'w100x60' as const, qty: 1, color: 'btx-7016' }],
+    };
+    const result = quoteInputSchema.safeParse(input);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.map((issue) => issue.path.join('.'))).toEqual(
+        expect.arrayContaining(['flashingColor', 'gates.0.color', 'doorColors.0', 'windows.0.color']),
+      );
+    }
+  });
+
+  it('i odwrotnie: przy poszyciu RAL/BTX nie przyjmuje kolorów drewnopodobnych', () => {
+    const base = emptyInput(DEFAULT_PRICE_LIST);
+    const input = {
+      ...base,
+      sheet: 'ral' as const,
+      sheetColor: 'ral-5010',
+      flashingColor: 'wood-orzech',
+      gates: [{ ...base.gates[0], color: 'wood-grafit' }],
+      doors: 1,
+      doorColors: ['wood-zloty-dab'],
+      windows: [{ type: 'w80x60' as const, qty: 1, color: 'wood-orzech' }],
+    };
+    const result = quoteInputSchema.safeParse(input);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.map((issue) => issue.path.join('.'))).toEqual(
+        expect.arrayContaining(['flashingColor', 'gates.0.color', 'doorColors.0', 'windows.0.color']),
+      );
+    }
+  });
+
+  it('udostępnia do wyboru wyłącznie paletę poszycia', () => {
+    expect(colorOptionsWithInherit('wood', 'wood-orzech').every((option) => option.key === INHERIT_COLOR || option.key.startsWith('wood-'))).toBe(true);
+    expect(colorOptionsWithInherit('btx', 'btx-9005').every((option) => option.key === INHERIT_COLOR || option.key.startsWith('btx-'))).toBe(true);
+    expect(colorOptionsWithInherit('ral', 'ral-3011').every((option) => option.key === INHERIT_COLOR || option.key.startsWith('ral-'))).toBe(true);
+  });
+
   it('zmiana koloru ścian nie rusza elementów z własnym kolorem, a dziedziczące idą za nią', () => {
     const base = emptyInput(DEFAULT_PRICE_LIST);
     const czerwone = {
