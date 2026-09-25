@@ -16,6 +16,11 @@ export function Calculator({ priceList, isAdmin = false }: { priceList: PriceLis
   const result = useMemo(() => calculateQuote(input, priceList), [input, priceList]);
   const openDialog = useCallback(() => setDialogOpen(true), []);
   const closeDialog = useCallback(() => setDialogOpen(false), []);
+  // Reset czysci caly formularz - pytamy, bo przycisk stoi pod "Zapisz wycene".
+  const reset = useCallback(() => {
+    if (!confirm('Wyczyścić kalkulator i wrócić do ustawień startowych?')) return;
+    setInput(emptyInput(priceList));
+  }, [priceList]);
 
   const sectionProps = { input, pl: priceList, update };
   const productType: ProductType = input.productType ?? 'steel';
@@ -67,6 +72,7 @@ export function Calculator({ priceList, isAdmin = false }: { priceList: PriceLis
         <Summary
           result={result}
           onSave={openDialog}
+          onReset={reset}
           currencies={priceList.currencies ?? []}
           currency={input.currency}
           onCurrencyChange={(currency) => update({ currency: currency === 'PLN' ? undefined : currency })}

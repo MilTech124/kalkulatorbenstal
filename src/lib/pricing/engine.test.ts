@@ -237,6 +237,20 @@ describe('garaże warstwowe', () => {
     expect(amount(r, 'base')).toBe(Math.round(4 * 6 * 2.53 * 370));
   });
 
+  it('drzwi ocieplane: każda sztuka płatna i tylko przy garażu warstwowym', () => {
+    const cena = PL.sandwich.insulatedDoor;
+    expect(cena).toBe(1000);
+    const bez = calculateQuote(base({ productType: 'sandwich' }), PL);
+    const jedne = calculateQuote(base({ productType: 'sandwich', insulatedDoors: 1 }), PL);
+    const dwoje = calculateQuote(base({ productType: 'sandwich', insulatedDoors: 2 }), PL);
+    expect(amount(bez, 'insulatedDoors')).toBeUndefined();
+    expect(amount(jedne, 'insulatedDoors')).toBe(cena);
+    expect(amount(dwoje, 'insulatedDoors')).toBe(2 * cena);
+    expect(jedne.total - bez.total).toBe(cena);
+    // w blaszanych ta pozycja nie istnieje
+    expect(amount(calculateQuote(base({ insulatedDoors: 2 }), PL), 'insulatedDoors')).toBeUndefined();
+  });
+
   it('wiaty śmietnikowe: jeszcze bez wyceny', () => {
     const r = calculateQuote(base({ productType: 'bin' }), PL);
     expect(r.total).toBe(0);

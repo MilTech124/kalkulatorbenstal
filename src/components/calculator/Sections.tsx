@@ -515,6 +515,14 @@ export function WindowsDoorsSection({ input, pl, update }: SectionProps) {
         {input.doors > 0 && (
           <QtyRow label="Zamek kowal (klamka) w drzwiach" hint={`${formatPln(pl.extras.lockKowal)}/szt., max ${input.doors}`} value={input.doorLocks ?? 0} onChange={(doorLocks) => update({ doorLocks: Math.min(doorLocks, input.doors) })} />
         )}
+        {input.productType === 'sandwich' && (
+          <QtyRow
+            label="Drzwi ocieplane"
+            hint={`${formatPln(pl.sandwich?.insulatedDoor ?? 0)}/szt., każda sztuka płatna`}
+            value={input.insulatedDoors ?? 0}
+            onChange={(insulatedDoors) => update({ insulatedDoors })}
+          />
+        )}
       </div>
 
       {colorFamily !== 'ocynk' && input.windows.some((window) => window.qty > 0 && window.type !== 'opening') && (

@@ -57,6 +57,7 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
   }
   const openings: string[] = input.windows.filter((w) => w.qty > 0).map((w) => `${pl.windows[w.type]?.label ?? w.type} × ${w.qty}`);
   if (input.doors > 0) openings.push(`drzwi wejściowe × ${input.doors}${input.doorLocks ? ` (zamek kowal × ${Math.min(input.doorLocks, input.doors)})` : ''}`);
+  if (sandwich && (input.insulatedDoors ?? 0) > 0) openings.push(`drzwi ocieplane × ${input.insulatedDoors}`);
   if (openings.length) rows.push({ label: 'Okna i drzwi', value: openings.join(', ') });
   const windowColors = input.windows.filter((w) => w.qty > 0 && w.type !== 'opening');
   if (windowColors.length) rows.push({

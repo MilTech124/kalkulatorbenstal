@@ -446,6 +446,7 @@ export function SandwichEditor({ pl, setPl }: EditorProps) {
   const panels = pl.sandwich?.panels ?? [];
   const setPanels = (next: typeof panels) => setPl((p) => ({ ...p, sandwich: { ...p.sandwich, panels: next } }));
   return (
+    <div className="space-y-5">
     <Panel
       title="Garaże warstwowe – rodzaje płyty"
       description="Cena bazowa = szerokość × długość × wysokość × stawka wybranej płyty. Dodatki (bramy, okna, drzwi, zamek, kratka, kotwiczenie, wiata) liczone jak w garażach blaszanych."
@@ -472,6 +473,16 @@ export function SandwichEditor({ pl, setPl }: EditorProps) {
         </button>
       </div>
     </Panel>
+
+    <Group title="Garaże warstwowe – dodatki" description="Pozycje dostępne w kalkulatorze tylko przy garażu warstwowym.">
+      <NumField
+        label="Drzwi ocieplane [zł/szt.]"
+        value={pl.sandwich?.insulatedDoor ?? 0}
+        onChange={(v) => setPl((p) => ({ ...p, sandwich: { ...p.sandwich, insulatedDoor: v } }))}
+        hint="Każda sztuka płatna (nie wchodzi w „1 szt. w cenie garażu”)"
+      />
+    </Group>
+    </div>
   );
 }
 

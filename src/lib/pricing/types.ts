@@ -128,6 +128,8 @@ export interface PriceList {
     pricePerM3: number;
     /** Rodzaje plyty warstwowej do wyboru: stawka za m3. */
     panels: { key: string; label: string; pricePerM3: number }[];
+    /** Drzwi ocieplane [zl/szt.] - pozycja tylko dla garazy warstwowych. */
+    insulatedDoor: number;
   };
   /** Garaze blaszane spoza tabeli: a x b x h (w najwyzszym punkcie) x stawka + kolor za m3. */
   custom: {
@@ -191,6 +193,8 @@ export interface QuoteInput {
   doors: number;
   /** Kolory kolejnych drzwi; brak pozycji = kolor poszycia garażu. */
   doorColors?: string[];
+  /** Drzwi ocieplane [szt.] - tylko garaze warstwowe. */
+  insulatedDoors?: number;
   /** Liczba drzwi z zamkiem kowal. */
   doorLocks?: number;
   /** Waluta prezentacji ceny (klucz pozycji z PriceList.currencies); brak = PLN. */

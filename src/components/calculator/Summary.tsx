@@ -28,12 +28,14 @@ export function QuoteBreakdown({ result, compact = false }: { result: QuoteResul
 export function Summary({
   result,
   onSave,
+  onReset,
   currencies = [],
   currency,
   onCurrencyChange,
 }: {
   result: QuoteResult;
   onSave: () => void;
+  onReset: () => void;
   currencies?: CurrencyOption[];
   currency?: string;
   onCurrencyChange?: (code: string) => void;
@@ -85,6 +87,13 @@ export function Summary({
           className="mt-4 w-full rounded-lg bg-accent-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-600 disabled:opacity-50"
         >
           Zapisz wycenę
+        </button>
+        <button
+          type="button"
+          onClick={onReset}
+          className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+        >
+          Resetuj
         </button>
       </div>
     </aside>

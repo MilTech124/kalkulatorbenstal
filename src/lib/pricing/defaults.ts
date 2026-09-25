@@ -91,6 +91,7 @@ export const DEFAULT_PRICE_LIST: PriceList = {
       { key: 'p60', label: 'Płyta 6 cm', pricePerM3: 370 },
       { key: 'p100', label: 'Płyta 10 cm', pricePerM3: 390 },
     ],
+    insulatedDoor: 1000,
   },
   custom: { pricePerM3: 90, colorPerM3: { ral: 20, wood: 30 } },
   // Katownik w cenie; profile zamkniete = narzut % od ceny bazowej garazu

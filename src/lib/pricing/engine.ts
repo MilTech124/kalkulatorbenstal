@@ -454,6 +454,24 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     }
   }
 
+  // 10b. Drzwi ocieplane - tylko garaze warstwowe, kazda sztuka platna
+  const insulatedDoors = productType === 'sandwich' ? (input.insulatedDoors ?? 0) : 0;
+  if (insulatedDoors > 0) {
+    const price = pl.sandwich?.insulatedDoor ?? 0;
+    if (price <= 0) {
+      warnings.push('Brak ceny drzwi ocieplanych – ustaw ją w panelu (Garaże warstwowe).');
+      needsManualQuote = true;
+    }
+    push({
+      key: 'insulatedDoors',
+      label: 'Drzwi ocieplane',
+      qty: insulatedDoors,
+      unit: 'szt.',
+      unitPrice: price,
+      amount: insulatedDoors * price,
+    });
+  }
+
   // 11. Dodatki
   // Stare wyceny: globalny zamek kowal (obecnie zaznaczany przy bramie/drzwiach)
   if (input.extras.lockKowal) push({ key: 'lockKowal', label: 'Zamek kowal', amount: pl.extras.lockKowal });
