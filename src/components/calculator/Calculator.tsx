@@ -29,7 +29,7 @@ export function Calculator({ priceList, isAdmin = false }: { priceList: PriceLis
       const lengths = availableLengths(priceList, width);
       update({ productType: type, width, length: lengths.includes(input.length) ? input.length : lengths[0], height: base.height });
     } else {
-      update({ productType: type, horizontalPanel: false, felt: false, tile: false, gutters: false, sheet: 'ocynk', sheetColor: undefined, roofSheet: undefined, roofColor: undefined, flashingColor: undefined, gates: input.gates.map((gate) => ({ ...gate, color: undefined })), doorColors: undefined, windows: input.windows.map((window) => ({ ...window, color: undefined })), partitionWalls: [], openwork: { ...input.openwork, mode: 'none' } });
+      update({ productType: type, horizontalPanel: false, felt: false, tile: false, gutters: false, sheet: 'ocynk', sheetColor: undefined, roofSheet: undefined, roofColor: undefined, flashingSheet: undefined, flashingColor: undefined, gates: input.gates.map((gate) => ({ ...gate, color: undefined })), doorColors: undefined, windows: input.windows.map((window) => ({ ...window, color: undefined })), partitionWalls: [], openwork: { ...input.openwork, mode: 'none' } });
     }
   };
 

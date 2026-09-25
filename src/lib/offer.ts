@@ -1,7 +1,7 @@
 // Dane firmy i podsumowanie konfiguracji do oferty (PDF): bez rozbicia cen, tylko cena koncowa.
 import { GATE_LABELS, normalizeInput, sandwichPanel, SHEET_LAYOUT_LABELS, sheetLayout } from '@/lib/pricing/engine';
 import type { PriceList, QuoteInput } from '@/lib/pricing/types';
-import { resolvedRoof, sheetColorLabel } from '@/lib/sheetColors';
+import { resolvedFlashing, resolvedRoof, sheetColorLabel } from '@/lib/sheetColors';
 
 export const COMPANY = {
   name: 'F.P.H.U. „BEN-STAL” Galica Beniamin',
@@ -23,7 +23,7 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
     { label: 'Rodzaj', value: input.productType === 'sandwich' ? `Garaż warstwowy${sandwichPanel(pl, input.sandwichPanel) ? ` – ${sandwichPanel(pl, input.sandwichPanel)!.label.toLowerCase()}` : ''}` : 'Garaż blaszany' },
     { label: 'Szerokość (ściana przednia i tylna)', value: `${fmt(input.width)} m` },
     { label: 'Długość (ściany boczne)', value: `${fmt(input.length)} m` },
-    { label: 'Wysokość w najwyższym punkcie', value: `${fmt(effectiveHeight)} m` },
+    { label: 'Wysokość ścianki', value: `${fmt(effectiveHeight)} m` },
   ];
   const sandwich = input.productType === 'sandwich';
   if (!sandwich) {
@@ -51,7 +51,10 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
   }
   const roofOpts = [(input.flashings ?? true) && 'okucia', input.gutters && 'rynny', input.felt && 'filc antykondensacyjny', input.tile && 'blachodachówka'].filter(Boolean) as string[];
   if (!sandwich && roofOpts.length) rows.push({ label: 'Wyposażenie dachu', value: roofOpts.join(', ') });
-  if (!sandwich && (input.flashings ?? true)) rows.push({ label: 'Kolor okuć', value: sheetColorLabel(input.sheet, input.flashingColor ?? input.sheetColor) });
+  if (!sandwich && (input.flashings ?? true)) {
+    const { sheet: flashingSheet, color: flashingColor } = resolvedFlashing(input);
+    rows.push({ label: 'Kolor okuć', value: sheetColorLabel(flashingSheet, flashingColor) });
+  }
   const openings: string[] = input.windows.filter((w) => w.qty > 0).map((w) => `${pl.windows[w.type]?.label ?? w.type} × ${w.qty}`);
   if (input.doors > 0) openings.push(`drzwi wejściowe × ${input.doors}${input.doorLocks ? ` (zamek kowal × ${Math.min(input.doorLocks, input.doors)})` : ''}`);
   if (openings.length) rows.push({ label: 'Okna i drzwi', value: openings.join(', ') });

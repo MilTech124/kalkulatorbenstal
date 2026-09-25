@@ -173,6 +173,8 @@ export interface QuoteInput {
   roofSheet?: SheetType;
   /** Kolor dachu; brak = kolor poszycia garażu. */
   roofColor?: string;
+  /** Rodzaj blachy okuć (paleta koloru); brak = taki sam jak ścian. Okucia to element malowany osobno, więc klient wybiera kolor dowolnie, niezależnie od poszycia. */
+  flashingSheet?: SheetType;
   /** Kolor okuć dachowych i narożnych; brak = kolor poszycia. */
   flashingColor?: string;
   /** Zachowane dla zgodnosci: true = blacha w poziomie (h/hWide). Zrodlem prawdy jest sheetLayout, gdy ustawione. */

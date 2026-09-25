@@ -123,7 +123,7 @@ describe('brama uchylna / dwuskrzydłowa', () => {
     const onlyDoors = calculateQuote(base({ width: 3, length: 5, doors: 2 }), PL);
     expect(amount(onlyDoors, 'doors')).toBe(300);
     const sec = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), type: 'sectional', width: 3, height: 2.5 }], doors: 1 }), PL);
-    expect(amount(sec, 'gate:0:base')).toBe(Math.round(3500 * 1.23 * 1.4));
+    expect(amount(sec, 'gate:0:base')).toBe(Math.round(2980 * 1.23 * 1.4));
     expect(amount(sec, 'doors')).toBe(0);
   });
 
@@ -144,10 +144,10 @@ describe('brama uchylna / dwuskrzydłowa', () => {
 });
 
 describe('brama segmentowa', () => {
-  it('3050×2300 zaokrągla do 3100×2350 = 3330 × 1,23 × 1,4', () => {
+  it('3050×2300 zaokrągla do 3100×2300 = 2810 × 1,23 × 1,4', () => {
     const cell = sectionalCell(PL, 3.05, 2.3);
-    expect(cell).toEqual({ width: 3100, height: 2350, net: 3330 });
-    expect(sectionalPrice(PL, 3330)).toBe(Math.round(3330 * 1.23 * 1.4));
+    expect(cell).toEqual({ width: 3100, height: 2300, net: 2810 });
+    expect(sectionalPrice(PL, 2810)).toBe(Math.round(2810 * 1.23 * 1.4));
   });
 
   it('rozmiar poza tabelą = wycena indywidualna', () => {
@@ -160,7 +160,7 @@ describe('brama segmentowa', () => {
     const r = calculateQuote(base({ width: 4, length: 5, gates: [{ ...defaultGate(), type: 'sectional', width: 3, height: 2.5 }] }), PL);
     expect(r.effectiveHeight).toBe(3.03);
     expect(amount(r, 'height')).toBe(9 * 170);
-    expect(amount(r, 'gate:0:base')).toBe(Math.round(3500 * 1.23 * 1.4));
+    expect(amount(r, 'gate:0:base')).toBe(Math.round(2980 * 1.23 * 1.4));
   });
 
   it('segmentówka > 4 m przy spadzie do tyłu: +80 cm; przy dwuspadzie +40 cm', () => {
@@ -184,7 +184,7 @@ describe('kilka bram', () => {
       PL,
     );
     expect(amount(r, 'gate:0:base')).toBe(900);
-    expect(amount(r, 'gate:1:base')).toBe(Math.round(3500 * 1.23 * 1.4));
+    expect(amount(r, 'gate:1:base')).toBe(Math.round(2980 * 1.23 * 1.4));
     expect(r.effectiveHeight).toBe(3.03);
     expect(r.items.find((i) => i.key === 'gate:1:base')?.label).toMatch(/^Brama 2: /);
   });

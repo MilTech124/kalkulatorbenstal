@@ -78,6 +78,25 @@ export function heightSteps(pl: PriceList, height: number): number {
   return Math.ceil(diff / cm(pl.heightStep));
 }
 
+function meterRange(minM: number, maxM: number, stepM: number): number[] {
+  const out: number[] = [];
+  const minC = Math.round(minM * 100);
+  const maxC = Math.round(maxM * 100);
+  const stepC = Math.round(stepM * 100);
+  for (let c = minC; c <= maxC; c += stepC) out.push(c / 100);
+  return out;
+}
+
+/** Lista szerokosci [m] do wyboru dla bramy uchylnej/dwuskrzydlowej (skok 50 cm). */
+export function tiltGateWidthOptions(): number[] {
+  return meterRange(1, 10, 0.5);
+}
+
+/** Lista wysokosci [m] do wyboru dla bramy uchylnej/dwuskrzydlowej (skok 10 cm). */
+export function tiltGateHeightOptions(): number[] {
+  return meterRange(1, 4, 0.1);
+}
+
 /** Wymagany zapas wysokosci garazu ponad wysokosc bramy [cm] - max z pasujacych regul. */
 export function gateClearanceCm(
   pl: PriceList,

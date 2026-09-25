@@ -1,10 +1,21 @@
 'use client';
 
-import { availableLengths, availableWidths, defaultGate, GATE_LABELS, heightOptions, sandwichPanel, SHEET_LAYOUT_LABELS, sheetLayout } from '@/lib/pricing/engine';
+import {
+  availableLengths,
+  availableWidths,
+  defaultGate,
+  GATE_LABELS,
+  heightOptions,
+  sandwichPanel,
+  SHEET_LAYOUT_LABELS,
+  sheetLayout,
+  tiltGateHeightOptions,
+  tiltGateWidthOptions,
+} from '@/lib/pricing/engine';
 import type { GateInput, GateType, PriceList, SheetLayout, QuoteInput, RoofType, SheetType, WindowType } from '@/lib/pricing/types';
 import { Card, Checkbox, Field, NumberInput, Segmented, Select } from '@/components/ui';
 import { formatNum, formatPln } from '@/lib/format';
-import { INHERIT_COLOR, SHEET_COLORS, colorOptionsWithInherit, normalizedSheetColor, resolvedRoof, sheetColorFamily, type SheetColorFamily } from '@/lib/sheetColors';
+import { INHERIT_COLOR, SHEET_COLORS, colorOptionsWithInherit, normalizedSheetColor, resolvedFlashing, resolvedRoof, sheetColorFamily, type SheetColorFamily } from '@/lib/sheetColors';
 import { ColorSelect } from './ColorSelect';
 
 export interface SectionProps {
@@ -140,7 +151,7 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
   const setColorFamily = (family: SheetColorFamily | 'ocynk') => {
     if (family === colorFamily) return;
     const sheet: SheetType = family === 'ocynk' ? 'ocynk' : family === 'wood' ? 'wood' : 'ral';
-    update({ sheet, sheetColor: family === 'ocynk' ? undefined : SHEET_COLORS[family][0].key, flashingColor: undefined, gates: input.gates.map((gate) => ({ ...gate, color: undefined })), doorColors: undefined, windows: input.windows.map((window) => ({ ...window, color: undefined })) });
+    update({ sheet, sheetColor: family === 'ocynk' ? undefined : SHEET_COLORS[family][0].key, flashingSheet: undefined, flashingColor: undefined, gates: input.gates.map((gate) => ({ ...gate, color: undefined })), doorColors: undefined, windows: input.windows.map((window) => ({ ...window, color: undefined })) });
   };
   const setRoofFamily = (family: SheetColorFamily | 'ocynk') => {
     if (family === roofFamily) return;
@@ -148,6 +159,15 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
     if (family === colorFamily) return update({ roofSheet: undefined, roofColor: undefined });
     const roofSheet: SheetType = family === 'ocynk' ? 'ocynk' : family === 'wood' ? 'wood' : 'ral';
     update({ roofSheet, roofColor: family === 'ocynk' ? undefined : SHEET_COLORS[family][0].key });
+  };
+  const flashing = resolvedFlashing(input);
+  const flashingFamily = sheetColorFamily(flashing.sheet, flashing.color);
+  const setFlashingFamily = (family: SheetColorFamily) => {
+    if (family === flashingFamily) return;
+    // Powrot do rodzaju blachy scian = okucia znowu ida za poszyciem.
+    if (family === colorFamily) return update({ flashingSheet: undefined, flashingColor: undefined });
+    const flashingSheet: SheetType = family === 'wood' ? 'wood' : 'ral';
+    update({ flashingSheet, flashingColor: SHEET_COLORS[family][0].key });
   };
   return (
     <Card title="Dach i blacha">
@@ -181,8 +201,8 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
               Próbki mają charakter poglądowy. Elementy ustawione na „Taki jak poszycie garażu” idą za tym kolorem; element z własnym kolorem zostaje bez zmian.
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              Okucia, bramy, drzwi i okna są z blachy poszycia, więc ich kolory pochodzą z tej samej palety – przy poszyciu drewnopodobnym nie ma kolorów RAL/BTX i odwrotnie. Sam dach można
-              zamówić z innego rodzaju blachy.
+              Bramy, drzwi i okna są z blachy poszycia, więc ich kolory pochodzą z tej samej palety – przy poszyciu drewnopodobnym nie ma kolorów RAL/BTX i odwrotnie. Dach i okucia można
+              zamówić w dowolnym kolorze, niezależnie od poszycia.
             </p>
           </div>
         )}
@@ -271,15 +291,31 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
             hint={`${formatPln(pl.unit.tilePerM2)}/m² dachu`}
           />
         </div>
-        {!sandwich && (input.flashings ?? true) && colorFamily !== 'ocynk' && (
+        {!sandwich && (input.flashings ?? true) && (
           <div>
-            <p className="mb-1 text-sm font-medium text-slate-700">Kolor okuć</p>
-            <ColorSelect
-              label="Kolor okuć"
-              options={colorOptionsWithInherit(colorFamily, normalizedSheetColor(input.sheet, input.sheetColor))}
-              value={input.flashingColor ? normalizedSheetColor(input.sheet, input.flashingColor) : INHERIT_COLOR}
-              onChange={(key) => update({ flashingColor: key === INHERIT_COLOR ? undefined : key })}
+            <p className="mb-2 text-sm font-medium text-slate-700">Kolor okuć</p>
+            <p className="mb-2 text-xs text-slate-500">Okucia są malowane osobno – kolor można wybrać dowolnie, niezależnie od poszycia.</p>
+            <Segmented<SheetColorFamily>
+              value={flashingFamily === 'ocynk' ? 'ral' : flashingFamily}
+              onChange={setFlashingFamily}
+              options={[
+                { value: 'ral', label: 'Błyszczący RAL' },
+                { value: 'btx', label: 'Matowy BTX' },
+                { value: 'wood', label: pl.sheetLabels.wood },
+              ]}
             />
+            <div className="mt-2">
+              <ColorSelect
+                label="Kolor okuć"
+                options={
+                  colorFamily !== 'ocynk' && flashingFamily === colorFamily
+                    ? colorOptionsWithInherit(colorFamily, normalizedSheetColor(input.sheet, input.sheetColor))
+                    : SHEET_COLORS[flashingFamily === 'ocynk' ? 'ral' : flashingFamily]
+                }
+                value={!input.flashingColor && colorFamily !== 'ocynk' && flashingFamily === colorFamily ? INHERIT_COLOR : normalizedSheetColor(flashing.sheet, flashing.color)}
+                onChange={(key) => update(key === INHERIT_COLOR ? { flashingSheet: undefined, flashingColor: undefined } : { flashingSheet: flashingFamily === 'wood' ? 'wood' : 'ral', flashingColor: key })}
+              />
+            </div>
           </div>
         )}
       </div>
@@ -357,7 +393,7 @@ function GateCard({
         value={g.type}
         onChange={(type) => {
           if (type === 'sectional') {
-            onChange({ type, width: Math.max(g.width, 2.2), height: Math.max(g.height, 2.02), automat: true });
+            onChange({ type, width: Math.max(g.width, sec.widths[0] / 1000), height: Math.max(g.height, sec.heights[0] / 1000), automat: true });
           } else {
             onChange({ type, automat: false, winchester: false, doorInGate: false });
           }
@@ -368,20 +404,20 @@ function GateCard({
       <div className="grid gap-4 sm:grid-cols-2">
         {isSectional ? (
           <>
-            <Field label="Szerokość bramy [mm]" hint="Rozmiar spoza listy zaokrąglany w górę">
-              <Select value={Math.round(g.width * 1000)} onChange={(e) => onChange({ width: Number(e.target.value) / 1000 })}>
+            <Field label="Szerokość bramy [m]" hint="Rozmiar spoza listy zaokrąglany w górę">
+              <Select value={g.width} onChange={(e) => onChange({ width: Number(e.target.value) })}>
                 {sec.widths.map((w) => (
-                  <option key={w} value={w}>
-                    {w} mm
+                  <option key={w} value={w / 1000}>
+                    {formatNum(w / 1000)} m
                   </option>
                 ))}
               </Select>
             </Field>
-            <Field label="Wysokość bramy [mm]">
-              <Select value={Math.round(g.height * 1000)} onChange={(e) => onChange({ height: Number(e.target.value) / 1000 })}>
+            <Field label="Wysokość bramy [m]">
+              <Select value={g.height} onChange={(e) => onChange({ height: Number(e.target.value) })}>
                 {sec.heights.map((h) => (
-                  <option key={h} value={h}>
-                    {h} mm
+                  <option key={h} value={h / 1000}>
+                    {formatNum(h / 1000)} m
                   </option>
                 ))}
               </Select>
@@ -390,10 +426,22 @@ function GateCard({
         ) : (
           <>
             <Field label="Szerokość bramy [m]" hint={`Baza ${formatNum(pl.gate.tilt.baseWidth)} m, dopłata za każde 50 cm`}>
-              <NumberInput value={g.width} min={1} max={10} step={0.1} onChange={(width) => onChange({ width })} />
+              <Select value={g.width} onChange={(e) => onChange({ width: Number(e.target.value) })}>
+                {tiltGateWidthOptions().map((w) => (
+                  <option key={w} value={w}>
+                    {formatNum(w)} m
+                  </option>
+                ))}
+              </Select>
             </Field>
             <Field label="Wysokość bramy [m]" hint={`Baza ${formatNum(pl.gate.tilt.baseHeight)} m, dopłata za każde 10 cm`}>
-              <NumberInput value={g.height} min={1} max={4} step={0.1} onChange={(height) => onChange({ height })} />
+              <Select value={g.height} onChange={(e) => onChange({ height: Number(e.target.value) })}>
+                {tiltGateHeightOptions().map((h) => (
+                  <option key={h} value={h}>
+                    {formatNum(h)} m
+                  </option>
+                ))}
+              </Select>
             </Field>
           </>
         )}

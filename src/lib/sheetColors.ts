@@ -58,6 +58,12 @@ export function resolvedRoof(input: { sheet: SheetType; sheetColor?: string; roo
   return { sheet, color: input.roofColor ?? (sheet === input.sheet ? input.sheetColor : undefined) };
 }
 
+/** Blacha i kolor okuc - malowane osobno, klient wybiera dowolny kolor niezaleznie od poszycia. */
+export function resolvedFlashing(input: { sheet: SheetType; sheetColor?: string; flashingSheet?: SheetType; flashingColor?: string }): { sheet: SheetType; color?: string } {
+  const sheet = input.flashingSheet ?? input.sheet;
+  return { sheet, color: input.flashingColor ?? (sheet === input.sheet ? input.sheetColor : undefined) };
+}
+
 export function sheetColorLabel(sheet: SheetType, color?: string): string {
   const family = sheetColorFamily(sheet, color);
   if (family === 'ocynk') return 'ocynkowana';
