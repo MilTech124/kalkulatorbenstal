@@ -68,6 +68,57 @@ describe('okucia opcjonalne', () => {
   });
 });
 
+describe('okucia dachu wiaty', () => {
+  it.each([
+    ['rear', 8, 240],
+    ['side', 6, 180],
+    ['gable', 6, 180],
+  ] as const)('dolicza wiatę 3×4 m przy dachu %s', (roofType, qty, cost) => {
+    const input = base({ roofType });
+    const without = calculateQuote(input, PL);
+    const withCarport = calculateQuote({ ...input, carport: { enabled: true, width: 3, length: 4 } }, PL);
+    expect(withCarport.items.find((i) => i.key === 'flashingCarport')).toMatchObject({
+      label: 'Okucia dachu wiaty', qty, unit: 'mb', unitPrice: 30, amount: cost,
+    });
+    expect(amount(withCarport, 'flashingVertical')).toBe(amount(without, 'flashingVertical'));
+    expect(amount(withCarport, 'flashingRoof')).toBe(amount(without, 'flashingRoof'));
+    expect(withCarport.total - without.total).toBe(1200 * 4 + cost);
+  });
+
+  it.each([
+    { flashings: false },
+    { carport: { enabled: false, width: 3, length: 4 } },
+    { carport: { enabled: true, width: 0, length: 4 } },
+    { carport: { enabled: true, width: 3, length: 0 } },
+    { productType: 'sandwich' as const },
+    { productType: 'bin' as const },
+  ])('pomija okucia wiaty dla %j', (overrides) => {
+    const r = calculateQuote(base({ carport: { enabled: true, width: 3, length: 4 }, ...overrides }), PL);
+    expect(amount(r, 'flashingCarport')).toBeUndefined();
+  });
+
+  it('korzysta z edytowalnej stawki i wzoru, także dla wymiarów spoza tabeli', () => {
+    const pl = { ...PL, unit: { ...PL.unit, flashingPerMb: 37 }, roofTypes: {
+      ...PL.roofTypes, rear: { ...PL.roofTypes.rear, roofFlashing: { s: 1, d: 2 } },
+    } };
+    const r = calculateQuote(base({ customDims: true, width: 4.2, length: 8, carport: { enabled: true, width: 3, length: 4.5 } }), pl);
+    expect(r.items.find((i) => i.key === 'flashingCarport')).toMatchObject({ qty: 12, unitPrice: 37, amount: 444 });
+  });
+
+  it('brak pola flashings w starszym wejściu oznacza włączone okucia wiaty', () => {
+    const r = calculateQuote(base({ flashings: undefined, carport: { enabled: true, width: 3, length: 4 } }), PL);
+    expect(amount(r, 'flashingCarport')).toBe(240);
+  });
+
+  it('okucia wiaty nie zwiększają podstawy narzutu za konstrukcję', () => {
+    const input = base({ structure: 'painted30', carport: { enabled: true, width: 3, length: 4 } });
+    const withFlashings = calculateQuote(input, PL);
+    const withoutFlashings = calculateQuote({ ...input, flashings: false }, PL);
+    expect(amount(withFlashings, 'structure')).toBe(778);
+    expect(amount(withFlashings, 'structure')).toBe(amount(withoutFlashings, 'structure'));
+  });
+});
+
 describe('kolor i wysokość', () => {
   it('RAL 3×5 wys. 2,33 = kolor 650 + 2 kroki × (130 + 33)', () => {
     const r = calculateQuote(base({ width: 3, length: 5, sheet: 'ral', height: 2.33 }), PL);

@@ -267,7 +267,7 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
               checked={input.flashings ?? true}
               onChange={(flashings) => update({ flashings, flashingColor: flashings ? input.flashingColor : undefined })}
               label="Okucia (pionowe + dachu)"
-              hint={`${formatPln(pl.unit.flashingPerMb)}/mb, długość zależna od wysokości i spadu`}
+              hint={`${formatPln(pl.unit.flashingPerMb)}/mb, narożniki garażu i dach garażu oraz wiaty, zależnie od spadu`}
             />
           )}
           <Checkbox

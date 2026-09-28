@@ -23,6 +23,7 @@ export const SHEET_COLORS = {
     { key: 'wood-grafit', label: 'BTX drewnopodobny grafit', swatch: 'repeating-linear-gradient(100deg, #33383a 0 3px, #515553 4px 6px, #292f30 7px 10px)' },
     { key: 'wood-orzech', label: 'BTX drewnopodobny orzech', swatch: 'repeating-linear-gradient(100deg, #60402c 0 3px, #845b39 4px 6px, #503522 7px 10px)' },
     { key: 'wood-zloty-dab', label: 'BTX drewnopodobny złoty dąb', swatch: 'repeating-linear-gradient(100deg, #a8773a 0 3px, #c3934e 4px 6px, #8a602d 7px 10px)' },
+    { key: 'wood-winchester', label: 'Drewnopodobny Winchester', swatch: 'repeating-linear-gradient(100deg, #9b6c45 0 3px, #ba8a5c 4px 6px, #795235 7px 10px)' },
   ],
 } as const;
 

@@ -308,6 +308,19 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
       unitPrice: pl.unit.flashingPerMb,
       amount: roofMb * pl.unit.flashingPerMb,
     });
+    // Wiata korzysta z tego samego spadu i wzoru okuć dachowych co garaż.
+    // Otwarte zadaszenie nie dodaje narożnych okuć ścian (4 × wysokość).
+    if (flashings && input.carport.enabled && input.carport.width > 0 && input.carport.length > 0) {
+      const carportMb = linear(roof.roofFlashing, input.carport.width, input.carport.length);
+      push({
+        key: 'flashingCarport',
+        label: 'Okucia dachu wiaty',
+        qty: carportMb,
+        unit: 'mb',
+        unitPrice: pl.unit.flashingPerMb,
+        amount: carportMb * pl.unit.flashingPerMb,
+      });
+    }
 
     // 7. Rynny
     if (input.gutters) {
