@@ -201,6 +201,17 @@ describe('brama segmentowa', () => {
     expect(sectionalPrice(PL, 2810)).toBe(Math.round(2810 * 1.23 * 1.4));
   });
 
+  it('automat CAME i dodatkowe piloty jako osobne pozycje (netto × VAT × marża)', () => {
+    const gate = { ...defaultGate(), type: 'sectional' as const, width: 3, height: 2.5, automat: true, remotes: 2 };
+    const r = calculateQuote(base({ width: 4, length: 5, gates: [gate] }), PL);
+    expect(amount(r, 'gate:0:base')).toBe(Math.round(2980 * 1.23 * 1.4));
+    expect(amount(r, 'gate:0:automat')).toBe(Math.round(450 * 1.23 * 1.4));
+    expect(amount(r, 'gate:0:remotes')).toBe(Math.round(2 * 60 * 1.23 * 1.4));
+    const noAutomat = calculateQuote(base({ width: 4, length: 5, gates: [{ ...gate, automat: false }] }), PL);
+    expect(amount(noAutomat, 'gate:0:automat')).toBeUndefined();
+    expect(amount(noAutomat, 'gate:0:remotes')).toBeUndefined();
+  });
+
   it('rozmiar poza tabelą = wycena indywidualna', () => {
     const r = calculateQuote(base({ width: 7, length: 7, gates: [{ ...defaultGate(), type: 'sectional', width: 5.5, height: 3 }] }), PL);
     expect(r.needsManualQuote).toBe(true);

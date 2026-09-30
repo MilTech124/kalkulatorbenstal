@@ -48,6 +48,9 @@ export const DEFAULT_PRICE_LIST: PriceList = {
       marginMultiplier: 1.4,
       winchesterPerM2: 20,
       doorInGate: 2700,
+      automat: 450,
+      // TODO: cena pilota tymczasowa - do potwierdzenia u producenta
+      remote: 60,
     },
     heightRules: [
       { gates: ['sectional'], roofs: ['side', 'gable'], addCm: 40, label: 'Brama segmentowa przy spadzie na bok / dwuspadzie' },

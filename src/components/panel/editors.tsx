@@ -227,7 +227,7 @@ export function GatesEditor({ pl, setPl }: EditorProps) {
   const s = pl.gate.sectional;
   const setTilt = (k: keyof PriceList['gate']['tilt'], v: number) => setPl((p) => ({ ...p, gate: { ...p.gate, tilt: { ...p.gate.tilt, [k]: v } } }));
   const setGate = (k: 'doubleLeafExtra' | 'automat' | 'horizontalPanelOnGateOrDoor', v: number) => setPl((p) => ({ ...p, gate: { ...p.gate, [k]: v } }));
-  const setSec = (k: 'vatMultiplier' | 'marginMultiplier' | 'winchesterPerM2' | 'doorInGate', v: number) =>
+  const setSec = (k: 'vatMultiplier' | 'marginMultiplier' | 'winchesterPerM2' | 'doorInGate' | 'automat' | 'remote', v: number) =>
     setPl((p) => ({ ...p, gate: { ...p.gate, sectional: { ...p.gate.sectional, [k]: v } } }));
   const setNet = (hi: number, wi: number, v: number | null) =>
     setPl((p) => ({
@@ -257,6 +257,8 @@ export function GatesEditor({ pl, setPl }: EditorProps) {
         <NumField label="Mnożnik marży" value={s.marginMultiplier} step={0.01} onChange={(v) => setSec('marginMultiplier', v)} />
         <NumField label="Winchester [zł/m² netto]" value={s.winchesterPerM2} onChange={(v) => setSec('winchesterPerM2', v)} />
         <NumField label="Drzwi w bramie [zł brutto]" value={s.doorInGate} onChange={(v) => setSec('doorInGate', v)} />
+        <NumField label="Automat CAME z 2 pilotami [zł netto]" value={s.automat} onChange={(v) => setSec('automat', v)} hint="Ceny w tabeli są bez automatyki" />
+        <NumField label="Dodatkowy pilot [zł netto]" value={s.remote} onChange={(v) => setSec('remote', v)} />
       </Group>
 
       <section className="rounded-xl border border-slate-200 bg-white shadow-sm">

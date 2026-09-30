@@ -38,7 +38,7 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
     rows.push({
       label: input.gates.length > 1 ? 'Bramy' : 'Brama',
       value: input.gates
-        .map((g) => `${GATE_LABELS[g.type]} ${fmt(g.width)} × ${fmt(g.height)} m${g.automat && g.type !== 'sectional' ? ' z automatem' : ''}${g.winchester ? ', winchester' : ''}${g.doorInGate ? ', drzwi w bramie' : ''}${g.lockKowal ? ', zamek kowal' : ''}`)
+        .map((g) => `${GATE_LABELS[g.type]} ${fmt(g.width)} × ${fmt(g.height)} m${g.automat ? ' z automatem' : ''}${g.type === 'sectional' && g.automat && g.remotes ? `, dodatkowe piloty × ${g.remotes}` : ''}${g.winchester ? ', winchester' : ''}${g.doorInGate ? ', drzwi w bramie' : ''}${g.lockKowal ? ', zamek kowal' : ''}`)
         .join('; '),
     });
     input.gates.forEach((gate, index) => {

@@ -44,6 +44,7 @@ export const quoteInputSchema = z.object({
         horizontalPanel: z.boolean(),
         winchester: z.boolean(),
         doorInGate: z.boolean(),
+        remotes: z.number().int().min(0).max(10).optional(),
         lockKowal: z.boolean().optional(),
       }),
     )
@@ -178,6 +179,8 @@ export const priceListSchema = z.object({
         marginMultiplier: pos,
         winchesterPerM2: nonNeg,
         doorInGate: nonNeg,
+        automat: nonNeg.default(450),
+        remote: nonNeg.default(60),
       })
       .refine((s) => s.net.length === s.heights.length && s.net.every((r) => r.length === s.widths.length), {
         message: 'Tabela bram segmentowych ma zły rozmiar (wiersze = wysokości, kolumny = szerokości).',

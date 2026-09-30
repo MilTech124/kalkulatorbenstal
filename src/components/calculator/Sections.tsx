@@ -7,6 +7,7 @@ import {
   GATE_LABELS,
   heightOptions,
   sandwichPanel,
+  sectionalPrice,
   SHEET_LAYOUT_LABELS,
   sheetLayout,
   tiltGateHeightOptions,
@@ -331,7 +332,7 @@ export function GateSection({ input, pl, update }: SectionProps) {
   const patchGate = (i: number, patch: Partial<GateInput>) => setGates(gates.map((g, j) => (j === i ? { ...g, ...patch } : g)));
 
   return (
-    <Card title="Bramy" subtitle="Można dodać kilka bram (np. garaż dwustanowiskowy). Brama segmentowa wyceniana z cennika producenta, automat w standardzie.">
+    <Card title="Bramy" subtitle="Można dodać kilka bram (np. garaż dwustanowiskowy). Brama segmentowa wyceniana z cennika producenta, automat CAME i dodatkowe piloty jako osobne pozycje.">
       <div className="space-y-4">
         {gates.length === 0 && <p className="text-sm text-slate-500">Bez bramy.</p>}
         {gates.map((g, i) => (
@@ -395,7 +396,7 @@ function GateCard({
           if (type === 'sectional') {
             onChange({ type, width: Math.max(g.width, sec.widths[0] / 1000), height: Math.max(g.height, sec.heights[0] / 1000), automat: true });
           } else {
-            onChange({ type, automat: false, winchester: false, doorInGate: false });
+            onChange({ type, automat: false, remotes: 0, winchester: false, doorInGate: false });
           }
         }}
         options={GATE_ORDER.map((t) => ({ value: t, label: GATE_LABELS[t] }))}
@@ -463,6 +464,23 @@ function GateCard({
 
       {isSectional ? (
         <div className="grid gap-2 sm:grid-cols-2">
+          <Checkbox
+            checked={g.automat}
+            onChange={(automat) => onChange({ automat, remotes: automat ? g.remotes : 0 })}
+            label="Automat CAME (2 piloty w zestawie)"
+            hint={formatPln(sectionalPrice(pl, sec.automat))}
+          />
+          {g.automat && (
+            <Field label="Dodatkowe piloty [szt.]" hint={`${formatPln(sectionalPrice(pl, sec.remote))} / szt.`}>
+              <Select value={g.remotes ?? 0} onChange={(e) => onChange({ remotes: Number(e.target.value) })}>
+                {Array.from({ length: 11 }, (_, n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
           <Checkbox checked={g.winchester} onChange={(winchester) => onChange({ winchester })} label="Kolor winchester" hint="Dopłata za m² bramy" />
           <Checkbox checked={g.doorInGate} onChange={(doorInGate) => onChange({ doorInGate })} label="Drzwi w bramie" hint={formatPln(sec.doorInGate)} />
           <Checkbox checked={Boolean(g.lockKowal)} onChange={(lockKowal) => onChange({ lockKowal })} label="Zamek kowal (klamka)" hint={formatPln(pl.extras.lockKowal)} />

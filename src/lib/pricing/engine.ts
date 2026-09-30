@@ -414,10 +414,24 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
         const rounded = cell.width !== Math.round(gate.width * 1000) || cell.height !== Math.round(gate.height * 1000);
         push({
           key: k('base'),
-          label: `${prefix}Brama segmentowa ${fmt(gate.width)} × ${fmt(gate.height)} m (z automatem)`,
+          label: `${prefix}Brama segmentowa ${fmt(gate.width)} × ${fmt(gate.height)} m`,
           amount: sectionalPrice(pl, cell.net),
           note: rounded ? `Przyjęto rozmiar ${cell.width} × ${cell.height} mm z cennika.` : undefined,
         });
+        if (gate.automat) {
+          push({ key: k('automat'), label: `${prefix}automat CAME (2 piloty w zestawie)`, amount: sectionalPrice(pl, pl.gate.sectional.automat) });
+          const remotes = gate.remotes ?? 0;
+          if (remotes > 0) {
+            push({
+              key: k('remotes'),
+              label: `${prefix}dodatkowe piloty`,
+              qty: remotes,
+              unit: 'szt.',
+              unitPrice: sectionalPrice(pl, pl.gate.sectional.remote),
+              amount: sectionalPrice(pl, remotes * pl.gate.sectional.remote),
+            });
+          }
+        }
         if (gate.winchester) {
           const m2 = gate.width * gate.height;
           push({
@@ -638,7 +652,7 @@ export const GATE_LABELS: Record<GateType, string> = {
   none: 'Bez bramy',
   tilt: 'Uchylna',
   double: 'Dwuskrzydłowa',
-  sectional: 'Segmentowa (z automatem)',
+  sectional: 'Segmentowa',
 };
 
 export const SHEET_ORDER: SheetType[] = ['ocynk', 'ral', 'wood'];

@@ -101,6 +101,10 @@ export interface PriceList {
       marginMultiplier: number;
       winchesterPerM2: number;
       doorInGate: number;
+      /** Automat CAME z 2 pilotami [zł netto]; ceny z tabeli są bez automatyki. */
+      automat: number;
+      /** Dodatkowy pilot [zł netto]. */
+      remote: number;
     };
     heightRules: HeightRule[];
   };
@@ -151,6 +155,8 @@ export interface GateInput {
   horizontalPanel: boolean;
   winchester: boolean;
   doorInGate: boolean;
+  /** Dodatkowe piloty ponad 2 z zestawu automatu (brama segmentowa). */
+  remotes?: number;
   /** Zamek kowal (klamka) w tej bramie. */
   lockKowal?: boolean;
 }
