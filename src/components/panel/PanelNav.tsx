@@ -21,7 +21,7 @@ export function PanelNav() {
 
   return (
     <header className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+      <div className="flex w-full items-center justify-between px-4 py-3">
         <div className="flex items-center gap-6">
           <Link href="/" className="text-sm font-bold text-slate-900">
             BEN-STAL <span className="font-normal text-slate-400">/ panel</span>
