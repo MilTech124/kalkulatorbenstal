@@ -3,10 +3,11 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, type FormEvent } from 'react';
 import { formatPln } from '@/lib/format';
-import { Button, Field, TextInput } from '@/components/ui';
+import { Button, Field, Select, TextInput } from '@/components/ui';
+import { COMPANY_PROFILES, OFFER_COMPANIES, resolveOfferCompany, type OfferCompany } from '@/lib/offerCompany';
 
 /** Przyciski oferty: edycja ceny i dopisku, zapis oraz pobranie wybranego formatu. */
-export function OfferPdfButton({ quoteId, total, offeredTotal, note }: { quoteId: string; total: number; offeredTotal?: number | null; note?: string | null }) {
+export function OfferPdfButton({ quoteId, total, offeredTotal, note, offerCompany }: { quoteId: string; total: number; offeredTotal?: number | null; note?: string | null; offerCompany?: OfferCompany | null }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [price, setPrice] = useState<number>(offeredTotal ?? total);
@@ -14,6 +15,7 @@ export function OfferPdfButton({ quoteId, total, offeredTotal, note }: { quoteId
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [format, setFormat] = useState<'pdf' | 'word'>('pdf');
+  const [company, setCompany] = useState<OfferCompany>(resolveOfferCompany(offerCompany));
 
   useEffect(() => {
     if (!open) return;
@@ -30,7 +32,7 @@ export function OfferPdfButton({ quoteId, total, offeredTotal, note }: { quoteId
       const res = await fetch(`/api/admin/quotes/${quoteId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ offeredTotal: price, offerNote: text || null }),
+        body: JSON.stringify({ offeredTotal: price, offerNote: text || null, offerCompany: company }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Błąd zapisu');
@@ -55,6 +57,7 @@ export function OfferPdfButton({ quoteId, total, offeredTotal, note }: { quoteId
         type="button"
         onClick={() => {
           setFormat('pdf');
+          setCompany(resolveOfferCompany(offerCompany));
           setPrice(offeredTotal ?? total);
           setText(note ?? '');
           setOpen(true);
@@ -71,6 +74,7 @@ export function OfferPdfButton({ quoteId, total, offeredTotal, note }: { quoteId
         type="button"
         onClick={() => {
           setFormat('word');
+          setCompany(resolveOfferCompany(offerCompany));
           setPrice(offeredTotal ?? total);
           setText(note ?? '');
           setOpen(true);
@@ -82,12 +86,17 @@ export function OfferPdfButton({ quoteId, total, offeredTotal, note }: { quoteId
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 sm:items-center sm:p-4" onClick={() => setOpen(false)}>
-          <div className="w-full max-w-lg rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+          <div className="max-h-[100dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-6 shadow-xl sm:max-h-[calc(100dvh-2rem)] sm:rounded-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
             <form onSubmit={submit} className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-slate-900">Oferta {format === 'pdf' ? 'PDF' : 'Word'}</h3>
                 <p className="text-sm text-slate-500">Podsumowanie konfiguracji (bez rozbicia) i cena podana poniżej. Zmiany zostaną zapisane przy wycenie.</p>
               </div>
+              <Field label="Firma wystawiająca ofertę">
+                <Select value={company} onChange={(e) => setCompany(e.target.value as OfferCompany)} disabled={busy}>
+                  {OFFER_COMPANIES.map((key) => <option key={key} value={key}>{COMPANY_PROFILES[key].short}</option>)}
+                </Select>
+              </Field>
               <Field label="Cena w ofercie [zł]" hint={`Wyliczona z cennika: ${formatPln(total)}`}>
                 <TextInput type="number" min={0} step={1} value={price} onChange={(e) => setPrice(e.target.valueAsNumber || 0)} required />
               </Field>

@@ -12,6 +12,7 @@ import { connectDb } from '@/lib/db';
 import { GATE_LABELS, normalizeInput } from '@/lib/pricing/engine';
 import type { QuoteInput, QuoteResult } from '@/lib/pricing/types';
 import { QuoteModel } from '@/models/Quote';
+import { offerCompanyProfile } from '@/lib/offerCompany';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,7 +73,7 @@ export default async function QuoteDetailsPage({ params }: { params: Promise<{ i
           <div className="flex items-center gap-2 text-sm text-slate-600">
             Status: <StatusSelect quoteId={id} status={doc.status ?? 'nowe'} />
           </div>
-          <OfferPdfButton quoteId={id} total={doc.total} offeredTotal={doc.offeredTotal} note={doc.offerNote} />
+          <OfferPdfButton quoteId={id} total={doc.total} offeredTotal={doc.offeredTotal} note={doc.offerNote} offerCompany={doc.offerCompany} />
           <SendToTrackerButton quoteId={id} quoteNumber={doc.number} sentAt={doc.tracker?.sentAt ? doc.tracker.sentAt.toISOString() : null} variant="button" />
           <div>
             <QuoteAmountEditor quoteId={id} calculatedTotal={doc.total} offeredTotal={doc.offeredTotal} />
@@ -90,6 +91,7 @@ export default async function QuoteDetailsPage({ params }: { params: Promise<{ i
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 text-base font-semibold text-slate-900">Klient</h2>
             <dl className="space-y-2 text-sm">
+              <Row label="Firma wystawiająca ofertę" value={offerCompanyProfile(doc.offerCompany).short} />
               <Row label="Imię i nazwisko" value={`${c.firstName} ${c.lastName}`} />
               <Row label="Telefon" value={c.phone} />
               <Row label="E-mail" value={c.email ?? '—'} />

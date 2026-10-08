@@ -4,7 +4,7 @@ import { calculateQuote, emptyInput } from './pricing/engine';
 import { renderOfferPdf } from './offerPdf';
 
 describe('układ oferty PDF', () => {
-  it('mieści ofertę z wyposażeniem na jednej stronie', async () => {
+  it.each(['benstal', 'zimstal'] as const)('mieści ofertę %s z wyposażeniem na jednej stronie', async (company) => {
     const input = {
       ...emptyInput(DEFAULT_PRICE_LIST),
       sheet: 'ral' as const,
@@ -22,6 +22,7 @@ describe('układ oferty PDF', () => {
     const result = calculateQuote(input, DEFAULT_PRICE_LIST);
     const pdf = await renderOfferPdf({
       number: 123,
+      company,
       createdAt: new Date('2026-09-21'),
       customer: { firstName: 'Jan', lastName: 'Kowalski', phone: '602 348 266', email: 'jan@example.com', street: 'Testowa 12', postalCode: '00-001', city: 'Warszawa' },
       input,
@@ -64,7 +65,7 @@ describe('układ oferty PDF', () => {
     expect(pdf.toString('latin1').match(/\/Type\s*\/Page\b/g)).toHaveLength(1);
   });
 
-  it('nie gubi strony przy maksymalnej notatce i wielu pozycjach', async () => {
+  it.each(['benstal', 'zimstal'] as const)('nie gubi strony %s przy maksymalnej notatce i wielu pozycjach', async (company) => {
     const input = {
       ...emptyInput(DEFAULT_PRICE_LIST),
       sheet: 'wood' as const,
@@ -84,6 +85,7 @@ describe('układ oferty PDF', () => {
     const result = calculateQuote(input, DEFAULT_PRICE_LIST);
     const pdf = await renderOfferPdf({
       number: 125,
+      company,
       createdAt: new Date('2026-09-21'),
       customer: { firstName: 'Jan', lastName: 'Kowalski', phone: '602 348 266', email: 'jan@example.com', street: 'Testowa 12', postalCode: '00-001', city: 'Warszawa' },
       input,

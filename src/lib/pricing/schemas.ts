@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { SHEET_COLORS, sheetColorFamily } from '@/lib/sheetColors';
+import { OFFER_COMPANIES } from '@/lib/offerCompany';
 
 const num = z.number().finite();
 const nonNeg = num.min(0, 'wartość nie może być ujemna');
@@ -105,6 +106,7 @@ export const customerSchema = z.object({
 });
 
 export const offerEmailOptionsSchema = z.object({
+  company: z.enum(OFFER_COMPANIES).optional(),
   offeredTotal: z.number().finite().min(0).max(10_000_000).optional(),
   note: z.string().trim().max(2000).optional(),
 });

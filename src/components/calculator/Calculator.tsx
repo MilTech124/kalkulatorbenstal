@@ -79,7 +79,7 @@ export function Calculator({ priceList, isAdmin = false }: { priceList: PriceLis
         />
       </div>
       <MobileTotalBar total={result.total} onSave={openDialog} />
-      <SaveQuoteDialog open={dialogOpen} onClose={closeDialog} input={input} total={result.total} isAdmin={isAdmin} />
+      {dialogOpen && <SaveQuoteDialog open={dialogOpen} onClose={closeDialog} input={input} total={result.total} isAdmin={isAdmin} />}
     </div>
   );
 }

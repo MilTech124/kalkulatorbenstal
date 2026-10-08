@@ -25,6 +25,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const pl = await getActivePriceList();
   const pdf = await renderOfferPdf({
+    company: quote.offerCompany,
     number: quote.number,
     createdAt: quote.createdAt,
     customer: quote.customer,
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   return new NextResponse(new Uint8Array(pdf), {
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename="${offerPdfFilename(quote.number)}"`,
+      'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename="${offerPdfFilename(quote.number, quote.offerCompany)}"`,
       'Cache-Control': 'private, no-store',
     },
   });

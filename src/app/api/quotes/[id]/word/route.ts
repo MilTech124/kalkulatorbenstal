@@ -24,6 +24,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
   const pl = await getActivePriceList();
   const word = renderOfferWord({
+    company: quote.offerCompany,
     number: quote.number,
     createdAt: quote.createdAt,
     customer: quote.customer,
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   return new NextResponse(new Uint8Array(word), {
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'Content-Disposition': `attachment; filename="${offerWordFilename(quote.number)}"`,
+      'Content-Disposition': `attachment; filename="${offerWordFilename(quote.number, quote.offerCompany)}"`,
       'Cache-Control': 'private, no-store',
     },
   });

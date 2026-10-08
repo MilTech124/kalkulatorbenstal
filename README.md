@@ -67,9 +67,11 @@ Domyślne dane: [`src/lib/pricing/data/base-table.ts`](src/lib/pricing/data/base
 
 Panel → Cennik → Dodatki → „Waluty i kursy”: lista walut z kursem (ile PLN za 1 jednostkę); domyślnie osobne pozycje: Niemcy – EUR, Słowacja – EUR (mogą mieć różne kursy) i Węgry – HUF. W podsumowaniu wyceny jest wybór waluty – suma przeliczana po kursie, w PDF cena w wybranej walucie z adnotacją o kursie z chwili zapisu (kurs zapisywany przy wycenie). Rozbicie i edycja ceny zawsze w PLN.
 
-## Oferta PDF
+## Oferty PDF i Word — Benstal / Zimstal
 
-Po zapisaniu wyceny klient dostaje przycisk **„Pobierz ofertę PDF”** (link z jednorazowym tokenem, `/api/quotes/[id]/pdf?t=…`). PDF zawiera logo, numer i datę oferty, dane zamawiającego, podsumowanie konfiguracji (bez rozbicia cen), cenę, dopisek i stopkę firmową; generowany serwerowo (`@react-pdf/renderer`, czcionka Roboto z polskimi znakami, szablon w [`src/lib/offerPdf.tsx`](src/lib/offerPdf.tsx), dane firmy w `COMPANY` w [`src/lib/offer.ts`](src/lib/offer.ts)).
+Po zapisaniu wyceny klient dostaje przyciski **„Pobierz ofertę PDF”** i **„Pobierz ofertę Word”** (linki z tokenem, `/api/quotes/[id]/pdf?t=…` oraz `/api/quotes/[id]/word?t=…`). Dokumenty zawierają lokalne logo, numer i datę oferty, dane zamawiającego, podsumowanie konfiguracji (bez rozbicia cen), cenę, dopisek i dane wystawcy. PDF jest generowany serwerowo przez `@react-pdf/renderer`, a Word jako edytowalny DOCX z osadzonym logo.
+
+**Firma wystawiająca ofertę:** każdy użytkownik, również niezalogowany, wybiera Benstal lub Zimstal przy zapisie wyceny. W panelu można zmienić firmę przed pobraniem PDF lub Word. Wybór zapisuje się w `offerCompany`, a stare wyceny bez tego pola korzystają z Benstal. Cennik, numeracja i warunki realizacji są wspólne. Profile firm są w [`src/lib/offerCompany.ts`](src/lib/offerCompany.ts); kontakt Zimstal dla garaży warstwowych jest dobierany osobno. Logo Zimstal pochodzi z [oficjalnej strony](https://zimstalgaraze.pl/wp-content/uploads/2026/06/zimstal_logo.png) i jest przechowywane w `src/assets/zimstal-logo.png`, więc generowanie dokumentów nie wymaga dostępu do witryny.
 
 **Edycja ceny:** w oknie „Zapisz wycenę” jest sekcja „Cena w ofercie” – szybkie przyciski narzutu (+5/+10/+15/+20%), pole narzutu w % i pole ceny oraz dopisek. Niezalogowany użytkownik może cenę tylko podnieść (serwer odrzuca cenę niższą niż wyliczona); zalogowany admin może wpisać dowolną. W panelu, w szczegółach wyceny, przycisk **„Oferta PDF”** pozwala zmienić cenę/dopisek i otworzyć PDF (zmiany zapisują się przy wycenie).
 

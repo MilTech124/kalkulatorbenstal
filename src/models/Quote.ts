@@ -1,6 +1,7 @@
 import mongoose, { Schema, type InferSchemaType } from 'mongoose';
 import type { CustomerInfo, QuoteInput, QuoteResult } from '@/lib/pricing/types';
 import { QUOTE_STATUSES, type QuoteStatus } from '@/lib/quoteStatus';
+import { OFFER_COMPANIES, type OfferCompany } from '@/lib/offerCompany';
 
 const quoteSchema = new Schema(
   {
@@ -19,6 +20,7 @@ const quoteSchema = new Schema(
     /** Cena podana w ofercie e-mail (moze byc inna niz wyliczona - edycja przez firme). */
     offeredTotal: { type: Number },
     offerNote: { type: String },
+    offerCompany: { type: String, enum: OFFER_COMPANIES, default: 'benstal' },
     /** Waluta prezentacji + kurs z chwili zapisu (ile PLN za 1 jednostke). */
     currency: { key: { type: String }, code: { type: String }, label: { type: String }, rate: { type: Number } },
     /** Losowy token do publicznego pobrania oferty PDF. */
@@ -44,7 +46,8 @@ export interface TrackerInfo {
   addressGeocoded?: boolean;
 }
 
-export type QuoteDoc = Omit<InferSchemaType<typeof quoteSchema>, 'customer' | 'input' | 'result' | 'status' | 'tracker'> & {
+export type QuoteDoc = Omit<InferSchemaType<typeof quoteSchema>, 'customer' | 'input' | 'result' | 'status' | 'tracker' | 'offerCompany'> & {
+  offerCompany?: OfferCompany;
   customer: CustomerInfo;
   status: QuoteStatus;
   tracker?: TrackerInfo;

@@ -3,7 +3,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { CustomerInfo, QuoteInput } from '@/lib/pricing/types';
 import { customerSchema } from '@/lib/pricing/schemas';
-import { Button, Field, TextInput } from '@/components/ui';
+import { Button, Field, Select, TextInput } from '@/components/ui';
+import { COMPANY_PROFILES, OFFER_COMPANIES, type OfferCompany } from '@/lib/offerCompany';
 import { formatPln } from '@/lib/format';
 
 interface Props {
@@ -26,6 +27,7 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
   const [markupPct, setMarkupPct] = useState(0);
   const [offeredTotal, setOfferedTotal] = useState<number | null>(null);
   const [note, setNote] = useState('');
+  const [company, setCompany] = useState<OfferCompany>('benstal');
   // Cena w ofercie: recznie wpisana (offeredTotal) albo wyliczona + narzut %.
   const offerPrice = offeredTotal ?? Math.round(total * (1 + markupPct / 100));
   const applyMarkup = (pct: number) => {
@@ -62,7 +64,7 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
         body: JSON.stringify({
           input,
           customer: parsed.data,
-          offer: offerPrice !== total || note ? { offeredTotal: offerPrice, note: note || undefined } : undefined,
+          offer: { company, offeredTotal: offerPrice, note: note || undefined },
         }),
       });
       const data = await res.json();
@@ -77,7 +79,7 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 sm:items-center sm:p-4" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div className="max-h-[100dvh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-6 shadow-xl sm:max-h-[calc(100dvh-2rem)] sm:rounded-2xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         {status === 'done' && saved ? (
           <div className="text-center">
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-2xl text-green-700">✓</div>
@@ -114,6 +116,13 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <Field label="Firma wystawiająca ofertę">
+                  <Select value={company} onChange={(e) => setCompany(e.target.value as OfferCompany)} disabled={status === 'saving'}>
+                    {OFFER_COMPANIES.map((key) => <option key={key} value={key}>{COMPANY_PROFILES[key].short}</option>)}
+                  </Select>
+                </Field>
+              </div>
               <Field label="Imię">
                 <TextInput value={customer.firstName} onChange={(e) => set('firstName', e.target.value)} autoComplete="given-name" />
                 {errors.firstName && <span className="text-xs text-red-600">{errors.firstName}</span>}

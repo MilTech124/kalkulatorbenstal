@@ -1,8 +1,9 @@
-// Oferta PDF BEN-STAL generowana serwerowo (@react-pdf/renderer, bez przegladarki).
+// Oferta PDF wybranej firmy generowana serwerowo (@react-pdf/renderer, bez przegladarki).
 import fs from 'node:fs';
 import path from 'node:path';
 import { Document, Font, Image, Page, StyleSheet, Text, View, renderToBuffer } from '@react-pdf/renderer';
-import { COMPANY, offerSummary } from '@/lib/offer';
+import { offerSummary } from '@/lib/offer';
+import { offerCompanyProfile, offerCompanyTerms, type OfferCompany } from '@/lib/offerCompany';
 import { formatAddress } from '@/lib/customer';
 import { convertFromPln, formatMoney } from '@/lib/currency';
 import type { CustomerInfo, PriceList, QuoteInput } from '@/lib/pricing/types';
@@ -64,6 +65,7 @@ const s = StyleSheet.create({
 });
 
 export interface OfferPdfData {
+  company?: OfferCompany;
   number: number;
   createdAt: Date;
   customer: CustomerInfo;
@@ -81,6 +83,7 @@ const fmt = (n: number) => n.toLocaleString('pl-PL', { maximumFractionDigits: 2 
 const pln = (n: number) => `${n.toLocaleString('pl-PL', { maximumFractionDigits: 0 })} zł`;
 
 function OfferDocument({ d, logo, pageSize }: { d: OfferPdfData; logo: Buffer; pageSize: 'A4' | 'A3' | 'A2' }) {
+  const company = offerCompanyProfile(d.company, d.input.productType);
   const rows = offerSummary(d.input, d.priceList, d.effectiveHeight);
   const date = d.createdAt.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
   const name = `${d.customer.firstName} ${d.customer.lastName}`.trim();
@@ -88,7 +91,7 @@ function OfferDocument({ d, logo, pageSize }: { d: OfferPdfData; logo: Buffer; p
   const foreign = d.currency && d.currency.code !== 'PLN' && d.currency.rate > 0 ? d.currency : null;
 
   return (
-    <Document title={`Oferta BEN-STAL nr ${d.number}`} author={COMPANY.short} subject={`Wycena garażu ${fmt(d.input.width)} × ${fmt(d.input.length)} m`}>
+    <Document title={`Oferta ${company.short} nr ${d.number}`} author={company.short} subject={`Wycena garażu ${fmt(d.input.width)} × ${fmt(d.input.length)} m`}>
       <Page size={pageSize} style={s.page}>
         <View style={s.header} fixed>
           {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image nie ma prop alt */}
@@ -145,14 +148,7 @@ function OfferDocument({ d, logo, pageSize }: { d: OfferPdfData; logo: Buffer; p
             <View style={s.column}>
               <Text style={s.sectionTitle}>Informacje dotyczące realizacji</Text>
               <Text style={s.infoLine}>{d.input.extras.anchoring ? 'Kotwiczenie do podłoża jest uwzględnione w cenie.' : 'Kotwiczenie do podłoża nie jest wliczone w cenę.'}</Text>
-              <Text style={s.infoLine}>Poniższa specyfikacja jest naszą propozycją. Umiejscowienie poszczególnych elementów ustalimy podczas składania zamówienia.</Text>
-              <Text style={s.infoLine}>Termin realizacji zamówienia wynosi od 2 do około 10 tygodni.</Text>
-              <Text style={s.infoLine}>Firma „BEN-STAL” nie sporządza dokumentacji technicznej do wykonanej konstrukcji stalowej.</Text>
-              <Text style={s.infoLine}>Wizualizację garażu można wykonać samodzielnie na stronie www.benstal.pl.</Text>
-              <Text style={s.infoLine}>Dostawa i montaż odbywają się w dni robocze w sposób „wiązany”. Montażyści dostarczają garaże punkt po punkcie, dlatego nie ma możliwości wybrania dnia i godziny dostawy.</Text>
-              <Text style={s.infoLine}>Montujemy na terenie przygotowanym przez Zamawiającego. Wskazówki dotyczące przygotowania podłoża znajdą Państwo na stronie www.benstal.pl.</Text>
-              <Text style={s.infoLine}>W przypadku zamówienia usługi kotwiczenia podłoże musi być stałe: wylewka, punktowe stopy betonowe lub fundament. Nie kotwiczymy konstrukcji do kostki brukowej ani płyt chodnikowych.</Text>
-              <Text style={s.infoLine}>W razie pytań zapraszamy do kontaktu: +48 602 348 266.</Text>
+              {offerCompanyTerms(company).map((line) => <Text key={line} style={s.infoLine}>{line}</Text>)}
               {d.note ? <Text style={s.note}>{d.note}</Text> : null}
               <Text style={s.disclaimer}>Przedstawiona oferta cenowa ma charakter informacyjny i nie stanowi oferty handlowej w rozumieniu art. 66 § 1 Kodeksu cywilnego. Oferta cenowa jest ważna {validDays} dni.</Text>
             </View>
@@ -161,14 +157,15 @@ function OfferDocument({ d, logo, pageSize }: { d: OfferPdfData; logo: Buffer; p
 
         <View style={s.footer} fixed>
           <View>
-            <Text style={s.footerName}>{COMPANY.name}</Text>
-            <Text style={s.footerText}>{COMPANY.tagline}</Text>
-            <Text style={s.footerText}>{COMPANY.address}</Text>
+            <Text style={s.footerName}>{company.name}</Text>
+            <Text style={s.footerText}>{company.tagline}</Text>
+            <Text style={s.footerText}>{company.address}</Text>
+            {company.nip ? <Text style={s.footerText}>NIP: {company.nip}</Text> : null}
           </View>
           <View style={{ alignItems: 'flex-end' }}>
-            <Text style={s.footerText}>tel. {COMPANY.phones.join(', ')}</Text>
-            <Text style={s.footerText}>{COMPANY.email}</Text>
-            <Text style={s.footerText}>benstal.pl</Text>
+            <Text style={s.footerText}>tel. {company.phones.join(', ')}</Text>
+            <Text style={s.footerText}>{company.email}</Text>
+            <Text style={s.footerText}>{company.domain}</Text>
           </View>
         </View>
       </Page>
@@ -178,7 +175,7 @@ function OfferDocument({ d, logo, pageSize }: { d: OfferPdfData; logo: Buffer; p
 
 export async function renderOfferPdf(d: OfferPdfData): Promise<Buffer> {
   registerFonts();
-  const logo = fs.readFileSync(path.join(ASSETS, 'benstal-logo.png'));
+  const logo = fs.readFileSync(path.join(ASSETS, offerCompanyProfile(d.company).logo));
   // Większy arkusz jest potrzebny wyłącznie przy rozbudowanej specyfikacji lub długiej notatce.
   for (const pageSize of ['A4', 'A3', 'A2'] as const) {
     const pdf = await renderToBuffer(<OfferDocument d={d} logo={logo} pageSize={pageSize} />);
@@ -187,6 +184,6 @@ export async function renderOfferPdf(d: OfferPdfData): Promise<Buffer> {
   throw new Error('Oferta nie mieści się na jednej stronie PDF.');
 }
 
-export function offerPdfFilename(number: number): string {
-  return `Oferta-BENSTAL-${number}.pdf`;
+export function offerPdfFilename(number: number, company?: OfferCompany): string {
+  return `Oferta-${offerCompanyProfile(company).filename}-${number}.pdf`;
 }

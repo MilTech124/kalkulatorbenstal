@@ -6,6 +6,7 @@ import { connectDb } from '@/lib/db';
 import { calculateQuote } from '@/lib/pricing/engine';
 import { getActivePriceList } from '@/lib/pricing/repository';
 import { saveQuoteSchema } from '@/lib/pricing/schemas';
+import { resolveOfferCompany } from '@/lib/offerCompany';
 import { nextSequence } from '@/models/Counter';
 import { QuoteModel } from '@/models/Quote';
 
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
     total: result.total,
     offeredTotal,
     offerNote: note,
+    offerCompany: resolveOfferCompany(offer?.company),
     currency: (() => {
       const c = findCurrency(pl.data.currencies, input.currency);
       return { key: currencyKey(c), code: c.code, label: c.label, rate: c.rate };
@@ -58,7 +60,7 @@ export async function POST(request: Request) {
 
   const id = doc._id.toString();
   return NextResponse.json(
-    { id, number, total: result.total, offeredTotal: offeredTotal ?? null, pdfUrl: `/api/quotes/${id}/pdf?t=${accessToken}`, wordUrl: `/api/quotes/${id}/word?t=${accessToken}` },
+    { id, number, total: result.total, offeredTotal: offeredTotal ?? null, offerCompany: doc.offerCompany, pdfUrl: `/api/quotes/${id}/pdf?t=${accessToken}`, wordUrl: `/api/quotes/${id}/word?t=${accessToken}` },
     { status: 201 },
   );
 }

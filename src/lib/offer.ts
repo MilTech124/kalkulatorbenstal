@@ -2,15 +2,10 @@
 import { GATE_LABELS, normalizeInput, sandwichPanel, SHEET_LAYOUT_LABELS, sheetLayout } from '@/lib/pricing/engine';
 import type { PriceList, QuoteInput } from '@/lib/pricing/types';
 import { resolvedFlashing, resolvedRoof, sheetColorLabel } from '@/lib/sheetColors';
+import { COMPANY_PROFILES } from '@/lib/offerCompany';
 
 export const COMPANY = {
-  name: 'F.P.H.U. „BEN-STAL” Galica Beniamin',
-  short: 'BEN-STAL',
-  tagline: 'Producent garaży blaszanych, hal, wiat i carportów',
-  address: 'Przenosza 102, 34-625 Skrzydlna',
-  phones: ['602 348 266', '533 615 010'],
-  email: 'biuro@benstal.pl',
-  www: 'https://benstal.pl',
+  ...COMPANY_PROFILES.benstal,
   facebook: 'https://www.facebook.com/102612067971157',
 };
 
