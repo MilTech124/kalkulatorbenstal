@@ -36,6 +36,7 @@ export function OfferPdfButton({ quoteId, total, offeredTotal, note, offerCompan
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Błąd zapisu');
+      if (data.offerCompany !== company) throw new Error('Wybrana firma nie została zapisana. Odśwież stronę i spróbuj ponownie.');
       if (format === 'pdf') window.open(`/api/quotes/${quoteId}/pdf`, '_blank');
       else {
         const download = document.createElement('a');

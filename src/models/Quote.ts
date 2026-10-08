@@ -57,4 +57,11 @@ export type QuoteDoc = Omit<InferSchemaType<typeof quoteSchema>, 'customer' | 'i
   updatedAt: Date;
 };
 
+// Hot reload może pozostawić model sprzed dodania pola firmy. Taki model
+// po cichu usuwa offerCompany zarówno przy create, jak i findByIdAndUpdate.
+// Wymieniamy wyłącznie nieaktualny model w pamięci; zapisane wyceny pozostają bez zmian.
+if (mongoose.models.Quote && !mongoose.models.Quote.schema.path('offerCompany')) {
+  mongoose.deleteModel('Quote');
+}
+
 export const QuoteModel = (mongoose.models.Quote as mongoose.Model<QuoteDoc>) || mongoose.model<QuoteDoc>('Quote', quoteSchema);

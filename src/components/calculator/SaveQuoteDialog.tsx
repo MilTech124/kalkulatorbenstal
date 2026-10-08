@@ -69,6 +69,7 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Błąd zapisu');
+      if (data.offerCompany !== company) throw new Error('Wybrana firma nie została zapisana. Odśwież stronę i spróbuj ponownie.');
       setSaved({ number: data.number, total: data.offeredTotal ?? data.total, pdfUrl: data.pdfUrl, wordUrl: data.wordUrl });
       setStatus('done');
     } catch (err) {
