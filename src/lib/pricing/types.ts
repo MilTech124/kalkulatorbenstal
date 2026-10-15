@@ -72,6 +72,8 @@ export interface PriceList {
   unit: {
     flashingPerMb: number;
     gutterPerMb: number;
+    /** Dopłata za mb rynny w danym kolorze [zł/mb] (klucz z GUTTER_COLORS); brak = 0. */
+    gutterColorPerMb: Record<string, number>;
     feltPerM2: number;
     tilePerM2: number;
     roofAreaFactor: number;

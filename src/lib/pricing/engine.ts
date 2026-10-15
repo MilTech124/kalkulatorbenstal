@@ -1,5 +1,6 @@
 // Silnik wyceny - czysta funkcja bez zaleznosci od React/Mongo.
 // Uzywany na kliencie (cena na zywo) i na serwerze (przeliczenie przy zapisie wyceny).
+import { GUTTER_COLORS } from '@/lib/sheetColors';
 import type {
   BaseTableRow,
   GateInput,
@@ -326,6 +327,11 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     if (input.gutters) {
       const mb = linear(roof.gutter, S, D);
       push({ key: 'gutters', label: 'Rynny', qty: mb, unit: 'mb', unitPrice: pl.unit.gutterPerMb, amount: mb * pl.unit.gutterPerMb });
+      const gutterSurcharge = pl.unit.gutterColorPerMb?.[input.gutterColor ?? ''] ?? 0;
+      if (gutterSurcharge > 0) {
+        const colorLabel = GUTTER_COLORS.find((option) => option.key === input.gutterColor)?.label ?? '';
+        push({ key: 'gutterColor', label: `Rynny – ${colorLabel.toLowerCase()}`, qty: mb, unit: 'mb', unitPrice: gutterSurcharge, amount: mb * gutterSurcharge });
+      }
       const downpipes = roof.downpipes ?? 0;
       const downpipePrice = pl.unit.downpipePrice ?? 0;
       if (downpipes > 0 && downpipePrice > 0) {

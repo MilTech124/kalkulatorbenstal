@@ -19,6 +19,8 @@ export const DEFAULT_PRICE_LIST: PriceList = {
   unit: {
     flashingPerMb: 30,
     gutterPerMb: 80,
+    // Dopłata za kolor rynien [zł/mb] - do uzupełnienia w panelu (domyślnie 0).
+    gutterColorPerMb: { 'gutter-bialy': 0, 'gutter-brazowy': 0, 'gutter-antracyt': 0, 'gutter-czarny': 0 },
     feltPerM2: 20,
     tilePerM2: 60,
     roofAreaFactor: 1,

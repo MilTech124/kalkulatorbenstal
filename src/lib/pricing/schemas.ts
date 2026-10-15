@@ -157,6 +157,7 @@ export const priceListSchema = z.object({
   unit: z.object({
     flashingPerMb: nonNeg,
     gutterPerMb: nonNeg,
+    gutterColorPerMb: z.record(z.string(), nonNeg).default({}),
     feltPerM2: nonNeg,
     tilePerM2: nonNeg,
     roofAreaFactor: pos,

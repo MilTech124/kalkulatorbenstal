@@ -2,6 +2,7 @@
 
 import type { GateType, HeightRule, PriceList, RoofType, SheetType } from '@/lib/pricing/types';
 import { GATE_LABELS } from '@/lib/pricing/engine';
+import { GUTTER_COLORS } from '@/lib/sheetColors';
 import { NullableNumberInput, NumberInput, TextInput } from '@/components/ui';
 
 export interface EditorProps {
@@ -158,6 +159,15 @@ export function RoofEditor({ pl, setPl }: EditorProps) {
       <Group title="Ceny jednostkowe pokrycia i obróbek" description="Okucia i rynny liczone z metrów bieżących (wzory niżej), filc i blachodachówka z metrów kwadratowych dachu.">
         <NumField label="Okucia [zł/mb]" value={u.flashingPerMb} onChange={(v) => setUnit('flashingPerMb', v)} />
         <NumField label="Rynny [zł/mb]" value={u.gutterPerMb} onChange={(v) => setUnit('gutterPerMb', v)} />
+        {GUTTER_COLORS.map((color) => (
+          <NumField
+            key={color.key}
+            label={`Dopłata – rynna ${color.label.toLowerCase()} [zł/mb]`}
+            value={u.gutterColorPerMb?.[color.key] ?? 0}
+            onChange={(v) => setPl((p) => ({ ...p, unit: { ...p.unit, gutterColorPerMb: { ...p.unit.gutterColorPerMb, [color.key]: v } } }))}
+            hint={color.key === GUTTER_COLORS[0].key ? 'Dopłata doliczana do rynien w tym kolorze; 0 = bez dopłaty' : undefined}
+          />
+        ))}
         <NumField label="Rura spustowa [zł/szt.]" value={u.downpipePrice ?? 0} onChange={(v) => setUnit('downpipePrice', v)} hint="Doliczana razem z rynnami; liczba rur zależy od rodzaju dachu (niżej)" />
         <NumField label="Filc [zł/m²]" value={u.feltPerM2} onChange={(v) => setUnit('feltPerM2', v)} />
         <NumField label="Filc – wypust poza obrys [m]" value={u.feltOverhangM ?? 0} step={0.05} onChange={(v) => setUnit('feltOverhangM', v)} hint="Na każdą stronę, np. 0,3 = +30 cm" />

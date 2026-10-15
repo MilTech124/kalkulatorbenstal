@@ -14,6 +14,15 @@ describe('kolor rynien', () => {
     expect(calculateQuote(input, DEFAULT_PRICE_LIST).total).toBe(calculateQuote(base, DEFAULT_PRICE_LIST).total);
   });
 
+  it('dolicza dopłatę za kolor rynny za metr bieżący', () => {
+    const pl = { ...DEFAULT_PRICE_LIST, unit: { ...DEFAULT_PRICE_LIST.unit, gutterColorPerMb: { ...DEFAULT_PRICE_LIST.unit.gutterColorPerMb, 'gutter-czarny': 25 } } };
+    const base = { ...emptyInput(pl), gutters: true };
+    const input = { ...base, gutterColor: 'gutter-czarny' };
+    const item = calculateQuote(input, pl).items.find((i) => i.key === 'gutterColor');
+    expect(item?.amount).toBe(Math.round(25 * (item?.qty ?? 0)));
+    expect(calculateQuote(input, pl).total - calculateQuote(base, pl).total).toBe(item?.amount);
+  });
+
   it('odrzuca kolor rynien spoza listy albo gdy rynien nie ma', () => {
     const base = emptyInput(DEFAULT_PRICE_LIST);
     expect(quoteInputSchema.safeParse({ ...base, gutters: true, gutterColor: 'ral-3011' }).success).toBe(false);
