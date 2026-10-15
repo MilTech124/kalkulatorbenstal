@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SHEET_COLORS, sheetColorFamily } from '@/lib/sheetColors';
+import { GUTTER_COLORS, SHEET_COLORS, sheetColorFamily } from '@/lib/sheetColors';
 import { OFFER_COMPANIES } from '@/lib/offerCompany';
 
 const num = z.number().finite();
@@ -28,6 +28,7 @@ export const quoteInputSchema = z.object({
   roofColor: z.string().max(40).optional(),
   flashingSheet: sheetSchema.optional(),
   flashingColor: z.string().max(40).optional(),
+  gutterColor: z.string().max(40).optional(),
   horizontalPanel: z.boolean(),
   sheetLayout: z.enum(['v', 'h', 'vWide', 'hWide']).optional(),
   felt: z.boolean(),
@@ -81,6 +82,9 @@ export const quoteInputSchema = z.object({
     const flashingFamily = sheetColorFamily(flashingSheet, input.flashingColor);
     const flashingValid = flashingFamily !== 'ocynk' && SHEET_COLORS[flashingFamily].some((option) => option.key === input.flashingColor);
     if (!flashingValid || input.flashings === false) ctx.addIssue({ code: 'custom', path: ['flashingColor'], message: 'Wybierz kolor okuć z wybranej palety' });
+  }
+  if (input.gutterColor && (!input.gutters || !GUTTER_COLORS.some((option) => option.key === input.gutterColor))) {
+    ctx.addIssue({ code: 'custom', path: ['gutterColor'], message: 'Wybierz kolor rynien z listy' });
   }
   input.gates.forEach((gate, index) => {
     if (gate.color && !valid(gate.color)) ctx.addIssue({ code: 'custom', path: ['gates', index, 'color'], message: 'Wybierz kolor bramy z aktualnej palety' });

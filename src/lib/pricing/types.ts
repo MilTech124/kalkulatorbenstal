@@ -185,6 +185,8 @@ export interface QuoteInput {
   flashingSheet?: SheetType;
   /** Kolor okuć dachowych i narożnych; brak = kolor poszycia. */
   flashingColor?: string;
+  /** Kolor rynien z GUTTER_COLORS; brak = pierwszy kolor z listy. Bez dopłaty. */
+  gutterColor?: string;
   /** Zachowane dla zgodnosci: true = blacha w poziomie (h/hWide). Zrodlem prawdy jest sheetLayout, gdy ustawione. */
   horizontalPanel: boolean;
   sheetLayout?: SheetLayout;

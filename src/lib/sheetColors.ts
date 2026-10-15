@@ -27,6 +27,14 @@ export const SHEET_COLORS = {
   ],
 } as const;
 
+// Podstawowe kolory rynien (bez dopłaty, niezależnie od poszycia).
+export const GUTTER_COLORS = [
+  { key: 'gutter-bialy', label: 'Biały', swatch: '#f4f4f0' },
+  { key: 'gutter-brazowy', label: 'Brązowy', swatch: '#49342f' },
+  { key: 'gutter-antracyt', label: 'Antracyt', swatch: '#383e42' },
+  { key: 'gutter-czarny', label: 'Czarny', swatch: '#202225' },
+] as const;
+
 export type SheetColorFamily = keyof typeof SHEET_COLORS;
 
 export function sheetColorFamily(sheet: SheetType, color?: string): SheetColorFamily | 'ocynk' {

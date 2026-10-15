@@ -16,7 +16,7 @@ import {
 import type { GateInput, GateType, PriceList, SheetLayout, QuoteInput, RoofType, SheetType, WindowType } from '@/lib/pricing/types';
 import { Card, Checkbox, Field, NumberInput, Segmented, Select } from '@/components/ui';
 import { formatNum, formatPln } from '@/lib/format';
-import { INHERIT_COLOR, SHEET_COLORS, colorOptionsWithInherit, normalizedSheetColor, resolvedFlashing, resolvedRoof, sheetColorFamily, type SheetColorFamily } from '@/lib/sheetColors';
+import { GUTTER_COLORS, INHERIT_COLOR, SHEET_COLORS, colorOptionsWithInherit, normalizedSheetColor, resolvedFlashing, resolvedRoof, sheetColorFamily, type SheetColorFamily } from '@/lib/sheetColors';
 import { ColorSelect } from './ColorSelect';
 
 export interface SectionProps {
@@ -273,7 +273,7 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
           )}
           <Checkbox
             checked={input.gutters}
-            onChange={(gutters) => update({ gutters })}
+            onChange={(gutters) => update({ gutters, gutterColor: gutters ? input.gutterColor : undefined })}
             label="Rynny"
             hint={`${formatPln(pl.unit.gutterPerMb)}/mb, długość zależna od spadu`}
           />
@@ -292,6 +292,17 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
             hint={`${formatPln(pl.unit.tilePerM2)}/m² dachu`}
           />
         </div>
+        {input.gutters && (
+          <div>
+            <p className="mb-1 text-sm font-medium text-slate-700">Kolor rynien</p>
+            <ColorSelect
+              label="Kolor rynien"
+              options={GUTTER_COLORS}
+              value={input.gutterColor ?? GUTTER_COLORS[0].key}
+              onChange={(gutterColor) => update({ gutterColor })}
+            />
+          </div>
+        )}
         {!sandwich && (input.flashings ?? true) && (
           <div>
             <p className="mb-2 text-sm font-medium text-slate-700">Kolor okuć</p>

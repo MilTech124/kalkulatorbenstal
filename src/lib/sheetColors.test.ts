@@ -5,6 +5,22 @@ import { quoteInputSchema } from './pricing/schemas';
 import { offerSummary } from './offer';
 import { INHERIT_COLOR, SHEET_COLORS, colorOptionsWithInherit, resolvedRoof } from './sheetColors';
 
+describe('kolor rynien', () => {
+  it('zapisuje kolor rynien, pokazuje go w ofercie i nie zmienia ceny', () => {
+    const base = { ...emptyInput(DEFAULT_PRICE_LIST), gutters: true };
+    const input = { ...base, gutterColor: 'gutter-antracyt' };
+    expect(quoteInputSchema.safeParse(input).success).toBe(true);
+    expect(offerSummary(input, DEFAULT_PRICE_LIST, input.height).find((row) => row.label === 'Kolor rynien')?.value).toBe('Antracyt');
+    expect(calculateQuote(input, DEFAULT_PRICE_LIST).total).toBe(calculateQuote(base, DEFAULT_PRICE_LIST).total);
+  });
+
+  it('odrzuca kolor rynien spoza listy albo gdy rynien nie ma', () => {
+    const base = emptyInput(DEFAULT_PRICE_LIST);
+    expect(quoteInputSchema.safeParse({ ...base, gutters: true, gutterColor: 'ral-3011' }).success).toBe(false);
+    expect(quoteInputSchema.safeParse({ ...base, gutters: false, gutterColor: 'gutter-bialy' }).success).toBe(false);
+  });
+});
+
 describe('kolor blachy w zapisanej wycenie i PDF', () => {
   it('pozwala wybrać dach BTX przy drewnopodobnych ścianach i oznacza cenę do potwierdzenia', () => {
     const input = { ...emptyInput(DEFAULT_PRICE_LIST), sheet: 'wood' as const, sheetColor: 'wood-grafit', roofSheet: 'ral' as const, roofColor: 'btx-7016' };

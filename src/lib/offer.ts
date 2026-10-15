@@ -1,7 +1,7 @@
 // Dane firmy i podsumowanie konfiguracji do oferty (PDF): bez rozbicia cen, tylko cena koncowa.
 import { GATE_LABELS, normalizeInput, sandwichPanel, SHEET_LAYOUT_LABELS, sheetLayout } from '@/lib/pricing/engine';
 import type { PriceList, QuoteInput } from '@/lib/pricing/types';
-import { resolvedFlashing, resolvedRoof, sheetColorLabel } from '@/lib/sheetColors';
+import { GUTTER_COLORS, resolvedFlashing, resolvedRoof, sheetColorLabel } from '@/lib/sheetColors';
 import { COMPANY_PROFILES } from '@/lib/offerCompany';
 
 export const COMPANY = {
@@ -44,7 +44,11 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
   } else {
     rows.push({ label: 'Brama', value: 'bez bramy' });
   }
-  const roofOpts = [(input.flashings ?? true) && 'okucia', input.gutters && 'rynny', input.felt && 'filc antykondensacyjny', input.tile && 'blachodachówka'].filter(Boolean) as string[];
+  if (!sandwich && input.gutters) {
+    const gutterOption = GUTTER_COLORS.find((option) => option.key === input.gutterColor) ?? GUTTER_COLORS[0];
+    rows.push({ label: 'Kolor rynien', value: gutterOption.label });
+  }
+  const roofOpts =[(input.flashings ?? true) && 'okucia', input.gutters && 'rynny', input.felt && 'filc antykondensacyjny', input.tile && 'blachodachówka'].filter(Boolean) as string[];
   if (!sandwich && roofOpts.length) rows.push({ label: 'Wyposażenie dachu', value: roofOpts.join(', ') });
   if (!sandwich && (input.flashings ?? true)) {
     const { sheet: flashingSheet, color: flashingColor } = resolvedFlashing(input);
