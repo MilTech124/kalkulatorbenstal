@@ -78,7 +78,7 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
     input.extras.ventGrilleQty > 0 && `kratka wentylacyjna × ${input.extras.ventGrilleQty}`,
   ].filter(Boolean) as string[];
   if (extras.length) rows.push({ label: 'Dodatki', value: extras.join(', ') });
-  if (input.carport.enabled) rows.push({ label: 'Wiata', value: `${fmt(input.carport.width)} × ${fmt(input.carport.length)} m` });
+  if (input.carport.enabled) rows.push({ label: 'Wiata', value: `długość ${fmt(input.carport.width)} m × szerokość ${fmt(input.carport.length)} m` });
   if (input.partitionWalls.length) {
     rows.push({ label: 'Ściany działowe', value: input.partitionWalls.map((w) => `${fmt(w.width)} × ${fmt(w.height)} m`).join(', ') });
   }

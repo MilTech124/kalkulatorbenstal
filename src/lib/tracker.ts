@@ -53,7 +53,7 @@ export function trackerDetails(quote: Pick<QuoteDoc, 'number' | 'input' | 'resul
   if (windows.length || input.doors) {
     lines.push(`Okna/drzwi: ${[...windows, input.doors ? `drzwi × ${input.doors}` : ''].filter(Boolean).join(', ')}`);
   }
-  if (input.carport.enabled) lines.push(`Wiata ${input.carport.width} × ${input.carport.length} m`);
+  if (input.carport.enabled) lines.push(`Wiata: długość ${input.carport.width} m × szerokość ${input.carport.length} m`);
   lines.push(`Kwota brutto: ${(quote.offeredTotal ?? quote.total).toLocaleString('pl-PL')} zł`);
   return lines.join('\n');
 }

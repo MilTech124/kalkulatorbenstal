@@ -645,10 +645,10 @@ export function CarportAndWallsSection({ input, pl, update }: SectionProps) {
     <Card title={sandwich ? 'Wiata' : 'Wiata, ściany i ażury'} subtitle="Opcjonalne elementy dodatkowe.">
       <div className="space-y-5">
         <div>
-          <Checkbox checked={c.enabled} onChange={(enabled) => setCarport({ enabled })} label="Wiata (zadaszenie) przy garażu" hint="Cena za metr bieżący zależna od szerokości wiaty" />
+          <Checkbox checked={c.enabled} onChange={(enabled) => setCarport({ enabled })} label="Wiata (zadaszenie) przy garażu" hint="Cena za metr bieżący zależna od długości wiaty" />
           {c.enabled && (
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
-              <Field label="Szerokość wiaty [m]">
+              <Field label="Długość wiaty [m]">
                 <Select value={c.width} onChange={(e) => setCarport({ width: Number(e.target.value) })}>
                   {carportWidths.map((w) => (
                     <option key={w} value={w}>
@@ -657,7 +657,7 @@ export function CarportAndWallsSection({ input, pl, update }: SectionProps) {
                   ))}
                 </Select>
               </Field>
-              <Field label="Długość wiaty [m]">
+              <Field label="Szerokość wiaty [m]">
                 <NumberInput value={c.length} min={1} max={30} step={0.5} onChange={(length) => setCarport({ length })} />
               </Field>
             </div>

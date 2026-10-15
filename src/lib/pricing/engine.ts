@@ -534,7 +534,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     } else {
       push({
         key: 'carport',
-        label: `Wiata ${fmt(input.carport.width)} × ${fmt(input.carport.length)} m`,
+        label: `Wiata: długość ${fmt(input.carport.width)} m × szerokość ${fmt(input.carport.length)} m`,
         qty: input.carport.length,
         unit: 'mb',
         unitPrice: rate,

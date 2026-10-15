@@ -511,11 +511,11 @@ export function CarportEditor({ pl, setPl }: EditorProps) {
 
   return (
     <div className="space-y-5">
-      <Panel title="Wiata – cena za metr bieżący długości wg szerokości" description="Cena wiaty = stawka dla szerokości × długość wiaty [mb].">
+      <Panel title="Wiata – cena za metr bieżący wg długości wiaty" description="Cena wiaty = stawka dla długości wiaty × szerokość wiaty [mb].">
         <div className="flex flex-wrap gap-3">
           {entries.map(([w, rate], i) => (
             <div key={i} className="flex items-end gap-2 rounded-lg border border-slate-200 p-2">
-              <NumField label="szer. [m]" value={w} step={0.5} onChange={(v) => setRates(entries.map((e, j) => (j === i ? [v, e[1]] : e)))} />
+              <NumField label="dł. [m]" value={w} step={0.5} onChange={(v) => setRates(entries.map((e, j) => (j === i ? [v, e[1]] : e)))} />
               <NumField label="zł/mb" value={rate} onChange={(v) => setRates(entries.map((e, j) => (j === i ? [e[0], v] : e)))} />
               <button type="button" className="pb-2 text-xs text-red-600 hover:underline" onClick={() => setRates(entries.filter((_, j) => j !== i))}>
                 usuń
@@ -523,7 +523,7 @@ export function CarportEditor({ pl, setPl }: EditorProps) {
             </div>
           ))}
           <button type="button" className="self-center text-sm font-medium text-brand-600 hover:underline" onClick={() => setRates([...entries, [(entries.at(-1)?.[0] ?? 1) + 1, 1800]])}>
-            + szerokość
+            + długość
           </button>
         </div>
       </Panel>
