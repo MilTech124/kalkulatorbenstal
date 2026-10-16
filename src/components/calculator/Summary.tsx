@@ -2,6 +2,7 @@
 
 import type { QuoteResult } from '@/lib/pricing/types';
 import { formatNum, formatPln } from '@/lib/format';
+import { Icon } from '@/components/icons';
 import { convertFromPln, currencyKey, findCurrency, formatMoney, PLN, type CurrencyOption } from '@/lib/currency';
 
 export function QuoteBreakdown({ result, compact = false }: { result: QuoteResult; compact?: boolean }) {
@@ -42,10 +43,15 @@ export function Summary({
 }) {
   const cur = findCurrency(currencies, currency);
   return (
-    <aside className="rounded-xl border border-slate-200 bg-white shadow-sm lg:sticky lg:top-6">
-      <div className="border-b border-slate-100 px-5 py-4">
-        <h2 className="text-base font-semibold text-slate-900">Twoja wycena</h2>
-        <p className="text-xs text-slate-500">Cena aktualizuje się na bieżąco.</p>
+    <aside className="rounded-2xl border border-slate-200 bg-white shadow-sm lg:sticky lg:top-6">
+      <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-500 text-white">
+          <Icon name="receipt" size={22} />
+        </span>
+        <div>
+          <h2 className="text-base font-semibold text-slate-900">Twoja wycena</h2>
+          <p className="text-xs text-slate-500">Cena aktualizuje się na bieżąco.</p>
+        </div>
       </div>
       <div className="max-h-[50vh] overflow-y-auto px-5">
         {result.items.length === 0 ? <p className="py-4 text-sm text-slate-500">Brak pozycji.</p> : <QuoteBreakdown result={result} />}
@@ -53,7 +59,10 @@ export function Summary({
       {result.warnings.length > 0 && (
         <ul className="mx-5 mb-3 space-y-1 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
           {result.warnings.map((w, i) => (
-            <li key={i}>⚠ {w}</li>
+            <li key={i} className="flex items-start gap-1.5">
+              <Icon name="alert" size={14} className="mt-0.5 shrink-0" />
+              <span>{w}</span>
+            </li>
           ))}
         </ul>
       )}
@@ -84,15 +93,17 @@ export function Summary({
           type="button"
           onClick={onSave}
           disabled={result.items.length === 0}
-          className="mt-4 w-full rounded-lg bg-accent-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-600 disabled:opacity-50"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-accent-500 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-accent-600 disabled:opacity-50"
         >
+          <Icon name="save" size={18} />
           Zapisz wycenę
         </button>
         <button
           type="button"
           onClick={onReset}
-          className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
         >
+          <Icon name="reset" size={16} />
           Resetuj
         </button>
       </div>
@@ -107,7 +118,8 @@ export function MobileTotalBar({ total, onSave }: { total: number; onSave: () =>
         <p className="text-xs text-slate-500">Razem brutto</p>
         <p className="text-lg font-bold tabular-nums text-brand-700">{formatPln(total)}</p>
       </div>
-      <button type="button" onClick={onSave} className="rounded-lg bg-accent-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-accent-600">
+      <button type="button" onClick={onSave} className="inline-flex items-center gap-2 rounded-lg bg-accent-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-accent-600">
+        <Icon name="save" size={18} />
         Zapisz wycenę
       </button>
     </div>

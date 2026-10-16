@@ -1,13 +1,21 @@
 'use client';
 
 import { useState, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { Icon, type IconName } from '@/components/icons';
 
-export function Card({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
+export function Card({ title, subtitle, icon, children }: { title: string; subtitle?: string; icon?: IconName; children: ReactNode }) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <header className="mb-4">
-        <h2 className="text-base font-semibold text-slate-900">{title}</h2>
-        {subtitle && <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>}
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <header className="mb-4 flex items-start gap-3 border-b border-slate-100 pb-4">
+        {icon && (
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+            <Icon name={icon} size={22} />
+          </span>
+        )}
+        <div className="min-w-0">
+          <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+          {subtitle && <p className="mt-0.5 text-sm text-slate-500">{subtitle}</p>}
+        </div>
       </header>
       {children}
     </section>
@@ -156,7 +164,7 @@ export function Segmented<T extends string>({
 }: {
   value: T;
   onChange: (v: T) => void;
-  options: { value: T; label: string; hint?: string }[];
+  options: { value: T; label: string; hint?: string; icon?: IconName }[];
 }) {
   return (
     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -167,10 +175,18 @@ export function Segmented<T extends string>({
             key={o.value}
             type="button"
             onClick={() => onChange(o.value)}
-            className={`rounded-lg border px-3 py-2.5 text-left transition ${active ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-100' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+            aria-pressed={active}
+            className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition ${active ? 'border-brand-500 bg-brand-50 ring-2 ring-brand-100' : 'border-slate-200 bg-white hover:border-slate-300'}`}
           >
-            <span className={`block text-sm font-medium ${active ? 'text-brand-700' : 'text-slate-800'}`}>{o.label}</span>
-            {o.hint && <span className="block text-xs text-slate-500">{o.hint}</span>}
+            {o.icon && (
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${active ? 'bg-brand-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                <Icon name={o.icon} size={20} />
+              </span>
+            )}
+            <span className="min-w-0">
+              <span className={`block text-sm font-medium ${active ? 'text-brand-700' : 'text-slate-800'}`}>{o.label}</span>
+              {o.hint && <span className="block text-xs text-slate-500">{o.hint}</span>}
+            </span>
           </button>
         );
       })}

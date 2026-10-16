@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { availableLengths, calculateQuote, emptyInput, PRODUCT_LABELS } from '@/lib/pricing/engine';
 import type { PriceList, ProductType, QuoteInput } from '@/lib/pricing/types';
+import { Icon } from '@/components/icons';
 import { Segmented } from '@/components/ui';
 import { BinSection } from './BinSection';
 import { CarportAndWallsSection, DimensionsSection, ExtrasSection, GateSection, RoofAndSheetSection, WindowsDoorsSection } from './Sections';
@@ -82,15 +83,18 @@ export function Calculator({ priceList }: { priceList: PriceList }) {
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 pb-28 pt-6 lg:grid-cols-[1fr_360px] lg:pb-10">
       <div className="space-y-5">
-        <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="mb-2 text-sm font-medium text-slate-700">Co wyceniamy?</p>
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
+            <Icon name="dashboard" size={18} className="text-brand-500" />
+            Co wyceniamy?
+          </p>
           <Segmented<ProductType>
             value={productType}
             onChange={setProductType}
             options={[
-              { value: 'steel', label: PRODUCT_LABELS.steel, hint: 'cennik wg wymiarów' },
-              { value: 'sandwich', label: PRODUCT_LABELS.sandwich, hint: 'płyta warstwowa, cena za m³' },
-              { value: 'bin', label: PRODUCT_LABELS.bin, hint: 'cennik wg kartki, ażury' },
+              { value: 'steel', label: PRODUCT_LABELS.steel, hint: 'cennik wg wymiarów', icon: 'home' },
+              { value: 'sandwich', label: PRODUCT_LABELS.sandwich, hint: 'płyta warstwowa, cena za m³', icon: 'layers' },
+              { value: 'bin', label: PRODUCT_LABELS.bin, hint: 'cennik wg kartki, ażury', icon: 'trashbin' },
             ]}
           />
         </section>

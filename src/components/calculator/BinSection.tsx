@@ -41,7 +41,7 @@ export function BinSection({ input, pl, update }: SectionProps) {
 
   return (
     <>
-      <Card title="Wymiary wiaty śmietnikowej" subtitle="Cena podstawy jak dla garażu o tych samych wymiarach.">
+      <Card title="Wymiary wiaty śmietnikowej" subtitle="Cena podstawy jak dla garażu o tych samych wymiarach." icon="ruler">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Szerokość [m]">
             <Select value={input.width} onChange={(e) => setWidth(Number(e.target.value))}>
@@ -64,7 +64,7 @@ export function BinSection({ input, pl, update }: SectionProps) {
         </div>
       </Card>
 
-      <Card title="Dach, drzwi i blacha">
+      <Card title="Dach, drzwi i blacha" subtitle="Spad, drzwi, blacha, kolor i obróbki." icon="roof">
         <div className="space-y-5">
           <div>
             <p className="mb-2 text-sm font-medium text-slate-700">Spad dachu</p>
@@ -123,7 +123,7 @@ export function BinSection({ input, pl, update }: SectionProps) {
         </div>
       </Card>
 
-      <Card title="Ażury" subtitle={`Wybierz ściany ażurowe: długość ściany × ${formatNum(pl.bin.openworkHeight)} m × ${formatPln(pl.bin.openworkPerM2)}/m². Ściany 1–2 mają ${formatNum(input.width)} m, 3–4 mają ${formatNum(input.length)} m.`}>
+      <Card title="Ażury" subtitle={`Wybierz ściany ażurowe: długość ściany × ${formatNum(pl.bin.openworkHeight)} m × ${formatPln(pl.bin.openworkPerM2)}/m². Ściany 1–2 mają ${formatNum(input.width)} m, 3–4 mają ${formatNum(input.length)} m.`} icon="grid">
         <div className="grid gap-2 sm:grid-cols-2">
           {BIN_WALLS.map((n) => (
             <Checkbox

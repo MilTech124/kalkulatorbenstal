@@ -15,6 +15,7 @@ import {
 } from '@/lib/pricing/engine';
 import type { GateInput, GateType, PriceList, SheetLayout, QuoteInput, RoofType, SheetType, WindowType } from '@/lib/pricing/types';
 import { Card, Checkbox, Field, NumberInput, Segmented, Select } from '@/components/ui';
+import { Icon } from '@/components/icons';
 import { formatNum, formatPln } from '@/lib/format';
 import { GUTTER_COLORS, INHERIT_COLOR, SHEET_COLORS, colorOptionsWithInherit, normalizedSheetColor, resolvedFlashing, resolvedRoof, sheetColorFamily, type SheetColorFamily } from '@/lib/sheetColors';
 import { ColorSelect } from './ColorSelect';
@@ -41,7 +42,7 @@ export function DimensionsSection({ input, pl, update }: SectionProps) {
     const panels = pl.sandwich?.panels ?? [];
     const panel = sandwichPanel(pl, input.sandwichPanel);
     return (
-      <Card title="Wymiary garażu warstwowego" subtitle={`Cena bazowa: szerokość × długość × wysokość × ${formatPln(panel?.pricePerM3 ?? pl.sandwich?.pricePerM3 ?? 0)}/m³.`}>
+      <Card title="Wymiary garażu warstwowego" subtitle={`Cena bazowa: szerokość × długość × wysokość × ${formatPln(panel?.pricePerM3 ?? pl.sandwich?.pricePerM3 ?? 0)}/m³.`} icon="ruler">
         {panels.length > 0 && (
           <div className="mb-4">
             <p className="mb-2 text-sm font-medium text-slate-700">Płyta warstwowa</p>
@@ -88,7 +89,7 @@ export function DimensionsSection({ input, pl, update }: SectionProps) {
 
   if (input.customDims) {
     return (
-      <Card title="Wymiary garażu (spoza cennika)" subtitle="Cena bazowa liczona z kubatury: szerokość × długość × wysokość w najwyższym punkcie.">
+      <Card title="Wymiary garażu (spoza cennika)" subtitle="Cena bazowa liczona z kubatury: szerokość × długość × wysokość w najwyższym punkcie." icon="ruler">
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Szerokość [m]">
             <NumberInput value={input.width} min={1} max={20} step={0.1} onChange={(width) => update({ width })} />
@@ -106,7 +107,7 @@ export function DimensionsSection({ input, pl, update }: SectionProps) {
   }
 
   return (
-    <Card title="Wymiary garażu" subtitle="Wybierz szerokość, długość i wysokość. Wysokość standardowa jest wliczona w cenę.">
+    <Card title="Wymiary garażu" subtitle="Wybierz szerokość, długość i wysokość. Wysokość standardowa jest wliczona w cenę." icon="ruler">
       <div className="grid gap-4 sm:grid-cols-3">
         <Field label="Szerokość [m]">
           <Select value={input.width} onChange={(e) => setWidth(Number(e.target.value))}>
@@ -171,8 +172,9 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
     update({ flashingSheet, flashingColor: SHEET_COLORS[family][0].key });
   };
   return (
-    <Card title="Dach i blacha">
-      <div className="space-y-5">
+    <>
+      <Card title="Dach i konstrukcja" subtitle="Spad, blacha i kolor dachu oraz rodzaj konstrukcji." icon="roof">
+        <div className="space-y-5">
         <div>
           <p className="mb-2 text-sm font-medium text-slate-700">Rodzaj dachu</p>
           <Segmented
@@ -181,32 +183,6 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
             options={ROOF_ORDER.map((r) => ({ value: r, label: pl.roofTypes[r].label }))}
           />
         </div>
-        <div>
-          <p className="mb-2 text-sm font-medium text-slate-700">Rodzaj blachy</p>
-          <Segmented<SheetColorFamily | 'ocynk'>
-            value={colorFamily}
-            onChange={setColorFamily}
-            options={[
-              { value: 'ocynk', label: pl.sheetLabels.ocynk, hint: 'w cenie' },
-              { value: 'ral', label: 'Błyszczący RAL', hint: 'dopłata wg wymiarów' },
-              { value: 'btx', label: 'Matowy BTX', hint: 'dopłata jak za RAL' },
-              { value: 'wood', label: pl.sheetLabels.wood, hint: 'dopłata wg wymiarów' },
-            ]}
-          />
-        </div>
-        {colorFamily !== 'ocynk' && (
-          <div>
-            <p className="mb-1 text-sm font-medium text-slate-700">Kolor ścian</p>
-            <ColorSelect label="Kolor ścian" options={SHEET_COLORS[colorFamily]} value={normalizedSheetColor(input.sheet, input.sheetColor)} onChange={(sheetColor) => update({ sheetColor })} />
-            <p className="mt-1 text-xs text-slate-500">
-              Próbki mają charakter poglądowy. Elementy ustawione na „Taki jak poszycie garażu” idą za tym kolorem; element z własnym kolorem zostaje bez zmian.
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              Bramy, drzwi i okna są z blachy poszycia, więc ich kolory pochodzą z tej samej palety – przy poszyciu drewnopodobnym nie ma kolorów RAL/BTX i odwrotnie. Dach i okucia można
-              zamówić w dowolnym kolorze, niezależnie od poszycia.
-            </p>
-          </div>
-        )}
         {!sandwich && (
           <div>
             <p className="mb-2 text-sm font-medium text-slate-700">Rodzaj blachy dachu</p>
@@ -247,6 +223,36 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
             />
           </div>
         )}
+        </div>
+      </Card>
+      <Card title="Blacha ścian" subtitle="Rodzaj, kolor i ułożenie blachy na poszyciu." icon="layers">
+        <div className="space-y-5">
+        <div>
+          <p className="mb-2 text-sm font-medium text-slate-700">Rodzaj blachy</p>
+          <Segmented<SheetColorFamily | 'ocynk'>
+            value={colorFamily}
+            onChange={setColorFamily}
+            options={[
+              { value: 'ocynk', label: pl.sheetLabels.ocynk, hint: 'w cenie' },
+              { value: 'ral', label: 'Błyszczący RAL', hint: 'dopłata wg wymiarów' },
+              { value: 'btx', label: 'Matowy BTX', hint: 'dopłata jak za RAL' },
+              { value: 'wood', label: pl.sheetLabels.wood, hint: 'dopłata wg wymiarów' },
+            ]}
+          />
+        </div>
+        {colorFamily !== 'ocynk' && (
+          <div>
+            <p className="mb-1 text-sm font-medium text-slate-700">Kolor ścian</p>
+            <ColorSelect label="Kolor ścian" options={SHEET_COLORS[colorFamily]} value={normalizedSheetColor(input.sheet, input.sheetColor)} onChange={(sheetColor) => update({ sheetColor })} />
+            <p className="mt-1 text-xs text-slate-500">
+              Próbki mają charakter poglądowy. Elementy ustawione na „Taki jak poszycie garażu” idą za tym kolorem; element z własnym kolorem zostaje bez zmian.
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Bramy, drzwi i okna są z blachy poszycia, więc ich kolory pochodzą z tej samej palety – przy poszyciu drewnopodobnym nie ma kolorów RAL/BTX i odwrotnie. Dach i okucia można
+              zamówić w dowolnym kolorze, niezależnie od poszycia.
+            </p>
+          </div>
+        )}
         {!sandwich && (
           <div>
             <p className="mb-2 text-sm font-medium text-slate-700">Ułożenie blachy</p>
@@ -262,6 +268,10 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
             />
           </div>
         )}
+        </div>
+      </Card>
+      <Card title="Wykończenie i obróbki" subtitle="Okucia, rynny, filc i blachodachówka." icon="wrench">
+        <div className="space-y-5">
         <div className="grid gap-2 sm:grid-cols-2">
           {!sandwich && (
             <Checkbox
@@ -330,8 +340,9 @@ export function RoofAndSheetSection({ input, pl, update }: SectionProps) {
             </div>
           </div>
         )}
-      </div>
-    </Card>
+        </div>
+      </Card>
+    </>
   );
 }
 
@@ -343,7 +354,7 @@ export function GateSection({ input, pl, update }: SectionProps) {
   const patchGate = (i: number, patch: Partial<GateInput>) => setGates(gates.map((g, j) => (j === i ? { ...g, ...patch } : g)));
 
   return (
-    <Card title="Bramy" subtitle="Można dodać kilka bram (np. garaż dwustanowiskowy). Brama segmentowa wyceniana z cennika producenta, automat CAME i dodatkowe piloty jako osobne pozycje.">
+    <Card title="Bramy" subtitle="Można dodać kilka bram (np. garaż dwustanowiskowy). Brama segmentowa wyceniana z cennika producenta, automat CAME i dodatkowe piloty jako osobne pozycje." icon="gate">
       <div className="space-y-4">
         {gates.length === 0 && <p className="text-sm text-slate-500">Bez bramy.</p>}
         {gates.map((g, i) => (
@@ -360,8 +371,8 @@ export function GateSection({ input, pl, update }: SectionProps) {
           />
         ))}
         {gates.length < 6 && (
-          <button type="button" className="text-sm font-medium text-brand-600 hover:underline" onClick={() => setGates([...gates, defaultGate()])}>
-            + dodaj bramę
+          <button type="button" className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-brand-500 px-3 py-2 text-sm font-medium text-brand-600 hover:bg-brand-50" onClick={() => setGates([...gates, defaultGate()])}>
+            <Icon name="plus" size={16} /> dodaj bramę
           </button>
         )}
       </div>
@@ -396,8 +407,8 @@ function GateCard({
     <div className="space-y-4 rounded-lg border border-slate-200 bg-slate-50/60 p-4">
       <div className="flex items-center justify-between">
         <p className="text-sm font-semibold text-slate-800">{total > 1 ? `Brama ${index + 1}` : 'Brama'}</p>
-        <button type="button" className="text-xs text-red-600 hover:underline" onClick={onRemove}>
-          usuń bramę
+        <button type="button" className="inline-flex items-center gap-1 text-xs text-red-600 hover:underline" onClick={onRemove}>
+          <Icon name="trash" size={14} /> usuń bramę
         </button>
       </div>
 
@@ -526,7 +537,7 @@ export function WindowsDoorsSection({ input, pl, update }: SectionProps) {
   const setWindowColor = (type: WindowType, color?: string) => update({ windows: input.windows.map((window) => (window.type === type ? { ...window, color } : window)) });
 
   return (
-    <Card title="Okna i drzwi">
+    <Card title="Okna i drzwi" subtitle="Ilość okien, drzwi i ich kolory." icon="window">
       <div className="grid gap-3 sm:grid-cols-2">
         {WINDOW_ORDER.map((t) => {
           const def = pl.windows[t];
@@ -600,12 +611,12 @@ function QtyRow({ label, hint, value, onChange }: { label: string; hint?: string
         {hint && <p className="text-xs text-slate-500">{hint}</p>}
       </div>
       <div className="flex items-center gap-1">
-        <button type="button" onClick={() => onChange(Math.max(0, value - 1))} className="h-8 w-8 rounded-md border border-slate-300 bg-white text-lg leading-none hover:bg-slate-50">
-          −
+        <button type="button" onClick={() => onChange(Math.max(0, value - 1))} aria-label="Mniej" className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white hover:bg-slate-50">
+          <Icon name="minus" size={16} />
         </button>
         <span className="w-8 text-center text-sm font-semibold tabular-nums">{value}</span>
-        <button type="button" onClick={() => onChange(Math.min(50, value + 1))} className="h-8 w-8 rounded-md border border-slate-300 bg-white text-lg leading-none hover:bg-slate-50">
-          +
+        <button type="button" onClick={() => onChange(Math.min(50, value + 1))} aria-label="Więcej" className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white hover:bg-slate-50">
+          <Icon name="plus" size={16} />
         </button>
       </div>
     </div>
@@ -616,7 +627,7 @@ export function ExtrasSection({ input, pl, update }: SectionProps) {
   const e = input.extras;
   const setExtras = (patch: Partial<QuoteInput['extras']>) => update({ extras: { ...e, ...patch } });
   return (
-    <Card title="Dodatki">
+    <Card title="Dodatki" subtitle="Drobne wyposażenie garażu." icon="package">
       <div className="grid gap-2 sm:grid-cols-2">
         <Checkbox checked={e.padlockHolder} onChange={(padlockHolder) => setExtras({ padlockHolder })} label="Uchwyt na kłódkę" hint={formatPln(pl.extras.padlockHolder)} />
         <Checkbox
@@ -642,7 +653,7 @@ export function CarportAndWallsSection({ input, pl, update }: SectionProps) {
   const sandwich = input.productType === 'sandwich';
 
   return (
-    <Card title={sandwich ? 'Wiata' : 'Wiata, ściany i ażury'} subtitle="Opcjonalne elementy dodatkowe.">
+    <Card title={sandwich ? 'Wiata' : 'Wiata, ściany i ażury'} subtitle="Opcjonalne elementy dodatkowe." icon="tent">
       <div className="space-y-5">
         <div>
           <Checkbox checked={c.enabled} onChange={(enabled) => setCarport({ enabled })} label="Wiata (zadaszenie) przy garażu" hint="Cena za metr bieżący zależna od długości wiaty" />
@@ -671,10 +682,10 @@ export function CarportAndWallsSection({ input, pl, update }: SectionProps) {
             <p className="text-sm font-medium text-slate-700">Ściany działowe / oblachowane</p>
             <button
               type="button"
-              className="text-sm font-medium text-brand-600 hover:underline"
+              className="inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:underline"
               onClick={() => update({ partitionWalls: [...input.partitionWalls, { width: input.length, height: input.height }] })}
             >
-              + dodaj ścianę
+              <Icon name="plus" size={16} /> dodaj ścianę
             </button>
           </div>
           {input.partitionWalls.length === 0 && <p className="text-xs text-slate-500">Brak. Cena {formatPln(pl.partitionWallPerM2[input.sheet])}/m² dla wybranej blachy.</p>}
