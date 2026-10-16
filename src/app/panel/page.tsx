@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function QuotesPage() {
   await connectDb();
-  const docs = await QuoteModel.find({}, { number: 1, customer: 1, total: 1, offeredTotal: 1, createdAt: 1, input: 1, 'result.effectiveHeight': 1, priceListVersion: 1, status: 1, 'tracker.sentAt': 1 })
+  const docs = await QuoteModel.find({}, { number: 1, customer: 1, total: 1, offeredTotal: 1, createdAt: 1, input: 1, 'result.effectiveHeight': 1, priceListVersion: 1, status: 1, 'tracker.sentAt': 1, 'createdBy.name': 1 })
     .sort({ createdAt: -1 })
     .limit(500)
     .lean();
@@ -22,6 +22,7 @@ export default async function QuotesPage() {
     dims: [d.input.width, d.input.length, d.result?.effectiveHeight ?? d.input.height].map((n) => n.toLocaleString('pl-PL')).join(' × ') + ' m',
     total: d.offeredTotal ?? d.total,
     version: d.priceListVersion,
+    author: d.createdBy?.name ?? null,
     status: d.status ?? 'nowe',
     trackerSentAt: d.tracker?.sentAt ? d.tracker.sentAt.toISOString() : null,
   }));

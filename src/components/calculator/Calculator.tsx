@@ -9,7 +9,7 @@ import { CarportAndWallsSection, DimensionsSection, ExtrasSection, GateSection, 
 import { MobileTotalBar, Summary } from './Summary';
 import { SaveQuoteDialog } from './SaveQuoteDialog';
 
-export function Calculator({ priceList, isAdmin = false }: { priceList: PriceList; isAdmin?: boolean }) {
+export function Calculator({ priceList }: { priceList: PriceList }) {
   const [input, setInput] = useState<QuoteInput>(() => emptyInput(priceList));
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -118,7 +118,7 @@ export function Calculator({ priceList, isAdmin = false }: { priceList: PriceLis
         />
       </div>
       <MobileTotalBar total={result.total} onSave={openDialog} />
-      {dialogOpen && <SaveQuoteDialog open={dialogOpen} onClose={closeDialog} input={input} total={result.total} isAdmin={isAdmin} />}
+      {dialogOpen && <SaveQuoteDialog open={dialogOpen} onClose={closeDialog} input={input} total={result.total} />}
     </div>
   );
 }

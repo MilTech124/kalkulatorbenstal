@@ -12,9 +12,11 @@ import { QuoteModel } from '@/models/Quote';
 
 export const dynamic = 'force-dynamic';
 
-// Publiczny zapis wyceny. Cena liczona po stronie serwera z aktywnego cennika.
-// offer.offeredTotal: cena w ofercie PDF (np. z narzutem %); dla niezalogowanych nie moze byc nizsza niz wyliczona.
+// Zapis wyceny przez zalogowanego pracownika. Cena liczona po stronie serwera z aktywnego cennika.
+// offer.offeredTotal: cena w ofercie PDF (np. z narzutem %), moze byc inna niz wyliczona.
 export async function POST(request: Request) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: 'Brak autoryzacji' }, { status: 401 });
   const body = await request.json().catch(() => null);
   const parsed = saveQuoteSchema.safeParse(body);
   if (!parsed.success) {
@@ -26,10 +28,7 @@ export async function POST(request: Request) {
   if (result.items.length === 0) {
     return NextResponse.json({ error: result.warnings[0] ?? 'Nie można policzyć wyceny' }, { status: 400 });
   }
-  const isAdmin = Boolean(await getSession());
-  // Narzut z frontu jest dozwolony dla kazdego, ale tylko admin moze obnizyc cene ponizej wyliczonej.
   let offeredTotal = offer?.offeredTotal;
-  if (offeredTotal !== undefined && !isAdmin && offeredTotal < result.total) offeredTotal = result.total;
   if (offeredTotal === result.total) offeredTotal = undefined;
   const note = offer?.note;
 
@@ -56,6 +55,7 @@ export async function POST(request: Request) {
     })(),
     priceListVersion: pl.version,
     accessToken,
+    createdBy: { userId: session.userId, name: session.name, login: session.login },
   });
 
   const id = doc._id.toString();

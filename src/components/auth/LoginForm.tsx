@@ -1,13 +1,15 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { Button, Field, TextInput } from '@/components/ui';
+import { safeNext } from './safeNext';
 
 export function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const [email, setEmail] = useState('');
+  const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -16,10 +18,10 @@ export function LoginForm() {
     e.preventDefault();
     setBusy(true);
     setError('');
-    const res = await fetch('/api/admin/login', {
+    const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ login, password }),
     });
     setBusy(false);
     if (!res.ok) {
@@ -27,15 +29,14 @@ export function LoginForm() {
       setError(data.error ?? 'Błąd logowania');
       return;
     }
-    const next = params.get('next');
-    router.replace(next && next.startsWith('/panel') ? next : '/panel');
+    router.replace(safeNext(params.get('next')));
     router.refresh();
   }
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <Field label="E-mail">
-        <TextInput type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" required />
+      <Field label="Login">
+        <TextInput value={login} onChange={(e) => setLogin(e.target.value)} autoComplete="username" required />
       </Field>
       <Field label="Hasło">
         <TextInput type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
@@ -44,6 +45,12 @@ export function LoginForm() {
       <Button type="submit" disabled={busy} className="w-full">
         {busy ? 'Logowanie…' : 'Zaloguj'}
       </Button>
+      <p className="text-center text-sm text-slate-500">
+        Nie masz konta?{' '}
+        <Link href="/register" className="font-medium text-brand-700 hover:underline">
+          Zarejestruj się
+        </Link>
+      </p>
     </form>
   );
 }

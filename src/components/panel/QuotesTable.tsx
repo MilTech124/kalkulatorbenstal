@@ -19,6 +19,7 @@ export interface QuoteRow {
   total: number;
   version: number;
   status: QuoteStatus;
+  author: string | null;
   trackerSentAt: string | null;
 }
 
@@ -27,7 +28,7 @@ export function QuotesTable({ rows }: { rows: QuoteRow[] }) {
   const [q, setQ] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | QuoteStatus>('all');
   const filtered = rows.filter(
-    (r) => (statusFilter === 'all' || r.status === statusFilter) && `${r.number} ${r.customer} ${r.phone} ${r.address}`.toLowerCase().includes(q.toLowerCase()),
+    (r) => (statusFilter === 'all' || r.status === statusFilter) && `${r.number} ${r.customer} ${r.phone} ${r.address} ${r.author ?? ''}`.toLowerCase().includes(q.toLowerCase()),
   );
 
   async function remove(row: QuoteRow) {
@@ -88,6 +89,7 @@ export function QuotesTable({ rows }: { rows: QuoteRow[] }) {
                   <span className="block">{new Date(r.createdAt).toLocaleDateString('pl-PL')}</span>
                   <span className="block">{new Date(r.createdAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}</span>
                 </time>
+                <div className="mt-1 text-xs text-slate-500">Wyceniał: {r.author ?? '—'}</div>
               </td>
               <td role="cell" className={styles.customer}>
                 <div className="font-medium text-slate-800">{r.customer}</div>

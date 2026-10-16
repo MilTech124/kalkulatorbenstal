@@ -13,12 +13,11 @@ interface Props {
   input: QuoteInput;
   total: number;
   /** Zalogowany admin: moze edytowac cene w ofercie e-mail. */
-  isAdmin?: boolean;
 }
 
 const EMPTY: CustomerInfo = { firstName: '', lastName: '', phone: '', email: '', street: '', postalCode: '', city: '' };
 
-export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }: Props) {
+export function SaveQuoteDialog({ open, onClose, input, total }: Props) {
   const [customer, setCustomer] = useState<CustomerInfo>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof CustomerInfo, string>>>({});
   const [status, setStatus] = useState<'idle' | 'saving' | 'done' | 'error'>('idle');
@@ -173,10 +172,10 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
               </div>
               <div className="grid gap-3 sm:grid-cols-[110px_1fr_1fr]">
                 <Field label="Narzut [%]">
-                  <TextInput type="number" min={isAdmin ? -100 : 0} max={500} step={1} value={markupPct} onChange={(e) => applyMarkup(e.target.valueAsNumber || 0)} />
+                  <TextInput type="number" min={-100} max={500} step={1} value={markupPct} onChange={(e) => applyMarkup(e.target.valueAsNumber || 0)} />
                 </Field>
                 <Field label="Cena w ofercie [zł]" hint={`Wyliczona z cennika: ${formatPln(total)}`}>
-                  <TextInput type="number" min={isAdmin ? 0 : total} step={1} value={offerPrice} onChange={(e) => setOfferedTotal(e.target.valueAsNumber || 0)} />
+                  <TextInput type="number" min={0} step={1} value={offerPrice} onChange={(e) => setOfferedTotal(e.target.valueAsNumber || 0)} />
                 </Field>
                 <Field label="Dopisek w ofercie (opcjonalnie)">
                   <textarea
@@ -188,7 +187,6 @@ export function SaveQuoteDialog({ open, onClose, input, total, isAdmin = false }
                   />
                 </Field>
               </div>
-              {!isAdmin && offerPrice < total && <p className="text-xs text-red-600">Cena w ofercie nie może być niższa niż wyliczona ({formatPln(total)}).</p>}
             </div>
             {status === 'error' && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{message}</p>}
             <div className="flex justify-end gap-2 pt-2">

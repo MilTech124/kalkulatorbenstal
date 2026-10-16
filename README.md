@@ -10,7 +10,7 @@ Stack: **Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · MongoDB (Mon
 
 ```bash
 npm install
-cp .env.example .env.local      # uzupełnij MONGODB_URI, ADMIN_EMAIL, ADMIN_PASSWORD, AUTH_SECRET
+cp .env.example .env.local      # uzupełnij MONGODB_URI, AUTH_SECRET, REGISTRATION_CODE
 ```
 
 Baza danych – jedna z opcji:
@@ -31,13 +31,16 @@ npm run dev     # http://localhost:3000  (panel: http://localhost:3000/panel)
 
 Inne skrypty: `npm test` (testy silnika wyceny), `npm run lint`, `npm run build` + `npm start` (produkcja).
 
+## Logowanie
+
+Cała aplikacja wymaga logowania. Pracownik zakłada konto na `/register` (imię, nazwisko, login, hasło i kod z `REGISTRATION_CODE`), potem loguje się na `/login`. Wszyscy zalogowani mają te same uprawnienia. Każda wycena zapisuje, kto ją zrobił (widoczne w `/panel`). Linki do PDF/Word z tokenem (wysyłane klientom) działają bez logowania.
+
 ## Zmienne środowiskowe
 
 | Zmienna          | Opis                                                                 |
 | ---------------- | -------------------------------------------------------------------- |
 | `MONGODB_URI`    | connection string do MongoDB                                         |
-| `ADMIN_EMAIL`    | e-mail do logowania w `/panel`                                       |
-| `ADMIN_PASSWORD` | hasło do logowania w `/panel`                                        |
+| `REGISTRATION_CODE` | kod wymagany w formularzu rejestracji pracownika (`/register`); pusty = rejestracja wyłączona |
 | `AUTH_SECRET`    | losowy sekret (min. 32 znaki) do podpisywania sesji, np. `openssl rand -hex 32` |
 | `ORDER_TRACKER_URL` | adres Order-trackera (domyślnie `https://order-tracker-rouge.vercel.app`) |
 | `ORDER_TRACKER_API_KEY` | klucz API z Order-trackera (Ustawienia → Klucz API); bez niego przycisk „Wyślij do Tracker” pokazuje komunikat o braku konfiguracji |

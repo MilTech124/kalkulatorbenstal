@@ -60,7 +60,7 @@ export default async function QuoteDetailsPage({ params }: { params: Promise<{ i
           </Link>
           <h1 className="text-xl font-bold text-slate-900">Wycena #{doc.number}</h1>
           <p className="text-sm text-slate-500">
-            {doc.createdAt.toLocaleString('pl-PL', { dateStyle: 'long', timeStyle: 'short' })} · cennik v{doc.priceListVersion}
+            {doc.createdAt.toLocaleString('pl-PL', { dateStyle: 'long', timeStyle: 'short' })} · cennik v{doc.priceListVersion} · wyceniał: {doc.createdBy?.name ?? '—'}
             {doc.tracker?.orderId && (
               <>
                 {' '}· w trackerze od {doc.tracker.sentAt?.toLocaleString('pl-PL')}

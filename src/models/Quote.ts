@@ -31,6 +31,8 @@ const quoteSchema = new Schema(
       status: { type: String },
       addressGeocoded: { type: Boolean },
     },
+    /** Pracownik, ktory zrobil wycene (snapshot z sesji; stare wyceny nie maja tego pola). */
+    createdBy: { userId: { type: String }, name: { type: String }, login: { type: String } },
     input: { type: Schema.Types.Mixed, required: true },
     result: { type: Schema.Types.Mixed, required: true },
     total: { type: Number, required: true },
@@ -46,8 +48,15 @@ export interface TrackerInfo {
   addressGeocoded?: boolean;
 }
 
-export type QuoteDoc = Omit<InferSchemaType<typeof quoteSchema>, 'customer' | 'input' | 'result' | 'status' | 'tracker' | 'offerCompany'> & {
+export interface CreatedBy {
+  userId?: string;
+  name?: string;
+  login?: string;
+}
+
+export type QuoteDoc = Omit<InferSchemaType<typeof quoteSchema>, 'customer' | 'input' | 'result' | 'status' | 'tracker' | 'offerCompany' | 'createdBy'> & {
   offerCompany?: OfferCompany;
+  createdBy?: CreatedBy;
   customer: CustomerInfo;
   status: QuoteStatus;
   tracker?: TrackerInfo;
@@ -57,10 +66,10 @@ export type QuoteDoc = Omit<InferSchemaType<typeof quoteSchema>, 'customer' | 'i
   updatedAt: Date;
 };
 
-// Hot reload może pozostawić model sprzed dodania pola firmy. Taki model
+// Hot reload może pozostawić model sprzed dodania pola firmy lub autora. Taki model
 // po cichu usuwa offerCompany zarówno przy create, jak i findByIdAndUpdate.
 // Wymieniamy wyłącznie nieaktualny model w pamięci; zapisane wyceny pozostają bez zmian.
-if (mongoose.models.Quote && !mongoose.models.Quote.schema.path('offerCompany')) {
+if (mongoose.models.Quote && (!mongoose.models.Quote.schema.path('offerCompany') || !mongoose.models.Quote.schema.path('createdBy.name'))) {
   mongoose.deleteModel('Quote');
 }
 

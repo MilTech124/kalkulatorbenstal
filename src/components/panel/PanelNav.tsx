@@ -1,23 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 
 const LINKS = [
   { href: '/panel', label: 'Wyceny' },
   { href: '/panel/cennik', label: 'Cennik' },
 ];
 
-export function PanelNav() {
+export function PanelNav({ userName }: { userName?: string }) {
   const pathname = usePathname();
-  const router = useRouter();
-  if (pathname === '/panel/login') return null;
-
-  async function logout() {
-    await fetch('/api/admin/logout', { method: 'POST' });
-    router.replace('/panel/login');
-    router.refresh();
-  }
 
   return (
     <header className="border-b border-slate-200 bg-white">
@@ -41,9 +34,8 @@ export function PanelNav() {
           <Link href="/" className="text-sm text-slate-500 hover:text-slate-800">
             Kalkulator
           </Link>
-          <button type="button" onClick={logout} className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">
-            Wyloguj
-          </button>
+          {userName && <span className="hidden text-sm text-slate-500 sm:inline">{userName}</span>}
+          <LogoutButton />
         </div>
       </div>
     </header>
