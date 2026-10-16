@@ -99,6 +99,8 @@ export const DEFAULT_PRICE_LIST: PriceList = {
     insulatedDoor: 1000,
   },
   custom: { pricePerM3: 90, colorPerM3: { ral: 20, wood: 30 } },
+  // Wiata smietnikowa (kartka klientki): azury = dlugosc sciany x 2,18 m x 40 zl/m2
+  bin: { openworkPerM2: 40, openworkHeight: 2.18 },
   // Katownik w cenie; profile zamkniete = narzut % od ceny bazowej garazu
   // Kursy orientacyjne - do aktualizacji w panelu (ile PLN za 1 jednostke). Slowacja uzywa EUR.
   currencies: [

@@ -545,6 +545,11 @@ export function CarportEditor({ pl, setPl }: EditorProps) {
         <NumField label="Ściana ażurowa drewnopodobna" value={pl.openwork.wallPerM2.wood} onChange={(v) => setPl((p) => ({ ...p, openwork: { ...p.openwork, wallPerM2: { ...p.openwork.wallPerM2, wood: v } } }))} />
         <NumField label="Cały garaż w ażurach" value={pl.openwork.wholeGaragePerM2} onChange={(v) => setPl((p) => ({ ...p, openwork: { ...p.openwork, wholeGaragePerM2: v } }))} hint="× (2 × szer. + 2 × dł.) × wysokość" />
       </Group>
+
+      <Group title="Wiata śmietnikowa – ażury" description="Ażury = długość zaznaczonych ścian × wysokość × stawka.">
+        <NumField label="Stawka [zł/m²]" value={pl.bin.openworkPerM2} onChange={(v) => setPl((p) => ({ ...p, bin: { ...p.bin, openworkPerM2: v } }))} />
+        <NumField label="Wysokość ażurów [m]" value={pl.bin.openworkHeight} step={0.01} onChange={(v) => setPl((p) => ({ ...p, bin: { ...p.bin, openworkHeight: v } }))} />
+      </Group>
     </div>
   );
 }

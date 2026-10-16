@@ -313,10 +313,34 @@ describe('garaże warstwowe', () => {
     expect(amount(calculateQuote(base({ insulatedDoors: 2 }), PL), 'insulatedDoors')).toBeUndefined();
   });
 
-  it('wiaty śmietnikowe: jeszcze bez wyceny', () => {
-    const r = calculateQuote(base({ productType: 'bin' }), PL);
-    expect(r.total).toBe(0);
-    expect(r.needsManualQuote).toBe(true);
+  it('wiata śmietnikowa 4×5, spad na tył – przykład z kartki klientki', () => {
+    const r = calculateQuote(
+      base({ productType: 'bin', width: 4, length: 5, sheet: 'ral', sheetLayout: 'h', horizontalPanel: true, doors: 1, doorLocks: 1, openworkWalls: [1, 2, 3, 4] }),
+      PL,
+    );
+    expect(amount(r, 'base')).toBe(3980);
+    expect(amount(r, 'horizontalPanel')).toBe(800);
+    expect(amount(r, 'doorLocks')).toBe(200);
+    expect(amount(r, 'color')).toBe(710);
+    // konstrukcja 30x30 ocynk: (3980 + 800 + 200) × 20% - kolor poza podstawą (5976 = 4980 × 1,2)
+    expect(amount(r, 'structure')).toBe(996);
+    expect(amount(r, 'openworkBin')).toBe(1570);
+    // obróbka liczona jak w garażu (255,6 + 300 zł), kartka podaje 660 zł
+    expect(amount(r, 'flashingVertical')! + amount(r, 'flashingRoof')!).toBe(556);
+    expect(r.total).toBe(8812);
+    expect(r.needsManualQuote).toBe(false);
+  });
+
+  it('wiata śmietnikowa: spad na bok, drzwi dwuskrzydłowe, tylko wybrane ściany ażurowe', () => {
+    const r = calculateQuote(
+      base({ productType: 'bin', width: 4, length: 5, roofType: 'side', gates: [{ type: 'double', width: 2, height: 2, automat: false, horizontalPanel: false, winchester: false, doorInGate: false }], openworkWalls: [1, 3] }),
+      PL,
+    );
+    expect(amount(r, 'base')).toBe(4480);
+    expect(amount(r, 'gate:0:base')).toBe(0);
+    // ściana 1 (4 m) + ściana 3 (5 m) = 9 mb × 2,18 × 40
+    expect(amount(r, 'openworkBin')).toBe(785);
+    expect(r.items.some((i) => i.key === 'gutters' || i.key === 'felt' || i.key === 'tile')).toBe(false);
   });
 });
 

@@ -143,6 +143,12 @@ export interface PriceList {
     colorPerM3: Record<'ral' | 'wood', number>;
   };
   structures: StructureOption[];
+  /** Wiaty smietnikowe: podstawa z tabeli garazy, ażury liczone od wybranych scian. */
+  bin: {
+    openworkPerM2: number;
+    /** Wysokosc scian ażurowych [m]. */
+    openworkHeight: number;
+  };
   /** Waluty do wyboru przy wycenie (kurs = ile PLN za 1 jednostke). */
   currencies: { key?: string; code: string; label: string; rate: number }[];
 }
@@ -218,6 +224,8 @@ export interface QuoteInput {
   carport: { enabled: boolean; width: number; length: number };
   partitionWalls: { width: number; height: number }[];
   openwork: { mode: OpenworkMode; width: number; height: number };
+  /** Wiata smietnikowa: numery scian ażurowych (1-2 = szerokosc, 3-4 = dlugosc). */
+  openworkWalls?: number[];
 }
 
 export interface LineItem {

@@ -156,16 +156,13 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     needsManualQuote = true;
   }
 
-  if (productType === 'bin') {
-    warnings.push('Wiaty śmietnikowe – wycena wkrótce.');
-    return { items, total: 0, effectiveHeight: input.height, warnings, needsManualQuote: true };
-  }
-
   // Garaz warstwowy nie korzysta z tabeli bazowej (blaszaki); dopłaty z tabeli (kolor, panel, +10 cm) nie obowiazuja.
+  // Wiata smietnikowa ('bin') bierze podstawe, kolor i panel z tabeli garazy, ale bez rynien, filcu, okien i dodatkow.
   // Blaszak spoza tabeli (customDims) liczony z m3 jak "garaze spoza cennika".
+  const tableBased = productType === 'steel' || productType === 'bin';
   const customSteel = productType === 'steel' && Boolean(input.customDims);
-  const row = productType === 'steel' && !customSteel ? findBaseRow(pl, S, D) : undefined;
-  if (productType === 'steel' && !customSteel && !row) {
+  const row = tableBased && !customSteel ? findBaseRow(pl, S, D) : undefined;
+  if (tableBased && !customSteel && !row) {
     warnings.push(`Brak w cenniku garażu ${fmt(S)} × ${fmt(D)} m.`);
     return { items, total: 0, effectiveHeight: input.height, warnings, needsManualQuote: true };
   }
@@ -174,7 +171,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   if (row) {
     push({
       key: 'base',
-      label: `Garaż ${fmt(S)} × ${fmt(D)} m, ${roof.label.toLowerCase()}`,
+      label: `${productType === 'bin' ? 'Wiata śmietnikowa' : 'Garaż'} ${fmt(S)} × ${fmt(D)} m, ${roof.label.toLowerCase()}`,
       amount: roof.priceGroup === 'rear' ? row.rear : row.gable,
     });
   }
@@ -275,7 +272,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
   const layout = sheetLayout(input);
   const horizontalPanel = productType === 'steel' && (layout === 'h' || layout === 'hWide');
   const layoutMultiplier = SHEET_LAYOUT_MULTIPLIER[layout];
-  if (productType === 'steel' && layoutMultiplier > 0) {
+  if (tableBased && layoutMultiplier > 0) {
     const ref = row ?? nearestBaseRow(pl, S, D);
     if (ref) {
       push({
@@ -287,8 +284,8 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     }
   }
 
-  // 6-8. Elementy dachu i blachy - tylko garaze blaszane
-  if (productType === 'steel') {
+  // 6-8. Elementy dachu i blachy - garaze blaszane i wiaty smietnikowe (okucia); rynny/filc/blachodachowka tylko garaze
+  if (tableBased) {
     // 6. Okucia (opcjonalne; brak pola = tak)
     const flashings = input.flashings ?? true;
     const vertMb = pl.verticalFlashingPerHeight * effectiveHeight;
@@ -311,7 +308,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     });
     // Wiata korzysta z tego samego spadu i wzoru okuć dachowych co garaż.
     // Otwarte zadaszenie nie dodaje narożnych okuć ścian (4 × wysokość).
-    if (flashings && input.carport.enabled && input.carport.width > 0 && input.carport.length > 0) {
+    if (flashings && productType === 'steel' && input.carport.enabled && input.carport.width > 0 && input.carport.length > 0) {
       const carportMb = linear(roof.roofFlashing, input.carport.width, input.carport.length);
       push({
         key: 'flashingCarport',
@@ -324,7 +321,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     }
 
     // 7. Rynny
-    if (input.gutters) {
+    if (productType === 'steel' && input.gutters) {
       const mb = linear(roof.gutter, S, D);
       push({ key: 'gutters', label: 'Rynny', qty: mb, unit: 'mb', unitPrice: pl.unit.gutterPerMb, amount: mb * pl.unit.gutterPerMb });
       const gutterSurcharge = pl.unit.gutterColorPerMb?.[input.gutterColor ?? ''] ?? 0;
@@ -342,7 +339,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
     // 8. Filc / blachodachowka
     const garageArea = S * D * pl.unit.roofAreaFactor;
     const carportArea = input.carport.enabled ? input.carport.width * input.carport.length : 0;
-    if (input.felt) {
+    if (productType === 'steel' && input.felt) {
       // Filc: powierzchnia dachu z wypustem na kazda strone (np. +30 cm) + wiata
       const o = pl.unit.feltOverhangM ?? 0;
       const m2 = (S + 2 * o) * (D + 2 * o) * pl.unit.roofAreaFactor + carportArea;
@@ -355,7 +352,7 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
         amount: m2 * pl.unit.feltPerM2,
       });
     }
-    if (input.tile) {
+    if (productType === 'steel' && input.tile) {
       push({
         key: 'tile',
         label: 'Blachodachówka',
@@ -599,17 +596,38 @@ export function calculateQuote(input: QuoteInput, pl: PriceList): QuoteResult {
 
   }
 
+  // 14b. Wiata smietnikowa: azury na wybranych scianach (1-2 = szerokosc, 3-4 = dlugosc) x wysokosc x stawka
+  if (productType === 'bin') {
+    const walls = [...new Set(input.openworkWalls ?? [])].filter((n) => n >= 1 && n <= 4).sort();
+    const mb = walls.reduce((sum, n) => sum + (n <= 2 ? S : D), 0);
+    if (mb > 0) {
+      const m2 = mb * pl.bin.openworkHeight;
+      push({
+        key: 'openworkBin',
+        label: `Ażury: ściany ${walls.join(', ')}`,
+        qty: m2,
+        unit: 'm²',
+        unitPrice: pl.bin.openworkPerM2,
+        amount: m2 * pl.bin.openworkPerM2,
+        note: `${fmt(mb)} mb × ${fmt(pl.bin.openworkHeight)} m`,
+      });
+    }
+  }
+
   // 15. Konstrukcja: katownik w cenie; inne profile = % od ceny bazowej + elementow konstrukcyjnych
   // (wysokosc, kolor, ulozenie blachy, bramy, okna, drzwi, wiata, sciany, azury) - bez oku, rynien, filcu, blachodachowki i drobnych dodatkow.
-  if (productType === 'steel' && input.structure) {
-    const opt = pl.structures?.find((o) => o.key === input.structure);
+  // Wiata smietnikowa: zawsze profil 30x30 ocynk, a kolor i azury sa poza podstawa narzutu (wg kartki klientki).
+  const structureKey = productType === 'bin' ? (input.structure ?? 'zinc30') : input.structure;
+  if (tableBased && structureKey) {
+    const opt = pl.structures?.find((o) => o.key === structureKey);
     if (opt && opt.pct !== 0) {
-      const baseSum = items.filter((i) => STRUCTURE_BASE_KEYS.some((p) => i.key === p || i.key.startsWith(`${p}:`))).reduce((sum, i) => sum + i.amount, 0);
+      const baseKeys = productType === 'bin' ? STRUCTURE_BASE_KEYS.filter((k) => k !== 'color') : STRUCTURE_BASE_KEYS;
+      const baseSum = items.filter((i) => baseKeys.some((p) => i.key === p || i.key.startsWith(`${p}:`))).reduce((sum, i) => sum + i.amount, 0);
       push({
         key: 'structure',
         label: `Konstrukcja: ${opt.label} (${opt.pct > 0 ? '+' : ''}${fmt(opt.pct)}%)`,
         amount: (baseSum * opt.pct) / 100,
-        note: `${fmt(opt.pct)}% od ${money(baseSum).toLocaleString('pl-PL')} zł (garaż + elementy konstrukcyjne)`,
+        note: `${fmt(opt.pct)}% od ${money(baseSum).toLocaleString('pl-PL')} zł (${productType === 'bin' ? 'wiata + elementy konstrukcyjne' : 'garaż + elementy konstrukcyjne'})`,
       });
     }
   }

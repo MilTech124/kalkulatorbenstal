@@ -30,6 +30,7 @@ export function withDefaults(data: Partial<PriceList>): PriceList {
   out.extras = { ...d.extras, ...(data.extras ?? {}) };
   out.carport = { ...d.carport, ...(data.carport ?? {}) };
   out.custom = { ...d.custom, ...(data.custom ?? {}), colorPerM3: { ...d.custom.colorPerM3, ...(data.custom?.colorPerM3 ?? {}) } };
+  out.bin = { ...d.bin, ...(data.bin ?? {}) };
   out.sandwich = { ...d.sandwich, ...(data.sandwich ?? {}) };
   if (!data.sandwich?.panels?.length) out.sandwich.panels = d.sandwich.panels;
   // Puste listy w starym cenniku = brak konfiguracji -> domyslne

@@ -66,6 +66,7 @@ export const quoteInputSchema = z.object({
   carport: z.object({ enabled: z.boolean(), width: nonNeg.max(20), length: nonNeg.max(50) }),
   partitionWalls: z.array(z.object({ width: nonNeg.max(20), height: nonNeg.max(6) })).max(10),
   openwork: z.object({ mode: z.enum(['none', 'wall', 'whole']), width: nonNeg.max(20), height: nonNeg.max(6) }),
+  openworkWalls: z.array(z.number().int().min(1).max(4)).max(4).optional(),
 }).superRefine((input, ctx) => {
   const family = sheetColorFamily(input.sheet, input.sheetColor);
   const valid = (color: string) => family !== 'ocynk' && SHEET_COLORS[family].some((option) => option.key === color);
@@ -232,6 +233,7 @@ export const priceListSchema = z.object({
     })
     .default({ pricePerM3: 0, panels: [], insulatedDoor: 0 }),
   custom: z.object({ pricePerM3: nonNeg, colorPerM3: z.object({ ral: nonNeg, wood: nonNeg }) }).default({ pricePerM3: 0, colorPerM3: { ral: 0, wood: 0 } }),
+  bin: z.object({ openworkPerM2: nonNeg, openworkHeight: pos }).default({ openworkPerM2: 40, openworkHeight: 2.18 }),
   structures: z.array(z.object({ key: z.string().min(1).max(50), label: z.string().min(1).max(100), pct: num })).default([]),
   currencies: z.array(z.object({ key: z.string().trim().min(1).max(20).optional(), code: z.string().trim().min(3).max(3).toUpperCase(), label: z.string().min(1).max(50), rate: pos })).default([]),
 });

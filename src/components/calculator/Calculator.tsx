@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { availableLengths, calculateQuote, emptyInput, PRODUCT_LABELS } from '@/lib/pricing/engine';
 import type { PriceList, ProductType, QuoteInput } from '@/lib/pricing/types';
 import { Segmented } from '@/components/ui';
+import { BinSection } from './BinSection';
 import { CarportAndWallsSection, DimensionsSection, ExtrasSection, GateSection, RoofAndSheetSection, WindowsDoorsSection } from './Sections';
 import { MobileTotalBar, Summary } from './Summary';
 import { SaveQuoteDialog } from './SaveQuoteDialog';
@@ -32,8 +33,48 @@ export function Calculator({ priceList, isAdmin = false }: { priceList: PriceLis
       const widths = [...new Set(priceList.baseTable.map((r) => r.width))];
       const width = widths.includes(input.width) ? input.width : base.width;
       const lengths = availableLengths(priceList, width);
-      update({ productType: type, width, length: lengths.includes(input.length) ? input.length : lengths[0], height: base.height });
+      const fromBin = input.productType === 'bin' ? { gates: base.gates, doors: 0, doorLocks: 0, openworkWalls: [] } : {};
+      update({ productType: type, width, length: lengths.includes(input.length) ? input.length : lengths[0], height: base.height, ...fromBin });
     } else {
+      if (type === 'bin') {
+        // Wiata smietnikowa: tabela garazy, spad tyl/bok, drzwi pojedyncze w cenie, bez dodatkow garazowych.
+        const base = emptyInput(priceList);
+        const widths = [...new Set(priceList.baseTable.map((r) => r.width))];
+        const width = widths.includes(input.width) ? input.width : base.width;
+        const lengths = availableLengths(priceList, width);
+        update({
+          productType: type,
+          customDims: false,
+          width,
+          length: lengths.includes(input.length) ? input.length : lengths[0],
+          height: priceList.standardHeight,
+          roofType: input.roofType === 'side' ? 'side' : 'rear',
+          sheet: 'ocynk',
+          sheetColor: undefined,
+          roofSheet: undefined,
+          roofColor: undefined,
+          flashingSheet: undefined,
+          flashingColor: undefined,
+          structure: undefined,
+          sheetLayout: 'v',
+          horizontalPanel: false,
+          felt: false,
+          tile: false,
+          gutters: false,
+          gutterColor: undefined,
+          gates: [],
+          doors: 1,
+          doorLocks: 0,
+          doorColors: undefined,
+          windows: [],
+          extras: base.extras,
+          carport: base.carport,
+          partitionWalls: [],
+          openwork: base.openwork,
+          openworkWalls: [],
+        });
+        return;
+      }
       update({ productType: type, horizontalPanel: false, felt: false, tile: false, gutters: false, sheet: 'ocynk', sheetColor: undefined, roofSheet: undefined, roofColor: undefined, flashingSheet: undefined, flashingColor: undefined, gates: input.gates.map((gate) => ({ ...gate, color: undefined })), doorColors: undefined, windows: input.windows.map((window) => ({ ...window, color: undefined })), partitionWalls: [], openwork: { ...input.openwork, mode: 'none' } });
     }
   };
@@ -49,14 +90,12 @@ export function Calculator({ priceList, isAdmin = false }: { priceList: PriceLis
             options={[
               { value: 'steel', label: PRODUCT_LABELS.steel, hint: 'cennik wg wymiarów' },
               { value: 'sandwich', label: PRODUCT_LABELS.sandwich, hint: 'płyta warstwowa, cena za m³' },
-              { value: 'bin', label: PRODUCT_LABELS.bin, hint: 'wkrótce' },
+              { value: 'bin', label: PRODUCT_LABELS.bin, hint: 'cennik wg kartki, ażury' },
             ]}
           />
         </section>
         {productType === 'bin' ? (
-          <section className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
-            Wycena wiat śmietnikowych będzie dostępna wkrótce.
-          </section>
+          <BinSection {...sectionProps} />
         ) : (
           <>
             <DimensionsSection {...sectionProps} />

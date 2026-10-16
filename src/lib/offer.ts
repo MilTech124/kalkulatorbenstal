@@ -15,7 +15,7 @@ const fmt = (n: number) => n.toLocaleString('pl-PL', { maximumFractionDigits: 2 
 export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: number): { label: string; value: string }[] {
   const input = normalizeInput(raw);
   const rows: { label: string; value: string }[] = [
-    { label: 'Rodzaj', value: input.productType === 'sandwich' ? `Garaż warstwowy${sandwichPanel(pl, input.sandwichPanel) ? ` – ${sandwichPanel(pl, input.sandwichPanel)!.label.toLowerCase()}` : ''}` : 'Garaż blaszany' },
+    { label: 'Rodzaj', value: input.productType === 'sandwich' ? `Garaż warstwowy${sandwichPanel(pl, input.sandwichPanel) ? ` – ${sandwichPanel(pl, input.sandwichPanel)!.label.toLowerCase()}` : ''}` : input.productType === 'bin' ? 'Wiata śmietnikowa' : 'Garaż blaszany' },
     { label: 'Szerokość (ściana przednia i tylna)', value: `${fmt(input.width)} m` },
     { label: 'Długość (ściany boczne)', value: `${fmt(input.length)} m` },
     { label: 'Wysokość ścianki', value: `${fmt(effectiveHeight)} m` },
@@ -26,7 +26,8 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
     rows.push({ label: 'Rodzaj spadu dachu', value: pl.roofTypes[input.roofType]?.label ?? input.roofType });
     rows.push({ label: 'Poszycie ścian', value: `blacha trapezowa, ${SHEET_LAYOUT_LABELS[sheetLayout(input)].toLowerCase()}, kolor: ${sheetColorLabel(input.sheet, input.sheetColor)}` });
     rows.push({ label: 'Poszycie dachu', value: input.tile ? `blachodachówka, kolor: ${sheetColorLabel(roofSheet, roofColor)}` : `blacha trapezowa, kolor: ${sheetColorLabel(roofSheet, roofColor)}` });
-    const structure = input.structure ? pl.structures?.find((o) => o.key === input.structure) : undefined;
+    const structureKey = input.productType === 'bin' ? (input.structure ?? 'zinc30') : input.structure;
+    const structure = structureKey ? pl.structures?.find((o) => o.key === structureKey) : undefined;
     rows.push({ label: 'Konstrukcja', value: structure?.label ?? 'kątownik' });
   }
   if (input.gates.length) {
@@ -84,5 +85,6 @@ export function offerSummary(raw: QuoteInput, pl: PriceList, effectiveHeight: nu
   }
   if (input.openwork.mode === 'wall') rows.push({ label: 'Ażury', value: `ściana ${fmt(input.openwork.width)} × ${fmt(input.openwork.height)} m` });
   if (input.openwork.mode === 'whole') rows.push({ label: 'Ażury', value: 'cały garaż' });
+  if (input.productType === 'bin' && input.openworkWalls?.length) rows.push({ label: 'Ażury', value: `ściany: ${[...input.openworkWalls].sort().join(', ')}` });
   return rows;
 }
