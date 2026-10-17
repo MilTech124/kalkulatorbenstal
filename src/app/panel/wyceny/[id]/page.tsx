@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import mongoose from 'mongoose';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -91,7 +92,7 @@ export default async function QuoteDetailsPage({ params }: { params: Promise<{ i
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="mb-3 text-base font-semibold text-slate-900">Klient</h2>
             <dl className="space-y-2 text-sm">
-              <Row label="Firma wystawiająca ofertę" value={offerCompanyProfile(doc.offerCompany).short} />
+              <Row label="Firma wystawiająca ofertę" value={<span className={`rounded-full px-2 py-0.5 text-xs font-bold text-white ${doc.offerCompany === 'zimstal' ? 'bg-green-700' : 'bg-brand-500'}`}>{offerCompanyProfile(doc.offerCompany).short}</span>} />
               <Row label="Imię i nazwisko" value={`${c.firstName} ${c.lastName}`} />
               <Row label="Telefon" value={c.phone} />
               <Row label="E-mail" value={c.email ?? '—'} />
@@ -127,7 +128,7 @@ export default async function QuoteDetailsPage({ params }: { params: Promise<{ i
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="grid grid-cols-[130px_1fr] gap-2">
       <dt className="text-slate-500">{label}</dt>

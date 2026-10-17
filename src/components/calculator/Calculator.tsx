@@ -92,9 +92,9 @@ export function Calculator({ priceList }: { priceList: PriceList }) {
             value={productType}
             onChange={setProductType}
             options={[
-              { value: 'steel', label: PRODUCT_LABELS.steel, hint: 'cennik wg wymiarów', icon: 'home' },
-              { value: 'sandwich', label: PRODUCT_LABELS.sandwich, hint: 'płyta warstwowa, cena za m³', icon: 'layers' },
-              { value: 'bin', label: PRODUCT_LABELS.bin, hint: 'cennik wg kartki, ażury', icon: 'trashbin' },
+              { value: 'steel', label: PRODUCT_LABELS.steel, icon: 'home' },
+              { value: 'sandwich', label: PRODUCT_LABELS.sandwich, icon: 'layers' },
+              { value: 'bin', label: PRODUCT_LABELS.bin, icon: 'trashbin' },
             ]}
           />
         </section>

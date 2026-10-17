@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { COMPANY_PROFILES, type OfferCompany } from '@/lib/offerCompany';
 import { formatPln } from '@/lib/format';
 import { QUOTE_STATUS_LABEL, QUOTE_STATUSES, type QuoteStatus } from '@/lib/quoteStatus';
 import { SendToTrackerButton, StatusSelect } from './QuoteStatusControls';
@@ -19,6 +20,7 @@ export interface QuoteRow {
   total: number;
   version: number;
   status: QuoteStatus;
+  company: OfferCompany;
   author: string | null;
   trackerSentAt: string | null;
 }
@@ -80,7 +82,7 @@ export function QuotesTable({ rows }: { rows: QuoteRow[] }) {
             </tr>
           )}
           {filtered.map((r) => (
-            <tr key={r.id} role="row" className={styles.row} onClick={() => router.push(`/panel/wyceny/${r.id}`)}>
+            <tr key={r.id} role="row" className={styles.row} data-company={r.company} onClick={() => router.push(`/panel/wyceny/${r.id}`)}>
               <td role="cell" className={styles.identity}>
                 <Link href={`/panel/wyceny/${r.id}`} className="font-semibold text-brand-600 hover:underline" onClick={(e) => e.stopPropagation()}>
                   #{r.number}
@@ -89,6 +91,7 @@ export function QuotesTable({ rows }: { rows: QuoteRow[] }) {
                   <span className="block">{new Date(r.createdAt).toLocaleDateString('pl-PL')}</span>
                   <span className="block">{new Date(r.createdAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' })}</span>
                 </time>
+                <span className={`${styles.badge} mt-1`} data-company={r.company}>{COMPANY_PROFILES[r.company].short}</span>
                 <div className="mt-1 text-xs text-slate-500">Wyceniał: {r.author ?? '—'}</div>
               </td>
               <td role="cell" className={styles.customer}>

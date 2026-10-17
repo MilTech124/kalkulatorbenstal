@@ -43,6 +43,12 @@
   cursor: pointer;
 }
 
+/* Kolor wiersza wg firmy wystawiajacej oferte: Benstal - niebieski, Zimstal - zielony. */
+.row { box-shadow: inset 4px 0 0 var(--company, #1f5fa8); background: var(--company-bg, #f5f9fd); }
+.row[data-company="zimstal"] { --company: #15803d; --company-bg: #f3faf5; }
+.badge { display: inline-block; border-radius: 9999px; padding: 0.05rem 0.5rem; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.03em; color: #fff; background: #1f5fa8; }
+.badge[data-company="zimstal"] { background: #15803d; }
+
 .row:hover,
 .row:focus-within {
   background: var(--color-brand-50);
