@@ -1,6 +1,6 @@
 'use client';
 
-import { availableLengths, availableWidths, defaultGate, SHEET_LAYOUT_LABELS, sheetLayout } from '@/lib/pricing/engine';
+import { availableLengths, availableWidths, defaultGate, heightOptions, SHEET_LAYOUT_LABELS, sheetLayout } from '@/lib/pricing/engine';
 import type { RoofType, SheetLayout } from '@/lib/pricing/types';
 import { Card, Checkbox, Field, Segmented, Select } from '@/components/ui';
 import { formatNum, formatPln } from '@/lib/format';
@@ -57,6 +57,15 @@ export function BinSection({ input, pl, update }: SectionProps) {
               {lengths.map((l) => (
                 <option key={l} value={l}>
                   {formatNum(l)} m
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="Wysokość [m]" hint={`Standard ${formatNum(pl.standardHeight)} m, dopłata za każde ${Math.round(pl.heightStep * 100)} cm`}>
+            <Select value={input.height} onChange={(e) => update({ height: Number(e.target.value) })}>
+              {heightOptions(pl).map((h) => (
+                <option key={h} value={h}>
+                  {formatNum(h)} m{h === pl.standardHeight ? ' (standard)' : ''}
                 </option>
               ))}
             </Select>
