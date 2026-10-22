@@ -32,6 +32,20 @@ const patchSchema = z.object({
   status: z.enum(QUOTE_STATUSES).optional(),
   offeredTotal: z.number().finite().min(0).max(10_000_000).nullable().optional(),
   offerNote: z.string().trim().max(2000).nullable().optional(),
+  items: z
+    .array(
+      z.object({
+        key: z.string().trim().min(1).max(100),
+        label: z.string().trim().min(1).max(300),
+        qty: z.number().finite().optional(),
+        unit: z.string().max(20).optional(),
+        unitPrice: z.number().finite().optional(),
+        amount: z.number().finite().min(-10_000_000).max(10_000_000),
+        note: z.string().max(500).optional(),
+      }),
+    )
+    .max(200)
+    .optional(),
 });
 
 // PATCH: zmiana statusu wyceny i/lub ceny/dopisku w ofercie PDF.
@@ -42,7 +56,15 @@ export async function PATCH(request: Request, { params }: Ctx) {
   if (!parsed.success) return NextResponse.json({ error: 'Nieprawidłowe dane' }, { status: 400 });
   const set: Record<string, unknown> = {};
   const unset: Record<string, 1> = {};
-  const { status, offeredTotal, offerNote, offerCompany } = parsed.data;
+  const { status, offeredTotal, offerNote, offerCompany, items } = parsed.data;
+  if (items !== undefined) {
+    const total = Math.round(items.reduce((sum, it) => sum + it.amount, 0));
+    set['result.items'] = items;
+    set['result.total'] = total;
+    set.total = total;
+    // Ręcznie ustawiona kwota dotyczyła starego zestawu pozycji - wracamy do kwoty z pozycji.
+    if (offeredTotal === undefined) unset.offeredTotal = 1;
+  }
   if (offerCompany !== undefined) set.offerCompany = offerCompany;
   if (status !== undefined) set.status = status;
   if (offeredTotal !== undefined) {

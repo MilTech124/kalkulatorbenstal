@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import mongoose from 'mongoose';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { QuoteBreakdown } from '@/components/calculator/Summary';
+import { QuoteItemsEditor } from '@/components/panel/QuoteItemsEditor';
 import { formatAddress } from '@/lib/customer';
 import { formatPln } from '@/lib/format';
 import { convertFromPln, formatMoney } from '@/lib/currency';
@@ -110,7 +110,7 @@ export default async function QuoteDetailsPage({ params }: { params: Promise<{ i
         </div>
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="mb-2 text-base font-semibold text-slate-900">Rozbicie ceny z cennika</h2>
-          <QuoteBreakdown result={result} />
+          <QuoteItemsEditor quoteId={id} result={result} />
           {result.warnings.length > 0 && (
             <ul className="mt-3 space-y-1 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
               {result.warnings.map((w, i) => (
